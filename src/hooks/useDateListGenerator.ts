@@ -14,6 +14,11 @@ export const useDateListGenerator = () => {
   const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
   const [generatedList, setGeneratedList] = useState('')
 
+  // 追加: プリセット選択状態
+  const [selectedPreset, setSelectedPreset] = useState<
+    { type: 'period'; value: number } | { type: 'months'; value: number } | null
+  >(null)
+
   useEffect(() => {
     setStartDate(getTodayString())
   }, [])
@@ -32,11 +37,13 @@ export const useDateListGenerator = () => {
   const setPresetPeriod = (days: number) => {
     const start = startDate || getTodayString()
     setEndDate(addDays(start, days))
+    setSelectedPreset({ type: 'period', value: days })
   }
 
   const setPresetMonths = (months: number) => {
     const start = startDate || getTodayString()
     setEndDate(addMonths(start, months))
+    setSelectedPreset({ type: 'months', value: months })
   }
 
   const copyToClipboard = async () => {
@@ -55,6 +62,7 @@ export const useDateListGenerator = () => {
     setStartDate(getTodayString())
     setEndDate('')
     setGeneratedList('')
+    setSelectedPreset(null)
   }
 
   const isGenerateButtonDisabled = !title.trim() || !startDate || !endDate
@@ -74,6 +82,7 @@ export const useDateListGenerator = () => {
     setPresetMonths,
     copyToClipboard,
     resetSettings,
-    isGenerateButtonDisabled
+    isGenerateButtonDisabled,
+    selectedPreset // 追加
   }
 }
