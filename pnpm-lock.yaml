@@ -54,6 +54,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.9.4
         version: 1.9.4
+      '@evilmartians/lefthook':
+        specifier: ^1.11.13
+        version: 1.11.13
       '@types/node':
         specifier: ^22.15.21
         version: 22.15.21
@@ -287,6 +290,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@evilmartians/lefthook@1.11.13':
+    resolution: {integrity: sha512-CcR9u7lb3uCKD+295S2GfhROI6q9npTsJ/E07XupZZFO8sdYHm3Uo3x8t+lzKmI/7rCFA2t0MWRggjNrxpjXFg==}
+    cpu: [x64, arm64, ia32]
+    os: [darwin, linux, win32]
+    hasBin: true
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -1092,6 +1101,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.25.4':
     optional: true
+
+  '@evilmartians/lefthook@1.11.13': {}
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:

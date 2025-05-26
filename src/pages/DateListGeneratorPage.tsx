@@ -40,12 +40,12 @@ export function DateListGeneratorPage() {
 
   return (
     <div className='container mx-auto max-w-4xl px-4 py-10'>
-      <div className='mb-8 text-center'>
-        <h1 className='mb-2 font-bold text-3xl text-gray-900'>
-          曜日付き日付リスト生成
-        </h1>
+      <div className='mb-8 space-y-4 text-center'>
+        <h1 className='font-bold text-4xl text-gray-900'>MarkDays</h1>
         <p className='text-gray-600'>
-          指定した期間の日付リストをマークダウン形式で生成します
+          Markdown形式で日付と曜日のリストを一発生成！
+          <br />
+          スケジュール作成やタスク管理をもっとスムーズに。
         </p>
       </div>
 
