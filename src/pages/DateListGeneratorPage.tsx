@@ -1,20 +1,35 @@
+import { ContentLayout } from '@/components/ContentLayout'
 import { DateListSettingsCard } from '@/components/DateListSettingsCard'
 import { GeneratedListCard } from '@/components/GeneratedListCard'
 import {
   DateListSettingsProvider,
   useDateListSettings
 } from '@/contexts/DateListSettingsContext'
+import { useEffect, useRef } from 'react'
 
 function DateListGeneratorContent() {
   const settings = useDateListSettings()
+  const generatedListRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (settings.generatedList && generatedListRef.current) {
+      generatedListRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, [settings.generatedList])
+
   return (
     <>
       <DateListSettingsCard />
       {settings.generatedList && (
-        <GeneratedListCard
-          generatedList={settings.generatedList}
-          copyToClipboard={settings.copyToClipboard}
-        />
+        <ContentLayout ref={generatedListRef}>
+          <GeneratedListCard
+            generatedList={settings.generatedList}
+            copyToClipboard={settings.copyToClipboard}
+          />
+        </ContentLayout>
       )}
     </>
   )

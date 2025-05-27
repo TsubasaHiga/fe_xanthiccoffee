@@ -16,7 +16,7 @@ export function GeneratedListCard({
   copyToClipboard: () => void
 }) {
   return (
-    <Card className='z-10 mb-8 w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-xl sm:max-w-xl md:max-w-2xl'>
+    <Card className='z-10 mb-8 rounded-2xl border border-gray-200 bg-white shadow-xl sm:max-w-xl md:max-w-2xl'>
       <CardHeader>
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
           <div>
