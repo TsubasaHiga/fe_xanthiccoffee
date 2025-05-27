@@ -1,8 +1,11 @@
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
+import Holidays from 'date-holidays'
 
 // 日本語ロケールを設定
 dayjs.locale('ja')
+
+const hd = new Holidays('JP')
 
 export const formatDate = (date: Date, format: string): string => {
   return dayjs(date).format(format)
@@ -39,7 +42,9 @@ export const generateDateList = (
   startDate: string,
   endDate: string,
   title: string,
-  format: string
+  format: string,
+  excludeHolidays?: boolean,
+  excludeJpHolidays?: boolean
 ): string => {
   if (!startDate || !endDate) return ''
 
@@ -53,7 +58,34 @@ export const generateDateList = (
   const end = dayjs(endDate)
 
   while (current.isBefore(end) || current.isSame(end)) {
-    markdown += `- ${formatDate(current.toDate(), format)}\n`
+    // excludeHolidaysがtrueなら土日を除外
+    if (excludeHolidays) {
+      const day = current.day()
+      if (day === 0 || day === 6) {
+        // 0:日曜, 6:土曜
+        current = current.add(1, 'day')
+        continue
+      }
+    }
+    // excludeJpHolidaysがtrueなら祝日を除外（date-holidays使用）
+    const holidayInfo = hd.isHoliday(current.toDate())
+    if (excludeJpHolidays && holidayInfo) {
+      current = current.add(1, 'day')
+      continue
+    }
+    let line = `- ${formatDate(current.toDate(), format)}`
+    if (!excludeJpHolidays && holidayInfo) {
+      // holidayInfoは配列またはオブジェクト
+      const name = Array.isArray(holidayInfo)
+        ? holidayInfo[0] && typeof holidayInfo[0] === 'object'
+          ? (holidayInfo[0] as { name?: string }).name
+          : undefined
+        : (holidayInfo as { name?: string })?.name
+      if (name) {
+        line += `（${name}）`
+      }
+    }
+    markdown += `${line}\n`
     current = current.add(1, 'day')
   }
 

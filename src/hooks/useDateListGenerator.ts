@@ -19,17 +19,28 @@ export const useDateListGenerator = () => {
     { type: 'period'; value: number } | { type: 'months'; value: number } | null
   >(null)
 
+  const [excludeHolidays, setExcludeHolidays] = useState(true)
+  const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
+
   useEffect(() => {
     setStartDate(getTodayString())
   }, [])
 
   const handleGenerateList = () => {
     try {
-      const result = generateDateList(startDate, endDate, title, dateFormat)
+      const result = generateDateList(
+        startDate,
+        endDate,
+        title,
+        dateFormat,
+        excludeHolidays,
+        excludeJpHolidays
+      )
       setGeneratedList(result)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'エラーが発生しました'
+        error instanceof Error ? error.message : 'エラーが発生しました',
+        { style: { color: '#b91c1c' } }
       )
     }
   }
@@ -52,7 +63,9 @@ export const useDateListGenerator = () => {
       toast.success('クリップボードにコピーしました')
     } catch (err) {
       console.error('コピーに失敗しました:', err)
-      toast.error('コピーに失敗しました')
+      toast.error('コピーに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
     }
   }
 
@@ -83,6 +96,10 @@ export const useDateListGenerator = () => {
     copyToClipboard,
     resetSettings,
     isGenerateButtonDisabled,
-    selectedPreset // 追加
+    selectedPreset, // 追加
+    excludeHolidays,
+    setExcludeHolidays,
+    excludeJpHolidays,
+    setExcludeJpHolidays
   }
 }
