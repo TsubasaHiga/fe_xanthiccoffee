@@ -41,32 +41,32 @@ export function DateListGeneratorPage() {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
 
   return (
-    <div className='relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden px-4 py-10'>
+    <div className='relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden px-2 py-6 sm:px-4 sm:py-10'>
       <div className='pointer-events-none absolute inset-0 z-0'>
         {/* subtle geometric background pattern */}
         <div className="absolute inset-0 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/symphony.png')] opacity-10" />
       </div>
-      <div className='z-10 mb-10 space-y-4 text-center'>
-        <h1 className='font-extrabold text-4xl text-gray-800 tracking-tight md:text-5xl'>
+      <div className='z-10 mb-6 space-y-3 text-center sm:mb-10 sm:space-y-4'>
+        <h1 className='font-extrabold text-3xl text-gray-800 tracking-tight sm:text-4xl md:text-5xl'>
           MarkDays
         </h1>
-        <p className='font-medium text-base text-gray-600 md:text-lg'>
+        <p className='font-medium text-gray-600 text-sm sm:text-base md:text-lg'>
           Markdown形式で日付と曜日のリストを一発生成！
           <br />
           スケジュール作成やタスク管理をもっとスムーズに。
         </p>
       </div>
 
-      <Card className='z-10 mb-8 w-full rounded-2xl border border-gray-200 bg-white shadow-xl'>
+      <Card className='z-10 mb-6 w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl sm:mb-8 sm:max-w-xl md:max-w-2xl md:rounded-2xl'>
         <CardHeader>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <Calendar className='h-7 w-7 text-blue-500' />
               <div>
-                <CardTitle className='font-bold text-gray-800 text-lg'>
+                <CardTitle className='font-bold text-base text-gray-800 sm:text-lg'>
                   設定
                 </CardTitle>
-                <CardDescription className='text-gray-500'>
+                <CardDescription className='text-gray-500 text-xs sm:text-sm'>
                   タイトルと期間を設定してリストを生成してください
                 </CardDescription>
               </div>
@@ -88,7 +88,7 @@ export function DateListGeneratorPage() {
             />
           </div>
 
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
               <Label htmlFor='start-date' className='text-gray-700'>
                 開始日
@@ -117,7 +117,7 @@ export function DateListGeneratorPage() {
 
           <div className='space-y-3'>
             <Label className='text-gray-700'>期間プリセット</Label>
-            <div className='grid grid-cols-2 gap-2 md:grid-cols-4'>
+            <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
               {[
                 { type: 'period', value: 7, label: '1週間' },
                 { type: 'period', value: 14, label: '2週間' },
@@ -199,7 +199,7 @@ export function DateListGeneratorPage() {
             <Button
               onClick={handleGenerateList}
               size='lg'
-              className='w-full rounded-lg bg-blue-600 py-3 font-bold text-lg text-white shadow-md transition-all duration-200 hover:bg-blue-700'
+              className='w-full rounded-lg bg-blue-600 py-3 font-bold text-base text-white shadow-md transition-all duration-200 hover:bg-blue-700 sm:text-lg'
               disabled={isGenerateButtonDisabled}
             >
               リスト生成
@@ -219,14 +219,14 @@ export function DateListGeneratorPage() {
       </Card>
 
       {generatedList && (
-        <Card className='z-10 mb-8 w-full rounded-2xl border border-gray-200 bg-white shadow-xl'>
+        <Card className='z-10 mb-8 w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-xl sm:max-w-xl md:max-w-2xl'>
           <CardHeader>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
               <div>
-                <CardTitle className='font-bold text-gray-800 text-lg'>
+                <CardTitle className='font-bold text-base text-gray-800 sm:text-lg'>
                   生成されたリスト
                 </CardTitle>
-                <CardDescription className='text-gray-500'>
+                <CardDescription className='text-gray-500 text-xs sm:text-sm'>
                   以下のマークダウンをコピーしてご利用ください
                 </CardDescription>
               </div>
@@ -234,7 +234,7 @@ export function DateListGeneratorPage() {
                 onClick={copyToClipboard}
                 variant='outline'
                 size='sm'
-                className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
+                className='mt-2 border border-blue-300 text-blue-600 transition hover:bg-blue-50 sm:mt-0'
               >
                 <Copy className='mr-2 h-4 w-4' />
                 コピー
@@ -242,7 +242,7 @@ export function DateListGeneratorPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <pre className='overflow-x-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-6 font-mono text-base text-gray-800 shadow-inner'>
+            <pre className='max-w-full overflow-x-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-gray-800 text-xs shadow-inner sm:p-6 sm:text-base'>
               {generatedList}
             </pre>
           </CardContent>
