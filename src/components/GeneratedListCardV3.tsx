@@ -92,7 +92,8 @@ export function GeneratedListCardV3({
               style={{
                 background: '#f9fafb',
                 borderRadius: '0.5rem',
-                height: 'auto'
+                height: 'auto',
+                fontVariantNumeric: 'tabular-nums'
               }}
               placeholder='ここにマークダウンを編集できます'
               previewTheme='github'
@@ -124,7 +125,10 @@ export function GeneratedListCardV3({
               <MdPreview
                 value={value}
                 className='prose-ul:ps-0 prose-ul:pl-1!'
-                style={{ background: 'transparent' }}
+                style={{
+                  background: 'transparent',
+                  fontVariantNumeric: 'tabular-nums'
+                }}
                 language='jp-JP'
                 previewTheme='github'
               />

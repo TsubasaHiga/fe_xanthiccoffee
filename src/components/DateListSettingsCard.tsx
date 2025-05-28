@@ -22,6 +22,7 @@ import { useState } from 'react'
 
 export function DateListSettingsCard() {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
+  // 必須項目のバリデーション
   const {
     startDate,
     setStartDate,
@@ -42,6 +43,9 @@ export function DateListSettingsCard() {
     excludeJpHolidays,
     setExcludeJpHolidays
   } = useDateListSettings()
+  const isTitleError = !title.trim()
+  const isStartDateError = !startDate
+  const isEndDateError = !endDate
 
   return (
     <ContentLayout>
@@ -72,7 +76,11 @@ export function DateListSettingsCard() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder='タイトルを入力'
-              className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+              className={`rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
+                isTitleError
+                  ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
+                  : 'border-gray-300'
+              }`}
               required
             />
           </div>
@@ -87,7 +95,11 @@ export function DateListSettingsCard() {
                 type='date'
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                className={`rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
+                  isStartDateError
+                    ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
+                    : 'border-gray-300'
+                }`}
                 required
               />
             </div>
@@ -100,7 +112,11 @@ export function DateListSettingsCard() {
                 type='date'
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                className={`rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
+                  isEndDateError
+                    ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
+                    : 'border-gray-300'
+                }`}
                 required
               />
             </div>
@@ -207,7 +223,6 @@ export function DateListSettingsCard() {
                     onCheckedChange={setExcludeHolidays}
                   />
                 </div>
-                {/* 祝日除外スイッチ追加 */}
                 <div className='flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
                     htmlFor='exclude-jp-holidays'
