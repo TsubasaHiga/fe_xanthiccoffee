@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { MdEditor, config } from 'md-editor-rt'
+import { MdEditor, MdPreview, config } from 'md-editor-rt'
 import 'md-editor-rt/lib/style.css'
 import { lineNumbers } from '@codemirror/view'
 import JP_JP from '@vavt/cm-extension/dist/locale/jp-JP'
@@ -32,6 +32,7 @@ export function GeneratedListCardV3({
   copyToClipboard: (text: string) => void
 }) {
   const [value, setValue] = useState<string>(generatedList)
+  const [isEditing, setIsEditing] = useState(false)
   const editorRef = useRef<typeof MdEditor>(null)
 
   // generatedListの変更を反映
@@ -44,10 +45,14 @@ export function GeneratedListCardV3({
     copyToClipboard(value)
   }, [value, copyToClipboard])
 
+  const handleEditToggle = () => {
+    setIsEditing((prev) => !prev)
+  }
+
   return (
     <Card className='z-10 mb-8 rounded-2xl border border-gray-200 bg-white shadow-xl'>
       <CardHeader>
-        <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-10'>
           <div>
             <CardTitle className='font-bold text-base text-gray-800 sm:text-lg'>
               生成されたリスト
@@ -56,59 +61,75 @@ export function GeneratedListCardV3({
               以下のマークダウンをコピーしてご利用ください
             </CardDescription>
           </div>
-          <Button
-            onClick={handleCopy}
-            variant='outline'
-            size='sm'
-            className='mt-2 border border-blue-300 text-blue-600 transition hover:bg-blue-50 sm:mt-0'
-          >
-            <Copy className='mr-2 h-4 w-4' />
-            コピー
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              onClick={handleCopy}
+              variant='outline'
+              size='sm'
+              className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
+            >
+              <Copy className='mr-2 h-4 w-4' />
+              コピー
+            </Button>
+            <Button
+              onClick={handleEditToggle}
+              variant='outline'
+              size='sm'
+              className='border border-gray-300 text-gray-700 transition hover:bg-gray-50'
+            >
+              {isEditing ? 'プレビューに戻す' : '編集する'}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         <div data-color-mode='light'>
-          <MdEditor
-            value={value}
-            onChange={setValue}
-            id='generated-list-md-editor-rt'
-            style={{
-              fontFamily:
-                'Noto Sans JP, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji',
-              fontSize: '1rem',
-              color: '#1f2937',
-              background: '#f9fafb',
-              borderRadius: '0.5rem',
-              border: '1px solid #e5e7eb',
-              boxShadow: 'inset 0 1px 2px 0 rgb(0 0 0 / 0.03)',
-              height: 'auto'
-            }}
-            placeholder='ここにマークダウンを編集できます'
-            previewTheme='github'
-            language='jp-JP'
-            toolbars={[
-              'bold',
-              'italic',
-              'strikeThrough',
-              '-',
-              'unorderedList',
-              'orderedList',
-              'task',
-              '-',
-              'code',
-              'preview',
-              'fullscreen'
-            ]}
-            ref={editorRef}
-            noUploadImg={true}
-            preview={true}
-            showToolbarName={false}
-            showCodeRowNumber={false}
-            scrollAuto={true}
-            theme='light'
-            codeTheme='atom'
-          />
+          {isEditing ? (
+            <MdEditor
+              value={value}
+              onChange={setValue}
+              id='generated-list-md-editor-rt'
+              style={{
+                background: '#f9fafb',
+                borderRadius: '0.5rem',
+                height: 'auto'
+              }}
+              placeholder='ここにマークダウンを編集できます'
+              previewTheme='github'
+              language='jp-JP'
+              toolbars={[
+                'bold',
+                'italic',
+                'strikeThrough',
+                '-',
+                'unorderedList',
+                'orderedList',
+                'task',
+                '-',
+                'code',
+                'preview',
+                'fullscreen'
+              ]}
+              ref={editorRef}
+              noUploadImg={true}
+              preview={false}
+              showToolbarName={false}
+              showCodeRowNumber={false}
+              scrollAuto={true}
+              theme='light'
+              codeTheme='github'
+            />
+          ) : (
+            <div className='rounded-md border border-gray-200 bg-white px-6 py-8 shadow-inner'>
+              <MdPreview
+                value={value}
+                className='prose-ul:ps-0 prose-ul:pl-1!'
+                style={{ background: 'transparent' }}
+                language='jp-JP'
+                previewTheme='github'
+              />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

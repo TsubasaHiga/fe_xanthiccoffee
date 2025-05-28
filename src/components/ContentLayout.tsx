@@ -12,7 +12,7 @@ export const ContentLayout = forwardRef<HTMLDivElement, ContentLayoutProps>(
     <div
       ref={ref}
       className={cn(
-        'w-full max-w-md sm:max-w-xl md:max-w-3xl md:rounded-2xl',
+        'w-full max-w-md sm:max-w-xl md:max-w-lg md:rounded-2xl',
         className
       )}
     >

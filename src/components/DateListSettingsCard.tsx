@@ -44,7 +44,7 @@ export function DateListSettingsCard() {
   } = useDateListSettings()
 
   return (
-    <ContentLayout className='md:max-w-lg'>
+    <ContentLayout>
       <Card className='z-10 mb-6 rounded-xl border border-gray-200 bg-white shadow-xl sm:mb-8'>
         <CardHeader>
           <div className='flex items-center justify-between'>
@@ -73,6 +73,7 @@ export function DateListSettingsCard() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder='タイトルを入力'
               className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+              required
             />
           </div>
 
@@ -87,6 +88,7 @@ export function DateListSettingsCard() {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                required
               />
             </div>
             <div className='space-y-2'>
@@ -99,6 +101,7 @@ export function DateListSettingsCard() {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                required
               />
             </div>
           </div>
