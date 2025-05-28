@@ -1,6 +1,6 @@
 import { ContentLayout } from '@/components/ContentLayout'
 import { DateListSettingsCard } from '@/components/DateListSettingsCard'
-import { GeneratedListCard } from '@/components/GeneratedListCard'
+import { GeneratedListCardV3 } from '@/components/GeneratedListCardV3'
 import {
   DateListSettingsProvider,
   useDateListSettings
@@ -25,7 +25,7 @@ function DateListGeneratorContent() {
       <DateListSettingsCard />
       {settings.generatedList && (
         <ContentLayout ref={generatedListRef}>
-          <GeneratedListCard
+          <GeneratedListCardV3
             generatedList={settings.generatedList}
             copyToClipboard={settings.copyToClipboard}
           />
