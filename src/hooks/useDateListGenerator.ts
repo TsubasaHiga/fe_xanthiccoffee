@@ -14,16 +14,20 @@ export const useDateListGenerator = () => {
   const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
   const [generatedList, setGeneratedList] = useState('')
 
+  // 終了日の初期値を設定
+  const initialEndDate = 14
+
   // 追加: プリセット選択状態
   const [selectedPreset, setSelectedPreset] = useState<
     { type: 'period'; value: number } | { type: 'months'; value: number } | null
-  >(null)
+  >({ type: 'period', value: initialEndDate })
 
   const [excludeHolidays, setExcludeHolidays] = useState(true)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
 
   useEffect(() => {
     setStartDate(getTodayString())
+    setEndDate(addDays(getTodayString(), initialEndDate))
   }, [])
 
   const handleGenerateList = () => {
@@ -70,12 +74,12 @@ export const useDateListGenerator = () => {
   }
 
   const resetSettings = () => {
-    setTitle('')
+    setTitle('スケジュール')
     setDateFormat('MM/DD（ddd）')
     setStartDate(getTodayString())
-    setEndDate('')
+    setEndDate(addDays(getTodayString(), initialEndDate))
     setGeneratedList('')
-    setSelectedPreset(null)
+    setSelectedPreset({ type: 'period', value: initialEndDate })
   }
 
   const isGenerateButtonDisabled = !title.trim() || !startDate || !endDate
