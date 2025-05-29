@@ -43,7 +43,7 @@ export function DateListGeneratorPage() {
           <div className="absolute inset-0 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/symphony.png')] opacity-10" />
         </div>
         <div className='z-10 mb-6 space-y-3 text-center sm:mb-10 sm:space-y-4'>
-          <h1 className='font-extrabold text-3xl text-gray-800 tracking-tight sm:text-4xl md:text-5xl'>
+          <h1 className='font-[Inter] font-extrabold text-3xl text-gray-800 tracking-tight sm:text-4xl md:text-5xl'>
             MarkDays
           </h1>
           <p className='font-medium text-gray-600 text-sm sm:text-base md:text-lg'>

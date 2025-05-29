@@ -4,13 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* @theme {
+@theme {
 	--font-sans: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif,
 		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-} */
+}
 
 html,
 body {
+	font-family: 'Noto Sans JP', 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 	@apply bg-white dark:bg-gray-950;
 
 	@media (prefers-color-scheme: dark) {
