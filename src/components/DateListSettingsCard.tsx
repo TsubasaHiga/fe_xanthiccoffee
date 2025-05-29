@@ -218,6 +218,7 @@ export function DateListSettingsCard() {
                     休日（土日）をリストから除外する
                   </Label>
                   <Switch
+                    className='data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-muted-foreground'
                     id='exclude-holidays'
                     checked={excludeHolidays}
                     onCheckedChange={setExcludeHolidays}
@@ -231,6 +232,7 @@ export function DateListSettingsCard() {
                     祝日（日本）をリストから除外する
                   </Label>
                   <Switch
+                    className='data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-muted-foreground'
                     id='exclude-jp-holidays'
                     checked={excludeJpHolidays}
                     onCheckedChange={setExcludeJpHolidays}
