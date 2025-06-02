@@ -31,7 +31,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
 
     /* Timeout for each test */
-    actionTimeout: 30 * 1000
+    actionTimeout: 30 * 1000,
+
+    /* Grant clipboard permissions globally for all tests */
+    permissions: ['clipboard-read', 'clipboard-write']
   },
 
   /* Global timeout for the entire test run */

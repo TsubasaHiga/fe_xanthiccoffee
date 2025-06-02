@@ -38,9 +38,6 @@ test.describe('Complete User Flow', () => {
     // Step 6: Test copy functionality if available
     const copyButton = page.locator(selectors.copyButton).first()
     if (await copyButton.isVisible()) {
-      await page
-        .context()
-        .grantPermissions(['clipboard-read', 'clipboard-write'])
       await copyButton.click()
 
       // Wait for potential toast notification

@@ -81,9 +81,6 @@ test.describe('Generated List Functionality', () => {
   test('should copy content to clipboard when copy button is clicked', async ({
     page
   }) => {
-    // Grant clipboard permissions
-    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
-
     // Find copy button
     const copyButton = page.getByRole('button', { name: 'コピー' }).first()
 
