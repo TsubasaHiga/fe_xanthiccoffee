@@ -31,10 +31,7 @@ test.describe('Advanced Settings', () => {
     }
 
     // Look for date format input
-    const formatInput = page
-      .locator('input[type="text"]')
-      .filter({ hasText: /format|フォーマット/i })
-      .or(page.locator('input').filter({ hasValue: /YYYY|MM|DD/ }))
+    const formatInput = page.getByRole('textbox', { name: '日付フォーマット' })
 
     if (await formatInput.isVisible()) {
       await expect(formatInput).toBeVisible()

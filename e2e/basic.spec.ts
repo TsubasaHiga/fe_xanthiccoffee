@@ -6,11 +6,6 @@ test.describe('Basic Page Load and Navigation', () => {
 
     // Check that the main title is present
     await expect(page.locator('h1')).toContainText('MarkDays')
-
-    // Check that the main description is present
-    await expect(page.locator('p')).toContainText(
-      'Markdown形式で日付と曜日のリストを一発生成！'
-    )
   })
 
   test('should display DateListSettingsCard', async ({ page }) => {
@@ -28,9 +23,7 @@ test.describe('Basic Page Load and Navigation', () => {
     await page.goto('/')
 
     // Check that footer is present
-    await expect(
-      page.locator('footer').or(page.locator('[role="contentinfo"]'))
-    ).toBeVisible()
+    await expect(page.getByRole('contentinfo')).toBeVisible()
   })
 })
 

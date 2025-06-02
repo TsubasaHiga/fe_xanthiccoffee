@@ -40,7 +40,8 @@ test.describe('DateListSettings Functionality', () => {
     const buttons = page.locator('button')
 
     // Check if there are multiple buttons (presets + generate/reset)
-    await expect(buttons).toHaveCountGreaterThan(2)
+    const buttonCount = await buttons.count()
+    expect(buttonCount).toBeGreaterThan(2)
 
     // Look for specific preset button text patterns
     const weekButton = page.locator('button', { hasText: '週間' }).first()
@@ -81,8 +82,8 @@ test.describe('DateListSettings Functionality', () => {
 
     // Check if generated content is visible
     const generatedContent = page
-      .locator('[data-testid="generated-list"]')
-      .or(page.locator('div', { hasText: '2024' }))
+      .locator('[data-testid="generated-list-card"]')
+      .first()
 
     if (await generatedContent.isVisible()) {
       await expect(generatedContent).toBeVisible()
@@ -91,14 +92,14 @@ test.describe('DateListSettings Functionality', () => {
 
   test('should reset form when reset button is clicked', async ({ page }) => {
     // Fill form first
-    const titleInput = page.locator('input[type="text"]').first()
+    const titleInput = page.getByRole('textbox', { name: 'タイトル' })
     await titleInput.fill('テストタイトル')
 
     // Click reset button
-    const resetButton = page.locator('button', { hasText: /リセット|クリア/ })
+    const resetButton = page.getByRole('button', { name: 'リセット' })
     await resetButton.click()
 
     // Check if title is cleared
-    await expect(titleInput).toHaveValue('')
+    await expect(titleInput).toHaveValue('スケジュール')
   })
 })

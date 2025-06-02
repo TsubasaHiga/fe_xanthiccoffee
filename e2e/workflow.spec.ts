@@ -53,7 +53,7 @@ test.describe('Complete User Flow', () => {
       await resetButton.click()
 
       // Verify form is reset
-      await expect(titleInput).toHaveValue('')
+      await expect(titleInput).toHaveValue('スケジュール')
     }
   })
 

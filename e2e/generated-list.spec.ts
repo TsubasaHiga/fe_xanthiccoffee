@@ -13,7 +13,7 @@ test.describe('Generated List Functionality', () => {
     await dateInputs.last().fill('2024-01-07')
 
     // Generate list
-    const generateButton = page.locator('button', { hasText: /生成|リスト/ })
+    const generateButton = page.getByRole('button', { name: /生成|リスト/ })
     await generateButton.click()
 
     // Wait for list to be generated
@@ -22,20 +22,13 @@ test.describe('Generated List Functionality', () => {
 
   test('should display generated list card', async ({ page }) => {
     // Check if generated list card is visible
-    const listCard = page
-      .locator('[data-testid="generated-list-card"]')
-      .or(page.locator('div', { hasText: 'テストタイトル' }))
-
-    if (await listCard.isVisible()) {
-      await expect(listCard).toBeVisible()
-    }
+    const listCard = page.locator('[data-testid="generated-list-card"]').first()
+    await expect(listCard).toBeVisible()
   })
 
   test('should have copy button', async ({ page }) => {
     // Look for copy button (usually has copy icon or copy text)
-    const copyButton = page
-      .locator('button', { hasText: /コピー|copy/i })
-      .or(page.locator('button:has(svg)'))
+    const copyButton = page.getByRole('button', { name: 'コピー' })
 
     if (await copyButton.isVisible()) {
       await expect(copyButton).toBeVisible()
@@ -92,10 +85,7 @@ test.describe('Generated List Functionality', () => {
     await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
 
     // Find copy button
-    const copyButton = page
-      .locator('button', { hasText: /コピー|copy/i })
-      .or(page.locator('button:has(svg)'))
-      .first()
+    const copyButton = page.getByRole('button', { name: 'コピー' }).first()
 
     if (await copyButton.isVisible()) {
       await copyButton.click()
@@ -105,8 +95,9 @@ test.describe('Generated List Functionality', () => {
 
       // Check if toast notification appears
       const toast = page
-        .locator('[data-sonner-toast]')
-        .or(page.locator('div', { hasText: /コピー|copy/i }))
+        .getByRole('region', { name: 'Notifications alt+T' })
+        .getByRole('listitem')
+        .getByText('クリップボードにコピーしました')
 
       if (await toast.isVisible()) {
         await expect(toast).toBeVisible()

@@ -11,7 +11,7 @@ test.describe('Smoke Tests', () => {
     await page.goto('/')
 
     // Check that we can access the page (any 2xx response)
-    const response = await page.waitForLoadState('networkidle')
+    const _response = await page.waitForLoadState('networkidle')
 
     // Check that the page title contains something (not empty)
     const title = await page.title()
