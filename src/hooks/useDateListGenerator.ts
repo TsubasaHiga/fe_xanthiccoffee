@@ -25,6 +25,11 @@ export const useDateListGenerator = () => {
   const [excludeHolidays, setExcludeHolidays] = useState(true)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
 
+  // 休日と祝日の色設定
+  const [enableHolidayColors, setEnableHolidayColors] = useState(true)
+  const [holidayColor, setHolidayColor] = useState('#dc2626') // 赤系
+  const [nationalHolidayColor, setNationalHolidayColor] = useState('#dc2626') // 赤系
+
   useEffect(() => {
     setStartDate(getTodayString())
     setEndDate(addDays(getTodayString(), initialEndDate))
@@ -38,7 +43,10 @@ export const useDateListGenerator = () => {
         title,
         dateFormat,
         excludeHolidays,
-        excludeJpHolidays
+        excludeJpHolidays,
+        enableHolidayColors,
+        holidayColor,
+        nationalHolidayColor
       )
       setGeneratedList(result)
     } catch (error) {
@@ -80,6 +88,9 @@ export const useDateListGenerator = () => {
     setEndDate(addDays(getTodayString(), initialEndDate))
     setGeneratedList('')
     setSelectedPreset({ type: 'period', value: initialEndDate })
+    setEnableHolidayColors(true)
+    setHolidayColor('#dc2626')
+    setNationalHolidayColor('#dc2626')
   }
 
   const isGenerateButtonDisabled = !title.trim() || !startDate || !endDate
@@ -104,6 +115,12 @@ export const useDateListGenerator = () => {
     excludeHolidays,
     setExcludeHolidays,
     excludeJpHolidays,
-    setExcludeJpHolidays
+    setExcludeJpHolidays,
+    enableHolidayColors,
+    setEnableHolidayColors,
+    holidayColor,
+    setHolidayColor,
+    nationalHolidayColor,
+    setNationalHolidayColor
   }
 }

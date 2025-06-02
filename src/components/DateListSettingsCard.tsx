@@ -41,7 +41,13 @@ export function DateListSettingsCard() {
     excludeHolidays,
     setExcludeHolidays,
     excludeJpHolidays,
-    setExcludeJpHolidays
+    setExcludeJpHolidays,
+    enableHolidayColors,
+    setEnableHolidayColors,
+    holidayColor,
+    setHolidayColor,
+    nationalHolidayColor,
+    setNationalHolidayColor
   } = useDateListSettings()
   const isTitleError = !title.trim()
   const isStartDateError = !startDate
@@ -209,6 +215,78 @@ export function DateListSettingsCard() {
                       2024-12-25（Sun）
                     </li>
                   </p>
+                </div>
+                <div className='space-y-2 rounded-lg border border-gray-200 bg-white p-3'>
+                  <div className='flex items-center justify-between gap-3'>
+                    <Label
+                      htmlFor='enable-holiday-colors'
+                      className='font-medium text-gray-700 text-sm'
+                    >
+                      休日と祝日の色を変更する
+                    </Label>
+                    <Switch
+                      className='data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-muted-foreground'
+                      id='enable-holiday-colors'
+                      checked={enableHolidayColors}
+                      onCheckedChange={setEnableHolidayColors}
+                    />
+                  </div>
+                  {enableHolidayColors && (
+                    <div className='grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2'>
+                      <div className='space-y-2'>
+                        <Label
+                          htmlFor='holiday-color'
+                          className='text-gray-600 text-xs'
+                        >
+                          休日（土日）の色
+                        </Label>
+                        <div className='flex items-center gap-2'>
+                          <Input
+                            id='holiday-color'
+                            type='color'
+                            value={holidayColor}
+                            onChange={(e) => setHolidayColor(e.target.value)}
+                            className='h-8 w-12 rounded border border-gray-300 p-1'
+                          />
+                          <Input
+                            type='text'
+                            value={holidayColor}
+                            onChange={(e) => setHolidayColor(e.target.value)}
+                            placeholder='#dc2626'
+                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 text-xs transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                          />
+                        </div>
+                      </div>
+                      <div className='space-y-2'>
+                        <Label
+                          htmlFor='national-holiday-color'
+                          className='text-gray-600 text-xs'
+                        >
+                          祝日（日本）の色
+                        </Label>
+                        <div className='flex items-center gap-2'>
+                          <Input
+                            id='national-holiday-color'
+                            type='color'
+                            value={nationalHolidayColor}
+                            onChange={(e) =>
+                              setNationalHolidayColor(e.target.value)
+                            }
+                            className='h-8 w-12 rounded border border-gray-300 p-1'
+                          />
+                          <Input
+                            type='text'
+                            value={nationalHolidayColor}
+                            onChange={(e) =>
+                              setNationalHolidayColor(e.target.value)
+                            }
+                            placeholder='#dc2626'
+                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 text-xs transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className='flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
