@@ -44,7 +44,10 @@ export const generateDateList = (
   title: string,
   format: string,
   excludeHolidays?: boolean,
-  excludeJpHolidays?: boolean
+  excludeJpHolidays?: boolean,
+  enableHolidayColors?: boolean,
+  holidayColor?: string,
+  nationalHolidayColor?: string
 ): string => {
   if (!startDate || !endDate) return ''
 
@@ -73,7 +76,10 @@ export const generateDateList = (
       current = current.add(1, 'day')
       continue
     }
-    let line = `- ${formatDate(current.toDate(), format)}`
+    let dateContent = formatDate(current.toDate(), format)
+    const day = current.day()
+    const isWeekend = day === 0 || day === 6 // 0:日曜, 6:土曜
+
     if (!excludeJpHolidays && holidayInfo) {
       // holidayInfoは配列またはオブジェクト
       const name = Array.isArray(holidayInfo)
@@ -82,9 +88,18 @@ export const generateDateList = (
           : undefined
         : (holidayInfo as { name?: string })?.name
       if (name) {
-        line += `（${name}）`
+        dateContent += `（${name}）`
       }
     }
+
+    // 色の適用
+    if (enableHolidayColors && (isWeekend || holidayInfo)) {
+      const color = holidayInfo ? nationalHolidayColor : holidayColor
+      dateContent = `<span style="color: ${color || '#dc2626'}">${dateContent}</span>`
+    }
+
+    const line = `- ${dateContent}`
+
     markdown += `${line}\n`
     current = current.add(1, 'day')
   }

@@ -17,4 +17,10 @@ export type DateListSettings = {
   setExcludeHolidays: (v: boolean) => void
   excludeJpHolidays: boolean
   setExcludeJpHolidays: (v: boolean) => void
+  enableHolidayColors: boolean
+  setEnableHolidayColors: (v: boolean) => void
+  holidayColor: string
+  setHolidayColor: (v: string) => void
+  nationalHolidayColor: string
+  setNationalHolidayColor: (v: string) => void
 }
