@@ -16,7 +16,13 @@ test.describe('Advanced Settings', () => {
 
       // Try to expand options
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
     }
   })
 
@@ -27,7 +33,13 @@ test.describe('Advanced Settings', () => {
     })
     if (await expandButton.isVisible()) {
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
     }
 
     // Look for date format input
@@ -45,7 +57,13 @@ test.describe('Advanced Settings', () => {
     })
     if (await expandButton.isVisible()) {
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
     }
 
     // Look for holiday color toggle
@@ -72,7 +90,13 @@ test.describe('Advanced Settings', () => {
     })
     if (await expandButton.isVisible()) {
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
     }
 
     // Look for weekend exclusion toggle
@@ -99,7 +123,13 @@ test.describe('Advanced Settings', () => {
     })
     if (await expandButton.isVisible()) {
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
     }
 
     // Look for holiday exclusion toggle
@@ -126,7 +156,13 @@ test.describe('Advanced Settings', () => {
     })
     if (await expandButton.isVisible()) {
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
     }
 
     // Find any toggle switch
@@ -141,7 +177,10 @@ test.describe('Advanced Settings', () => {
 
       // Toggle the switch
       await firstToggle.click()
-      await page.waitForTimeout(300)
+      // 300ms wait replaced with explicit wait for toggle state change
+      await expect(firstToggle)
+        .toBeChecked({ timeout: 500 })
+        .catch(() => {})
 
       // Check that state changed
       const newChecked = await firstToggle.isChecked()
@@ -166,7 +205,13 @@ test.describe('Advanced Settings', () => {
     })
     if (await expandButton.isVisible()) {
       await expandButton.click()
-      await page.waitForTimeout(500)
+      // 500ms wait replaced with explicit wait for advanced panel appearance
+      const advancedPanel = page
+        .locator(
+          'input[type="checkbox"], [role="switch"], [name="日付フォーマット"]'
+        )
+        .first()
+      await expect(advancedPanel).toBeVisible({ timeout: 800 })
 
       // Toggle some advanced setting
       const toggles = page.locator('input[type="checkbox"], [role="switch"]')
@@ -178,7 +223,11 @@ test.describe('Advanced Settings', () => {
     // Generate list
     const generateButton = page.locator('button', { hasText: /生成|リスト/ })
     await generateButton.click()
-    await page.waitForTimeout(2000)
+    // 2000ms wait replaced with explicit wait for generated list card appearance
+    const generatedContent = page
+      .locator('[data-testid="generated-list-card"]')
+      .first()
+    await expect(generatedContent).toBeVisible({ timeout: 1500 })
 
     // Check that settings are still accessible/visible
     if (await expandButton.isVisible()) {

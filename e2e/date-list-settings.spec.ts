@@ -77,17 +77,11 @@ test.describe('DateListSettings Functionality', () => {
     const generateButton = page.locator('button', { hasText: /生成|リスト/ })
     await generateButton.click()
 
-    // Wait for generated list to appear
-    await page.waitForTimeout(1000)
-
-    // Check if generated content is visible
+    // Wait for generated list to appear (wait replaced with explicit card appearance wait)
     const generatedContent = page
       .locator('[data-testid="generated-list-card"]')
       .first()
-
-    if (await generatedContent.isVisible()) {
-      await expect(generatedContent).toBeVisible()
-    }
+    await expect(generatedContent).toBeVisible({ timeout: 1500 })
   })
 
   test('should reset form when reset button is clicked', async ({ page }) => {

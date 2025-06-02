@@ -114,13 +114,11 @@ test.describe('Form Validation', () => {
     if (await generateButton.isEnabled()) {
       await generateButton.click()
 
-      // Wait for potential error message
-      await page.waitForTimeout(1000)
-
-      // Look for error toast or message
+      // 1000ms wait replaced with explicit wait for error message appearance
       const errorMessage = page
         .locator('[data-sonner-toast]')
         .or(page.locator('div', { hasText: /エラー|error/i }))
+      await expect(errorMessage).toBeVisible({ timeout: 1200 })
 
       if (await errorMessage.isVisible()) {
         await expect(errorMessage).toBeVisible()

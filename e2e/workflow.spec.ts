@@ -28,8 +28,11 @@ test.describe('Complete User Flow', () => {
     await expect(generateButton).toBeEnabled()
     await generateButton.click()
 
-    // Step 5: Wait for list generation and verify content
-    await page.waitForTimeout(2000)
+    // Step 5: Replace wait with explicit card appearance wait
+    const generatedContent = page
+      .locator('[data-testid="generated-list-card"]')
+      .first()
+    await expect(generatedContent).toBeVisible({ timeout: 1500 })
 
     // The generated content should contain the title and some date information
     const pageContent = await page.locator('body').textContent()
@@ -40,8 +43,11 @@ test.describe('Complete User Flow', () => {
     if (await copyButton.isVisible()) {
       await copyButton.click()
 
-      // Wait for potential toast notification
-      await page.waitForTimeout(1000)
+      // Step 6: Replace toast wait with explicit appearance wait
+      const toast = page
+        .locator('[data-sonner-toast], div:has-text("コピー")')
+        .first()
+      await expect(toast).toBeVisible({ timeout: 1200 })
     }
 
     // Step 7: Test reset functionality
@@ -68,7 +74,11 @@ test.describe('Complete User Flow', () => {
     const generateButton = page.locator(selectors.generateButton)
     await generateButton.click()
 
-    await page.waitForTimeout(1500)
+    // 1500ms wait replaced with explicit card appearance wait
+    const generatedContent = page
+      .locator('[data-testid="generated-list-card"]')
+      .first()
+    await expect(generatedContent).toBeVisible({ timeout: 1200 })
 
     // Verify content was generated
     const pageContent = await page.locator('body').textContent()
@@ -90,7 +100,11 @@ test.describe('Complete User Flow', () => {
     const generateButton = page.locator(selectors.generateButton)
     await generateButton.click()
 
-    await page.waitForTimeout(1500)
+    // 1500ms wait replaced with explicit card appearance wait
+    const generatedContent = page
+      .locator('[data-testid="generated-list-card"]')
+      .first()
+    await expect(generatedContent).toBeVisible({ timeout: 1200 })
 
     // Verify it works on mobile
     const pageContent = await page.locator('body').textContent()

@@ -16,8 +16,9 @@ test.describe('Generated List Functionality', () => {
     const generateButton = page.getByRole('button', { name: /生成|リスト/ })
     await generateButton.click()
 
-    // Wait for list to be generated
-    await page.waitForTimeout(2000)
+    // Wait for list to be generated (wait replaced with explicit card appearance wait)
+    const listCard = page.locator('[data-testid="generated-list-card"]').first()
+    await expect(listCard).toBeVisible()
   })
 
   test('should display generated list card', async ({ page }) => {
@@ -87,14 +88,12 @@ test.describe('Generated List Functionality', () => {
     if (await copyButton.isVisible()) {
       await copyButton.click()
 
-      // Wait for potential toast notification
-      await page.waitForTimeout(1000)
-
-      // Check if toast notification appears
+      // Wait for potential toast notification (wait replaced with explicit toast appearance wait)
       const toast = page
         .getByRole('region', { name: 'Notifications alt+T' })
         .getByRole('listitem')
         .getByText('クリップボードにコピーしました')
+      await expect(toast).toBeVisible({ timeout: 1500 })
 
       if (await toast.isVisible()) {
         await expect(toast).toBeVisible()
