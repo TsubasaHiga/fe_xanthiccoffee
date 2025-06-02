@@ -11,8 +11,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Enable parallel tests on CI for better performance. */
+  workers: process.env.CI ? 4 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
     ? [['html'], ['github']]
@@ -34,7 +34,13 @@ export default defineConfig({
     actionTimeout: 30 * 1000,
 
     /* Grant clipboard permissions globally for all tests */
-    permissions: ['clipboard-read', 'clipboard-write']
+    permissions: ['clipboard-read', 'clipboard-write'],
+
+    /* Additional context options for better CI compatibility */
+    ...(process.env.CI && {
+      // Force headless mode in CI and ensure clipboard works
+      headless: true
+    })
   },
 
   /* Global timeout for the entire test run */
@@ -44,7 +50,20 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: {
+        ...devices['Desktop Chrome'],
+        // Ensure clipboard permissions work in CI
+        launchOptions: {
+          args: process.env.CI
+            ? [
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--allow-clipboard-access',
+                '--enable-blink-features=UnsafeClipboardAPI'
+              ]
+            : []
+        }
+      }
     },
 
     /* Run tests on Firefox and Safari only on CI or when explicitly requested */
@@ -65,7 +84,20 @@ export default defineConfig({
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] }
+      use: {
+        ...devices['Pixel 5'],
+        // Ensure clipboard permissions work in CI for mobile tests too
+        launchOptions: {
+          args: process.env.CI
+            ? [
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--allow-clipboard-access',
+                '--enable-blink-features=UnsafeClipboardAPI'
+              ]
+            : []
+        }
+      }
     },
 
     ...(process.env.CI || process.env.ALL_BROWSERS
@@ -81,13 +113,13 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: process.env.PLAYWRIGHT_DEV_SERVER
     ? {
-        command: 'npm run dev',
+        command: 'pnpm run dev',
         url: 'http://localhost:5173',
         reuseExistingServer: true,
         timeout: 120 * 1000
       }
     : {
-        command: 'npm run preview',
+        command: 'pnpm run preview',
         url: 'http://localhost:4173',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000

@@ -16,7 +16,7 @@
 
 1. 依存関係をインストール:
 ```bash
-npm install
+pnpm install
 ```
 
 2. Playwrightブラウザをインストール:
@@ -28,26 +28,26 @@ npx playwright install
 
 ```bash
 # 全てのテストを実行
-npm run test:e2e
+pnpm run test:e2e
 
 # UIモードでテストを実行（対話的）
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 
 # 特定のブラウザのみでテスト
-npm run test:e2e -- --project=chromium
+pnpm run test:e2e -- --project=chromium
 
 # 特定のテストファイルのみ実行
-npm run test:e2e -- basic.spec.ts
+pnpm run test:e2e -- basic.spec.ts
 
 # ヘッドモードで実行（ブラウザが見える状態）
-npm run test:e2e -- --headed
+pnpm run test:e2e -- --headed
 ```
 
 ### レポートの確認
 
 ```bash
 # HTMLレポートを表示
-npm run test:e2e:report
+pnpm run test:e2e:report
 ```
 
 ## CI/CD
@@ -76,10 +76,10 @@ npx playwright install
 ### テストがタイムアウトする場合
 ネットワークやCIの状況により、タイムアウトを延長できます：
 ```bash
-npm run test:e2e -- --timeout=60000
+pnpm run test:e2e -- --timeout=60000
 ```
 
 ### デバッグモード
 ```bash
-npm run test:e2e -- --debug
+pnpm run test:e2e -- --debug
 ```
