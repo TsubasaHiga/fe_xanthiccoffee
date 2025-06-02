@@ -69,9 +69,9 @@ export const useDateListGenerator = () => {
     setSelectedPreset({ type: 'months', value: months })
   }
 
-  const copyToClipboard = async () => {
+  const copyToClipboard = async (text?: string) => {
     try {
-      await navigator.clipboard.writeText(generatedList)
+      await navigator.clipboard.writeText(text || generatedList)
       toast.success('クリップボードにコピーしました')
     } catch (err) {
       console.error('コピーに失敗しました:', err)
