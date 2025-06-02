@@ -53,9 +53,6 @@ export function DateListGeneratorPage() {
           </p>
         </div>
         <DateListGeneratorContent />
-        <footer className='z-10 mt-8 text-center text-gray-500 text-xs'>
-          © 2024 MarkDays
-        </footer>
       </div>
     </DateListSettingsProvider>
   )
