@@ -26,6 +26,9 @@ jobs:
     
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+
+    - name: Debug Playwright Cache
+      run: ls -la ~/.cache/ms-playwright
     
     - name: Run Playwright tests
       run: npm run test:e2e
