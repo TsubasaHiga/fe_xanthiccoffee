@@ -25,3 +25,8 @@ dist-ssr
 
 # Analyze
 analyze
+
+# Test results
+test-results/
+playwright-report/
+playwright/.cache/

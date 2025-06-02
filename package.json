@@ -9,7 +9,10 @@
 		"preview": "vite preview",
 		"lint": "npx @biomejs/biome check --write --unsafe .",
 		"analyze": "tsc -b && vite build --mode analyze",
-		"postinstall": "lefthook install"
+		"postinstall": "lefthook install",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:report": "playwright show-report"
 	},
 	"dependencies": {
 		"@codemirror/view": "^6.36.8",
@@ -36,6 +39,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@evilmartians/lefthook": "^1.11.13",
+		"@playwright/test": "^1.52.0",
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/node": "^22.15.23",
 		"@types/react": "^19.1.6",
