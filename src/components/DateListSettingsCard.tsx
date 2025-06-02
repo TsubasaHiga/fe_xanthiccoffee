@@ -55,7 +55,10 @@ export function DateListSettingsCard() {
 
   return (
     <ContentLayout>
-      <Card className='z-10 mb-6 rounded-xl border border-gray-200 bg-white shadow-xl sm:mb-8'>
+      <Card
+        data-testid='date-list-settings-card'
+        className='z-10 mb-6 rounded-xl border border-gray-200 bg-white shadow-xl sm:mb-8'
+      >
         <CardHeader>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>

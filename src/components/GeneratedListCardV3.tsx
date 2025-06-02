@@ -50,7 +50,10 @@ export function GeneratedListCardV3({
   }
 
   return (
-    <Card className='z-10 mb-8 rounded-2xl border border-gray-200 bg-white shadow-xl'>
+    <Card
+      data-testid='generated-list-card'
+      className='z-10 mb-8 rounded-2xl border border-gray-200 bg-white shadow-xl'
+    >
       <CardHeader>
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-10'>
           <div>
@@ -83,7 +86,7 @@ export function GeneratedListCardV3({
         </div>
       </CardHeader>
       <CardContent>
-        <div data-color-mode='light'>
+        <div data-testid='generated-list' data-color-mode='light'>
           {isEditing ? (
             <MdEditor
               value={value}
