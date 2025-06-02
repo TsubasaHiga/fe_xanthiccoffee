@@ -22,7 +22,7 @@ export const useDateListGenerator = () => {
     { type: 'period'; value: number } | { type: 'months'; value: number } | null
   >({ type: 'period', value: initialEndDate })
 
-  const [excludeHolidays, setExcludeHolidays] = useState(true)
+  const [excludeHolidays, setExcludeHolidays] = useState(false)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
 
   // 休日と祝日の色設定
@@ -88,6 +88,8 @@ export const useDateListGenerator = () => {
     setEndDate(addDays(getTodayString(), initialEndDate))
     setGeneratedList('')
     setSelectedPreset({ type: 'period', value: initialEndDate })
+    setExcludeHolidays(false)
+    setExcludeJpHolidays(false)
     setEnableHolidayColors(true)
     setHolidayColor('#dc2626')
     setNationalHolidayColor('#dc2626')
