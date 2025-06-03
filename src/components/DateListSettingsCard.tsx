@@ -14,15 +14,35 @@ import {
 } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { useDateListSettings } from '@/contexts/DateListSettingsContext'
 import { Calendar, ChevronDown, RotateCcw } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+
+// プリセット設定の定数をメモ化
+const PRESET_CONFIGURATIONS = [
+  { type: 'period' as const, value: 7, label: '1週間' },
+  { type: 'period' as const, value: 14, label: '2週間' },
+  { type: 'period' as const, value: 21, label: '3週間' },
+  { type: 'period' as const, value: 28, label: '4週間' },
+  { type: 'months' as const, value: 1, label: '1ヶ月' },
+  { type: 'months' as const, value: 2, label: '2ヶ月' },
+  { type: 'months' as const, value: 3, label: '3ヶ月' },
+  { type: 'months' as const, value: 4, label: '4ヶ月' }
+] as const
 
 export function DateListSettingsCard() {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
-  // 必須項目のバリデーション
+  const [presetBase, setPresetBase] = useState<'start' | 'end'>('start')
+
   const {
     startDate,
     setStartDate,
@@ -33,8 +53,7 @@ export function DateListSettingsCard() {
     dateFormat,
     setDateFormat,
     handleGenerateList,
-    setPresetPeriod,
-    setPresetMonths,
+    applyPreset,
     resetSettings,
     isGenerateButtonDisabled,
     selectedPreset,
@@ -49,9 +68,26 @@ export function DateListSettingsCard() {
     nationalHolidayColor,
     setNationalHolidayColor
   } = useDateListSettings()
-  const isTitleError = !title.trim()
-  const isStartDateError = !startDate
-  const isEndDateError = !endDate
+
+  // プリセット処理の統合関数
+  const handlePresetClick = useCallback(
+    (value: number, type: 'period' | 'months') => {
+      applyPreset(value, type, presetBase)
+    },
+    [applyPreset, presetBase]
+  )
+
+  // バリデーション状態をメモ化
+  const validationState = useMemo(
+    () => ({
+      isTitleError: !title.trim(),
+      isStartDateError: !startDate,
+      isEndDateError: !endDate
+    }),
+    [title, startDate, endDate]
+  )
+
+  const { isTitleError, isStartDateError, isEndDateError } = validationState
 
   return (
     <ContentLayout>
@@ -132,18 +168,23 @@ export function DateListSettingsCard() {
           </div>
 
           <div className='space-y-3'>
-            <Label className='text-gray-700'>期間プリセット</Label>
+            <div className='flex items-center gap-3'>
+              <Label className='text-gray-700'>期間プリセット</Label>
+              <Select
+                value={presetBase}
+                onValueChange={(v) => setPresetBase(v as 'start' | 'end')}
+              >
+                <SelectTrigger className='h-auto! w-32 py-1.5 text-xs shadow-none sm:text-sm'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='start'>開始日から</SelectItem>
+                  <SelectItem value='end'>終了日から</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className='grid grid-cols-4 gap-2'>
-              {[
-                { type: 'period', value: 7, label: '1週間' },
-                { type: 'period', value: 14, label: '2週間' },
-                { type: 'period', value: 21, label: '3週間' },
-                { type: 'period', value: 28, label: '4週間' },
-                { type: 'months', value: 1, label: '1ヶ月' },
-                { type: 'months', value: 2, label: '2ヶ月' },
-                { type: 'months', value: 3, label: '3ヶ月' },
-                { type: 'months', value: 4, label: '4ヶ月' }
-              ].map((preset) => (
+              {PRESET_CONFIGURATIONS.map((preset) => (
                 <Button
                   key={preset.type + preset.value}
                   variant={
@@ -153,12 +194,8 @@ export function DateListSettingsCard() {
                       : 'outline'
                   }
                   size='sm'
-                  onClick={() =>
-                    preset.type === 'period'
-                      ? setPresetPeriod(preset.value)
-                      : setPresetMonths(preset.value)
-                  }
-                  disabled={!startDate}
+                  onClick={() => handlePresetClick(preset.value, preset.type)}
+                  disabled={presetBase === 'end' ? !endDate : !startDate}
                   className={
                     selectedPreset?.type === preset.type &&
                     selectedPreset.value === preset.value

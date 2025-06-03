@@ -1,11 +1,14 @@
-import {
-  addDays,
-  addMonths,
-  generateDateList,
-  getTodayString
-} from '@/utils/dateUtils'
-import { useEffect, useState } from 'react'
+import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+
+// 型定義
+type PresetType = 'period' | 'months'
+type Preset = { type: PresetType; value: number }
+
+// 定数
+const INITIAL_END_DATE = 14
+const DEFAULT_HOLIDAY_COLOR = '#dc2626'
 
 export const useDateListGenerator = () => {
   const [startDate, setStartDate] = useState('')
@@ -14,29 +17,66 @@ export const useDateListGenerator = () => {
   const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
   const [generatedList, setGeneratedList] = useState('')
 
-  // 終了日の初期値を設定
-  const initialEndDate = 14
+  // プリセット選択状態
+  const [selectedPreset, setSelectedPreset] = useState<Preset | null>({
+    type: 'period',
+    value: INITIAL_END_DATE
+  })
 
-  // 追加: プリセット選択状態
-  const [selectedPreset, setSelectedPreset] = useState<
-    { type: 'period'; value: number } | { type: 'months'; value: number } | null
-  >({ type: 'period', value: initialEndDate })
-
+  // 休日設定
   const [excludeHolidays, setExcludeHolidays] = useState(false)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
-
-  // 休日と祝日の色設定
   const [enableHolidayColors, setEnableHolidayColors] = useState(true)
-  const [holidayColor, setHolidayColor] = useState('#dc2626') // 赤系
-  const [nationalHolidayColor, setNationalHolidayColor] = useState('#dc2626') // 赤系
+  const [holidayColor, setHolidayColor] = useState(DEFAULT_HOLIDAY_COLOR)
+  const [nationalHolidayColor, setNationalHolidayColor] = useState(
+    DEFAULT_HOLIDAY_COLOR
+  )
 
   useEffect(() => {
     setStartDate(getTodayString())
-    setEndDate(addDays(getTodayString(), initialEndDate))
+    setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
   }, [])
 
-  const handleGenerateList = () => {
+  // 生成処理の依存関係をメモ化
+  const generateListDependencies = useMemo(
+    () => ({
+      startDate,
+      endDate,
+      title,
+      dateFormat,
+      excludeHolidays,
+      excludeJpHolidays,
+      enableHolidayColors,
+      holidayColor,
+      nationalHolidayColor
+    }),
+    [
+      startDate,
+      endDate,
+      title,
+      dateFormat,
+      excludeHolidays,
+      excludeJpHolidays,
+      enableHolidayColors,
+      holidayColor,
+      nationalHolidayColor
+    ]
+  )
+
+  const handleGenerateList = useCallback(() => {
     try {
+      const {
+        startDate,
+        endDate,
+        title,
+        dateFormat,
+        excludeHolidays,
+        excludeJpHolidays,
+        enableHolidayColors,
+        holidayColor,
+        nationalHolidayColor
+      } = generateListDependencies
+
       const result = generateDateList(
         startDate,
         endDate,
@@ -55,47 +95,96 @@ export const useDateListGenerator = () => {
         { style: { color: '#b91c1c' } }
       )
     }
-  }
+  }, [generateListDependencies])
 
-  const setPresetPeriod = (days: number) => {
-    const start = startDate || getTodayString()
-    setEndDate(addDays(start, days))
-    setSelectedPreset({ type: 'period', value: days })
-  }
+  // プリセット選択状態を更新する関数（日付変更は行わない）
+  const updateSelectedPreset = useCallback((preset: Preset) => {
+    setSelectedPreset(preset)
+  }, [])
 
-  const setPresetMonths = (months: number) => {
-    const start = startDate || getTodayString()
-    setEndDate(addMonths(start, months))
-    setSelectedPreset({ type: 'months', value: months })
-  }
+  // 日付計算の共通ロジック
+  const calculateDateFromPreset = useCallback(
+    (
+      baseDate: string,
+      value: number,
+      type: PresetType,
+      direction: 'forward' | 'backward'
+    ): string => {
+      if (!baseDate) return ''
 
-  const copyToClipboard = async (text?: string) => {
-    try {
-      await navigator.clipboard.writeText(text || generatedList)
-      toast.success('クリップボードにコピーしました')
-    } catch (err) {
-      console.error('コピーに失敗しました:', err)
-      toast.error('コピーに失敗しました', {
-        style: { color: '#b91c1c' }
-      })
-    }
-  }
+      const multiplier = direction === 'backward' ? -1 : 1
+      const date = new Date(baseDate)
 
-  const resetSettings = () => {
+      if (type === 'period') {
+        date.setDate(date.getDate() + value * multiplier)
+        return date.toISOString().split('T')[0]
+      }
+
+      date.setMonth(date.getMonth() + value * multiplier)
+      return date.toISOString().split('T')[0]
+    },
+    []
+  )
+
+  // プリセット適用の統合関数
+  const applyPreset = useCallback(
+    (value: number, type: PresetType, base: 'start' | 'end') => {
+      if (base === 'start' && startDate) {
+        const newEndDate = calculateDateFromPreset(
+          startDate,
+          value,
+          type,
+          'forward'
+        )
+        setEndDate(newEndDate)
+      } else if (base === 'end' && endDate) {
+        const newStartDate = calculateDateFromPreset(
+          endDate,
+          value,
+          type,
+          'backward'
+        )
+        setStartDate(newStartDate)
+      }
+
+      updateSelectedPreset({ type, value })
+    },
+    [startDate, endDate, calculateDateFromPreset, updateSelectedPreset]
+  )
+
+  const copyToClipboard = useCallback(
+    async (text?: string) => {
+      try {
+        await navigator.clipboard.writeText(text || generatedList)
+        toast.success('クリップボードにコピーしました')
+      } catch (err) {
+        console.error('コピーに失敗しました:', err)
+        toast.error('コピーに失敗しました', {
+          style: { color: '#b91c1c' }
+        })
+      }
+    },
+    [generatedList]
+  )
+
+  const resetSettings = useCallback(() => {
     setTitle('スケジュール')
     setDateFormat('MM/DD（ddd）')
     setStartDate(getTodayString())
-    setEndDate(addDays(getTodayString(), initialEndDate))
+    setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
     setGeneratedList('')
-    setSelectedPreset({ type: 'period', value: initialEndDate })
+    setSelectedPreset({ type: 'period', value: INITIAL_END_DATE })
     setExcludeHolidays(false)
     setExcludeJpHolidays(false)
     setEnableHolidayColors(true)
-    setHolidayColor('#dc2626')
-    setNationalHolidayColor('#dc2626')
-  }
+    setHolidayColor(DEFAULT_HOLIDAY_COLOR)
+    setNationalHolidayColor(DEFAULT_HOLIDAY_COLOR)
+  }, [])
 
-  const isGenerateButtonDisabled = !title.trim() || !startDate || !endDate
+  // バリデーション状態をメモ化
+  const isGenerateButtonDisabled = useMemo(() => {
+    return !title.trim() || !startDate || !endDate
+  }, [title, startDate, endDate])
 
   return {
     startDate,
@@ -108,12 +197,12 @@ export const useDateListGenerator = () => {
     setDateFormat,
     generatedList,
     handleGenerateList,
-    setPresetPeriod,
-    setPresetMonths,
+    updateSelectedPreset,
+    applyPreset,
     copyToClipboard,
     resetSettings,
     isGenerateButtonDisabled,
-    selectedPreset, // 追加
+    selectedPreset,
     excludeHolidays,
     setExcludeHolidays,
     excludeJpHolidays,

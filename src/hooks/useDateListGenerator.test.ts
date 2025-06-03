@@ -134,7 +134,7 @@ describe('useDateListGenerator', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
-      result.current.setPresetPeriod(30)
+      result.current.applyPreset(30, 'period', 'start')
     })
 
     expect(result.current.selectedPreset).toEqual({ type: 'period', value: 30 })
@@ -144,7 +144,7 @@ describe('useDateListGenerator', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
-      result.current.setPresetMonths(3)
+      result.current.applyPreset(3, 'months', 'start')
     })
 
     expect(result.current.selectedPreset).toEqual({ type: 'months', value: 3 })
