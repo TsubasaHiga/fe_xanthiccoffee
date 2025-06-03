@@ -12,6 +12,7 @@ permissions:
   pull-requests: write
   pages: write
   id-token: write
+  deployments: write
 
 jobs:
   test:
@@ -166,33 +167,20 @@ jobs:
         path: playwright-report/
         retention-days: 30
     
+    - name: Setup Pages
+      if: github.event_name == 'pull_request'
+      uses: actions/configure-pages@v4
+
+    - name: Upload Pages artifact
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: playwright-report/
+
     - name: Deploy to GitHub Pages  
       if: github.event_name == 'pull_request'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        # Configure git
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
-        
-        # Clone gh-pages branch or create if it doesn't exist
-        git fetch origin gh-pages:gh-pages || git checkout --orphan gh-pages || echo "Creating new gh-pages branch"
-        
-        # Switch to gh-pages branch
-        git checkout gh-pages || git checkout --orphan gh-pages
-        
-        # Create directory for this PR
-        mkdir -p pr-${{ github.event.number }}
-        
-        # Copy report files
-        cp -r playwright-report/* pr-${{ github.event.number }}/
-        
-        # Add and commit
-        git add .
-        git commit -m "Deploy PR #${{ github.event.number }} test report" || echo "No changes to commit"
-        
-        # Push to gh-pages
-        git push origin gh-pages
+      id: deployment
+      uses: actions/deploy-pages@v4
     
     - name: Comment PR with Test Results
       if: github.event_name == 'pull_request'
@@ -206,7 +194,8 @@ jobs:
           const skippedTests = '${{ steps.test-summary.outputs.skipped-tests }}';
           
           const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-          const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${context.issue.number}/`;
+          const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/`;
+          const deploymentUrl = '${{ steps.deployment.outputs.page_url }}' || pagesUrl;
           
           let status = '✅ All tests passed!';
           if (parseInt(failedTests) > 0) {
@@ -224,7 +213,7 @@ jobs:
           | ⏭️ Skipped | ${skippedTests} |
           | 📊 Total | ${totalTests} |
           
-          🌐 **[View Live HTML Report](${pagesUrl})** | 📊 **[Download Report](${runUrl}/artifacts)** | 🔍 **[View Action Run](${runUrl})**
+          🌐 **[View Live HTML Report](${deploymentUrl})** | 📊 **[Download Report](${runUrl}/artifacts)** | 🔍 **[View Action Run](${runUrl})**
           
           <details>
           <summary>ℹ️ About this report</summary>
