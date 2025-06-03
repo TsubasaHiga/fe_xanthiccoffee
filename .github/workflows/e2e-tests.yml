@@ -99,6 +99,7 @@ jobs:
       with:
         path: downloads
         pattern: playwright-blob-report-*
+        merge-multiple: true
     
     - name: Merge into HTML Report
       run: pnpm exec playwright merge-reports --reporter html ./downloads
