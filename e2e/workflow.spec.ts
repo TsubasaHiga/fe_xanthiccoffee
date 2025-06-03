@@ -117,4 +117,76 @@ test.describe('Complete User Flow', () => {
     // Should still work on desktop
     await expect(page.locator('h1')).toContainText('MarkDays')
   })
+
+  test('should complete workflow using preset functionality', async ({
+    page
+  }) => {
+    await page.goto('/')
+
+    // Step 1: Fill title
+    const titleInput = page.locator(selectors.titleInput).first()
+    await titleInput.fill('プリセットテスト')
+
+    // Step 2: Fill start date
+    const dateInputs = page.locator(selectors.dateInputs)
+    await dateInputs.first().fill('2024-01-01')
+
+    // Step 3: Use preset to set end date (default is "開始日から")
+    const twoWeekButton = page.locator('button', { hasText: '2週間' })
+    await twoWeekButton.click()
+
+    // Step 4: Verify end date was set by preset
+    const endDateValue = await dateInputs.last().inputValue()
+    expect(endDateValue).toBe('2024-01-15') // 2 weeks from start date
+
+    // Step 5: Verify preset button is highlighted
+    await expect(twoWeekButton).toHaveClass(/bg-blue-600|default/)
+
+    // Step 6: Generate list
+    const generateButton = page.locator(selectors.generateButton)
+    await generateButton.click()
+
+    // Step 7: Verify generated content appears
+    const generatedContent = page
+      .locator('[data-testid="generated-list-card"]')
+      .first()
+    await expect(generatedContent).toBeVisible({ timeout: 1500 })
+  })
+
+  test('should complete workflow using "終了日から" preset', async ({
+    page
+  }) => {
+    await page.goto('/')
+
+    // Step 1: Fill title
+    const titleInput = page.locator(selectors.titleInput).first()
+    await titleInput.fill('終了日からテスト')
+
+    // Step 2: Fill end date
+    const dateInputs = page.locator(selectors.dateInputs)
+    await dateInputs.last().fill('2024-01-31')
+
+    // Step 3: Change preset base to "終了日から"
+    const presetBaseSelect = page.locator('button[role="combobox"]').first()
+    await presetBaseSelect.click()
+    await page.locator('[role="option"]', { hasText: '終了日から' }).click()
+
+    // Step 4: Use preset to set start date
+    const oneMonthButton = page.locator('button', { hasText: '1ヶ月' })
+    await oneMonthButton.click()
+
+    // Step 5: Verify start date was set by preset
+    const startDateValue = await dateInputs.first().inputValue()
+    expect(startDateValue).toBe('2023-12-31') // 1 month before end date
+
+    // Step 6: Generate list
+    const generateButton = page.locator(selectors.generateButton)
+    await generateButton.click()
+
+    // Step 7: Verify generated content appears
+    const generatedContent = page
+      .locator('[data-testid="generated-list-card"]')
+      .first()
+    await expect(generatedContent).toBeVisible({ timeout: 1500 })
+  })
 })

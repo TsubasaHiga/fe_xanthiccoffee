@@ -19,8 +19,8 @@ vi.mock('@/hooks/useDateListGenerator', () => ({
     setDateFormat: vi.fn(),
     generatedList: '',
     handleGenerateList: vi.fn(),
-    setPresetPeriod: vi.fn(),
-    setPresetMonths: vi.fn(),
+    updateSelectedPreset: vi.fn(),
+    applyPreset: vi.fn(),
     copyToClipboard: vi.fn(),
     resetSettings: vi.fn(),
     isGenerateButtonDisabled: false,
@@ -91,8 +91,8 @@ describe('DateListSettingsContext', () => {
     expect(typeof result.current.setTitle).toBe('function')
     expect(typeof result.current.setDateFormat).toBe('function')
     expect(typeof result.current.handleGenerateList).toBe('function')
-    expect(typeof result.current.setPresetPeriod).toBe('function')
-    expect(typeof result.current.setPresetMonths).toBe('function')
+    expect(typeof result.current.updateSelectedPreset).toBe('function')
+    expect(typeof result.current.applyPreset).toBe('function')
     expect(typeof result.current.copyToClipboard).toBe('function')
     expect(typeof result.current.resetSettings).toBe('function')
   })

@@ -1,4 +1,5 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
+import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -100,9 +101,7 @@ export const useDateListGenerator = () => {
   // プリセット選択状態を更新する関数（日付変更は行わない）
   const updateSelectedPreset = useCallback((preset: Preset) => {
     setSelectedPreset(preset)
-  }, [])
-
-  // 日付計算の共通ロジック
+  }, []) // 日付計算の共通ロジック
   const calculateDateFromPreset = useCallback(
     (
       baseDate: string,
@@ -113,15 +112,17 @@ export const useDateListGenerator = () => {
       if (!baseDate) return ''
 
       const multiplier = direction === 'backward' ? -1 : 1
-      const date = new Date(baseDate)
+
+      // dayjsを使ってタイムゾーンの影響を避ける
+      let date = dayjs(baseDate)
 
       if (type === 'period') {
-        date.setDate(date.getDate() + value * multiplier)
-        return date.toISOString().split('T')[0]
+        date = date.add(value * multiplier, 'day')
+      } else {
+        date = date.add(value * multiplier, 'month')
       }
 
-      date.setMonth(date.getMonth() + value * multiplier)
-      return date.toISOString().split('T')[0]
+      return date.format('YYYY-MM-DD')
     },
     []
   )
