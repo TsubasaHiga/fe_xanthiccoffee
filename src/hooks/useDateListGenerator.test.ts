@@ -13,12 +13,12 @@ vi.mock('sonner', () => ({
 // Mock the dateUtils
 vi.mock('@/utils/dateUtils', () => ({
   getTodayString: vi.fn(() => '2024-01-01'),
-  addDays: vi.fn((date, days) => {
+  addDays: vi.fn((_date, days) => {
     const baseDate = new Date('2024-01-01')
     baseDate.setDate(baseDate.getDate() + days - 1)
     return baseDate.toISOString().split('T')[0]
   }),
-  addMonths: vi.fn((date, months) => {
+  addMonths: vi.fn((_date, months) => {
     const baseDate = new Date('2024-01-01')
     baseDate.setMonth(baseDate.getMonth() + months)
     baseDate.setDate(baseDate.getDate() - 1)

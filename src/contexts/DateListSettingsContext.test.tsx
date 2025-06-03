@@ -98,11 +98,6 @@ describe('DateListSettingsContext', () => {
   })
 
   it('should throw error when useDateListSettings is used outside provider', () => {
-    const TestComponentWithoutProvider = () => {
-      useDateListSettings()
-      return <div>Test</div>
-    }
-
     expect(() => {
       renderHook(() => useDateListSettings())
     }).toThrow(
