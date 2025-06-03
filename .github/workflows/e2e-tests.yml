@@ -159,13 +159,7 @@ jobs:
         path: playwright-report/
         retention-days: 30
     
-    - name: Deploy to GitHub Pages
-      if: github.event_name == 'pull_request'
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./playwright-report
-        destination_dir: pr-${{ github.event.number }}
+
     
     - name: Comment PR with Test Results
       if: github.event_name == 'pull_request'
@@ -179,7 +173,6 @@ jobs:
           const skippedTests = '${{ steps.test-summary.outputs.skipped-tests }}';
           
           const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-          const pagesUrl = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${context.issue.number}/`;
           
           let status = '✅ All tests passed!';
           if (parseInt(failedTests) > 0) {
@@ -197,7 +190,7 @@ jobs:
           | ⏭️ Skipped | ${skippedTests} |
           | 📊 Total | ${totalTests} |
           
-          🌐 **[View Live HTML Report](${pagesUrl})** | 📊 **[Download Report](${runUrl}/artifacts)** | 🔍 **[View Action Run](${runUrl})**
+          📊 **[Download HTML Report](${runUrl}/artifacts)** | 🔍 **[View Action Run](${runUrl})**
           
           <details>
           <summary>ℹ️ About this report</summary>
