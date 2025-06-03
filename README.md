@@ -37,13 +37,25 @@ pnpm build
 
 ## テスト
 
-### ユニットテスト
+### ユニットテスト（Vitest）
 
-（ユニットテストのセットアップがある場合、ここに記載）
+- 各関数・ロジック・コンポーネント単位での正確な動作を保証し、バグの早期発見・リグレッション防止を図ります。
+- テスト対象や詳細要件は [`docs/unit-test-requirements.md`](docs/unit-test-requirements.md) を参照してください。
+- テストコードは `src/` 配下に `*.test.ts(x)` 形式で配置します。
+- 実行例：
+
+```bash
+pnpm test:unit
+```
+
+（Vitestのセットアップが必要です。未導入の場合は `pnpm add -D vitest @testing-library/react` などで導入してください）
 
 ### E2Eテスト（Playwright）
 
-1. Playwright の依存をインストール（初回のみ）
+- ユーザー操作の主要フローを自動テストし、リグレッションやUI/UXの破壊を防ぎます。
+- テスト対象や詳細要件は [`docs/e2e-test-requirements.md`](docs/e2e-test-requirements.md) を参照してください。
+
+1. 依存パッケージのインストール（初回のみ）
 
 ```bash
 pnpm install
