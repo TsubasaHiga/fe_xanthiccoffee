@@ -1,7 +1,14 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Generated List Functionality', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    // Chromium以外はスキップし、ログを出力
+    if (testInfo.project.name !== 'chromium') {
+      console.log(
+        `[SKIP] ${testInfo.project.name} ではクリップボードテストをスキップします`
+      )
+      test.skip()
+    }
     await page.goto('/')
 
     // Fill form to generate a list
