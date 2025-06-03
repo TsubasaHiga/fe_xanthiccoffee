@@ -30,3 +30,4 @@ analyze
 test-results/
 playwright-report/
 playwright/.cache/
+blob-report/
