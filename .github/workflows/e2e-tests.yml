@@ -101,6 +101,14 @@ jobs:
         pattern: playwright-blob-report-*
         merge-multiple: true
     
+    - name: List downloaded files for debugging
+      run: |
+        echo "Contents of downloads directory:"
+        ls -la downloads/ || echo "Downloads directory not found"
+        if [ -d downloads ]; then
+          find downloads -type f -name "*.jsonl" | head -10
+        fi
+    
     - name: Merge into HTML Report
       run: pnpm exec playwright merge-reports --reporter html ./downloads
     
