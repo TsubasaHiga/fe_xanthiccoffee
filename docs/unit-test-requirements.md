@@ -11,6 +11,9 @@
 - コンテキスト（DateListSettingsContext など）
 - 外部APIや副作用を持つ処理（必要に応じてモック化）
 
+## 対象外
+- `src/components/ui/` 配下のコンポーネント（shadcn/uiライブラリのコンポーネントのため）
+
 ## ユニットテストが必要な主なファイル一覧
 - src/utils/dateUtils.ts
 - src/lib/utils.ts
@@ -18,14 +21,9 @@
 - src/contexts/DateListSettingsContext.tsx
 - src/components/DateListSettingsCard.tsx
 - src/components/GeneratedListCardV3.tsx
-- src/components/ui/button.tsx
-- src/components/ui/card.tsx
-- src/components/ui/collapsible.tsx
-- src/components/ui/input.tsx
-- src/components/ui/label.tsx
-- src/components/ui/separator.tsx
-- src/components/ui/switch.tsx
 - src/pages/DateListGeneratorPage.tsx
+
+注：`src/components/ui/` 配下のコンポーネント（button.tsx, card.tsx, input.tsx等）はshadcn/uiライブラリのコンポーネントのため、ユニットテストの対象外とします。
 
 ## テスト内容例
 - 各ユーティリティ関数の正常系・異常系の返り値検証
