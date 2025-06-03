@@ -1,14 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Generated List Functionality', () => {
-  test.beforeEach(async ({ page }, testInfo) => {
-    // Chromium以外はスキップし、ログを出力
-    if (testInfo.project.name !== 'chromium') {
-      console.log(
-        `[SKIP] ${testInfo.project.name} ではクリップボードテストをスキップします`
-      )
-      test.skip()
-    }
+  test.beforeEach(async ({ page }) => {
     await page.goto('/')
 
     // Fill form to generate a list
@@ -88,7 +81,13 @@ test.describe('Generated List Functionality', () => {
 
   test('should copy content to clipboard when copy button is clicked', async ({
     page
-  }) => {
+  }, testInfo) => {
+    if (!['chromium', 'Mobile Chrome'].includes(testInfo.project.name)) {
+      console.log(
+        `[SKIP] ${testInfo.project.name} ではクリップボードテストをスキップします`
+      )
+      test.skip()
+    }
     // Find copy button
     const copyButton = page.getByRole('button', { name: 'コピー' }).first()
 
