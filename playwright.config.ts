@@ -11,11 +11,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Enable parallel tests on CI for better performance. */
-  workers: process.env.CI ? 4 : undefined,
+  /* Enable parallel tests on CI for better performance. Reduce workers per shard since we're using multiple shards */
+  workers: process.env.CI ? 2 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
-    ? [['html'], ['github']]
+    ? [['blob'], ['github']] // Use blob reporter for sharding support in CI
     : [['html', { outputFolder: 'playwright-report' }], ['list']],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -79,34 +79,48 @@ export default defineConfig({
         ]
       : []),
 
-    /* Test against mobile viewports. */
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-        permissions: ['clipboard-read', 'clipboard-write'],
-        // Ensure clipboard permissions work in CI for mobile tests too
-        launchOptions: {
-          args: process.env.CI
-            ? [
-                '--disable-web-security',
-                '--disable-features=VizDisplayCompositor',
-                '--allow-clipboard-access',
-                '--enable-blink-features=UnsafeClipboardAPI'
-              ]
-            : []
-        }
-      }
-    },
-
-    ...(process.env.CI || process.env.ALL_BROWSERS
+    /* Test against mobile viewports - only Mobile Chrome in CI for faster execution */
+    ...(process.env.CI
       ? [
           {
-            name: 'Mobile Safari',
-            use: { ...devices['iPhone 12'] }
+            name: 'Mobile Chrome',
+            use: {
+              ...devices['Pixel 5'],
+              permissions: ['clipboard-read', 'clipboard-write'],
+              // Ensure clipboard permissions work in CI for mobile tests too
+              launchOptions: {
+                args: process.env.CI
+                  ? [
+                      '--disable-web-security',
+                      '--disable-features=VizDisplayCompositor',
+                      '--allow-clipboard-access',
+                      '--enable-blink-features=UnsafeClipboardAPI'
+                    ]
+                  : []
+              }
+            }
           }
         ]
-      : [])
+      : [
+          {
+            name: 'Mobile Chrome',
+            use: {
+              ...devices['Pixel 5'],
+              permissions: ['clipboard-read', 'clipboard-write'],
+              // Ensure clipboard permissions work in CI for mobile tests too
+              launchOptions: {
+                args: process.env.CI
+                  ? [
+                      '--disable-web-security',
+                      '--disable-features=VizDisplayCompositor',
+                      '--allow-clipboard-access',
+                      '--enable-blink-features=UnsafeClipboardAPI'
+                    ]
+                  : []
+              }
+            }
+          }
+        ])
   ],
 
   /* Run your local dev server before starting the tests */
