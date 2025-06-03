@@ -94,7 +94,7 @@ export function DateListSettingsCard() {
             />
           </div>
 
-          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+          <div className='grid grid-cols-2 gap-2 sm:gap-4'>
             <div className='space-y-2'>
               <Label htmlFor='start-date' className='text-gray-700'>
                 開始日
@@ -104,7 +104,7 @@ export function DateListSettingsCard() {
                 type='date'
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className={`rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
+                className={`appearance-none rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
                   isStartDateError
                     ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
                     : 'border-gray-300'
@@ -121,7 +121,7 @@ export function DateListSettingsCard() {
                 type='date'
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className={`rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
+                className={`appearance-none rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
                   isEndDateError
                     ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
                     : 'border-gray-300'
