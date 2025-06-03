@@ -76,7 +76,12 @@ describe('DateListGeneratorPage', () => {
 
     // Check title styling
     const title = screen.getByRole('heading', { level: 1 })
-    expect(title).toHaveClass('font-extrabold', 'text-3xl', 'text-gray-800')
+    expect(title).toHaveClass(
+      'font-[Inter]',
+      'font-extrabold',
+      'text-gray-800',
+      'tracking-tight'
+    )
   })
 
   it('should have background pattern element', () => {
