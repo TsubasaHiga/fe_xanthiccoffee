@@ -1,54 +1,91 @@
-# React + TypeScript + Vite
+# MarkDays
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<https://markdays.vercel.app/>
 
-Currently, two official plugins are available:
+このリポジトリは、Vite・React・TypeScript を用いたフロントエンドプロジェクトです。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 必要要件
 
-## Expanding the ESLint configuration
+- Node.js (推奨: v18以上)
+- pnpm
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## セットアップ
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. 依存パッケージのインストール
+
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. 開発サーバーの起動
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+pnpm dev
 ```
+
+- ブラウザで `http://localhost:5173` にアクセスしてください。
+
+## ビルド
+
+本番用ビルドを作成するには:
+
+```bash
+pnpm build
+```
+
+- 出力は `dist/` ディレクトリに生成されます。
+
+## テスト
+
+### ユニットテスト
+
+（ユニットテストのセットアップがある場合、ここに記載）
+
+### E2Eテスト（Playwright）
+
+1. Playwright の依存をインストール（初回のみ）
+
+```bash
+pnpm install
+```
+
+2. 本番ビルドでのE2Eテスト実行
+
+```bash
+pnpm test:e2e
+```
+
+3. ローカル開発サーバーでのE2Eテスト実行
+
+```bash
+pnpm test:e2e:dev
+# またはUIモード
+pnpm test:e2e:dev:ui
+```
+
+- テスト結果は `playwright-report/` に出力されます。
+
+## Lint
+
+ESLint による静的解析を実行するには:
+
+```bash
+pnpm lint
+```
+
+## 主要スクリプト一覧
+
+| コマンド         | 説明                       |
+|------------------|----------------------------|
+| pnpm dev         | 開発サーバー起動           |
+| pnpm build       | 本番ビルド                 |
+| pnpm preview     | ビルド後のローカルプレビュー|
+| pnpm lint        | ESLint による静的解析      |
+| pnpm test:e2e    | E2Eテスト（Playwright）    |
+
+## ディレクトリ構成
+
+- `src/` ... アプリケーション本体
+- `e2e/` ... E2Eテスト（Playwright）
+- `public/` ... 静的ファイル
+- `docs/` ... ドキュメント

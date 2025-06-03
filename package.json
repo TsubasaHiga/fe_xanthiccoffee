@@ -9,7 +9,7 @@
 		"preview": "vite preview",
 		"lint": "npx @biomejs/biome check --write --unsafe .",
 		"analyze": "tsc -b && vite build --mode analyze",
-		"postinstall": "lefthook install",
+		"postinstall": "lefthook install && pnpm exec playwright install",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:report": "playwright show-report",
