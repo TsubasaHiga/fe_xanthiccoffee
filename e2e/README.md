@@ -54,8 +54,8 @@ pnpm run test:e2e:report
 
 GitHubActions（`.github/workflows/e2e-tests.yml`）により、以下のタイミングで自動実行されます：
 
-- `main`、`develop`ブランチへのプッシュ
-- これらのブランチへのプルリクエスト
+- 毎週日曜日の午前0時（JST）に定期実行
+- 必要に応じて手動実行が可能
 
 テスト結果はArtifactsとしてアップロードされ、失敗時にはビルドが停止します。
 
