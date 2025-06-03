@@ -39,11 +39,11 @@ jobs:
           ${{ runner.os }}-playwright-
     
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      run: pnpm exec playwright install --with-deps
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     
     - name: Install Playwright Browser dependencies (if cached)
-      run: npx playwright install-deps
+      run: pnpm exec playwright install-deps
       if: steps.playwright-cache.outputs.cache-hit == 'true'
     
     - name: Run Playwright tests
