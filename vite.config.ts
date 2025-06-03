@@ -3,8 +3,11 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { type UserConfig, defineConfig } from 'vitest/config'
+import pkg from './package.json'
 
 // https://vite.dev/config/
+const version = pkg.version
+
 const config = (mode: string): UserConfig => {
   return {
     server: {
@@ -21,6 +24,9 @@ const config = (mode: string): UserConfig => {
           gzipSize: true
         })
     ],
+    define: {
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(version)
+    },
     test: {
       globals: true,
       environment: 'jsdom',

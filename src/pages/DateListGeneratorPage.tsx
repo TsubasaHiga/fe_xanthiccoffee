@@ -1,6 +1,7 @@
 import { ContentLayout } from '@/components/ContentLayout'
 import { DateListSettingsCard } from '@/components/DateListSettingsCard'
 import { GeneratedListCardV3 } from '@/components/GeneratedListCardV3'
+import { Badge } from '@/components/ui/badge'
 import {
   DateListSettingsProvider,
   useDateListSettings
@@ -43,8 +44,16 @@ export function DateListGeneratorPage() {
           <div className="absolute inset-0 bg-[url('https://www.toptal.com/designers/subtlepatterns/patterns/symphony.png')] opacity-10" />
         </div>
         <div className='z-10 mb-6 space-y-3 text-center sm:mb-10 sm:space-y-4'>
-          <h1 className='font-[Inter] font-extrabold text-3xl text-gray-800 tracking-tight sm:text-4xl md:text-5xl'>
-            MarkDays
+          <h1 className='font-[Inter] font-extrabold text-gray-800 tracking-tight'>
+            <span className='relative text-4xl md:text-5xl'>
+              MarkDays
+              <Badge
+                variant='outline'
+                className='-top-0 absolute right-0 rounded-none border-none p-0 font-medium font-sans text-[10px] tracking-tight md:text-xs md:tracking-wide'
+              >
+                マークデイズ
+              </Badge>
+            </span>
           </h1>
           <p className='font-medium text-gray-600 text-sm sm:text-base md:text-lg'>
             Markdown形式で日付と曜日のリストを一発生成！
