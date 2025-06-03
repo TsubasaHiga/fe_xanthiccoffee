@@ -62,9 +62,9 @@ export function DateListSettingsCard() {
         <CardHeader>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
-              <Calendar className='h-7 w-7 text-blue-500' />
+              <Calendar className='hidden h-7 w-7 text-blue-500 sm:block' />
               <div>
-                <CardTitle className='font-bold text-base text-gray-800 sm:text-lg'>
+                <CardTitle className='font-bold text-gray-800 text-lg'>
                   設定
                 </CardTitle>
                 <CardDescription className='text-gray-500 text-xs sm:text-sm'>
@@ -74,7 +74,7 @@ export function DateListSettingsCard() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className='space-y-6'>
+        <CardContent className='space-y-4 sm:space-y-6'>
           <div className='space-y-2'>
             <Label htmlFor='title' className='text-gray-700'>
               タイトル
@@ -133,7 +133,7 @@ export function DateListSettingsCard() {
 
           <div className='space-y-3'>
             <Label className='text-gray-700'>期間プリセット</Label>
-            <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
+            <div className='grid grid-cols-4 gap-2'>
               {[
                 { type: 'period', value: 7, label: '1週間' },
                 { type: 'period', value: 14, label: '2週間' },
@@ -175,7 +175,7 @@ export function DateListSettingsCard() {
           <Collapsible
             open={isAdvancedOpen}
             onOpenChange={setIsAdvancedOpen}
-            className='rounded-xl border border-gray-200 bg-gray-50'
+            className='mb-4 rounded-xl border border-gray-200 bg-gray-50 sm:mb-6'
           >
             <CollapsibleTrigger asChild>
               <Button
@@ -193,7 +193,7 @@ export function DateListSettingsCard() {
                 <div className='flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
                     htmlFor='date-format'
-                    className='font-medium text-gray-700'
+                    className='font-medium text-gray-700 text-xs sm:text-base'
                   >
                     日付フォーマット
                   </Label>
@@ -205,25 +205,28 @@ export function DateListSettingsCard() {
                     placeholder='例: M/D（dd）, YYYY-MM-DD, MM月DD日（ddd）'
                     className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                   />
-                  <p className='mt-1 flex list-disc flex-col space-y-1 pl-4 text-gray-500 text-xs'>
+                  <div className='mt-1 flex flex-col space-y-1 pl-2 text-gray-500 text-xs'>
                     <span>
                       設定例：（<span className='font-bold'>dayjs</span>{' '}
                       形式を使用）
                     </span>
-                    <li>
-                      <span className='font-mono'>M/D（dd）</span> → 12/25（日）
-                    </li>
-                    <li>
-                      <span className='font-mono'>YYYY-MM-DD（ddd）</span> →
-                      2024-12-25（Sun）
-                    </li>
-                  </p>
+                    <ul className='flex list-disc flex-col pl-5'>
+                      <li>
+                        <span className='font-mono'>M/D（dd）</span> →
+                        12/25（日）
+                      </li>
+                      <li>
+                        <span className='font-mono'>YYYY-MM-DD（ddd）</span> →
+                        2024-12-25（Sun）
+                      </li>
+                    </ul>
+                  </div>
                 </div>
                 <div className='space-y-2 rounded-lg border border-gray-200 bg-white p-3'>
                   <div className='flex items-center justify-between gap-3'>
                     <Label
                       htmlFor='enable-holiday-colors'
-                      className='font-medium text-gray-700 text-sm'
+                      className='font-medium text-gray-700 text-xs sm:text-base'
                     >
                       休日と祝日の色を変更する
                     </Label>
@@ -239,7 +242,7 @@ export function DateListSettingsCard() {
                       <div className='space-y-2'>
                         <Label
                           htmlFor='holiday-color'
-                          className='text-gray-600 text-xs'
+                          className='text-gray-600 text-xs sm:text-sm'
                         >
                           休日（土日）の色
                         </Label>
@@ -256,14 +259,14 @@ export function DateListSettingsCard() {
                             value={holidayColor}
                             onChange={(e) => setHolidayColor(e.target.value)}
                             placeholder='#dc2626'
-                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 text-xs transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                           />
                         </div>
                       </div>
                       <div className='space-y-2'>
                         <Label
                           htmlFor='national-holiday-color'
-                          className='text-gray-600 text-xs'
+                          className='text-gray-600 text-xs sm:text-sm'
                         >
                           祝日（日本）の色
                         </Label>
@@ -284,7 +287,7 @@ export function DateListSettingsCard() {
                               setNationalHolidayColor(e.target.value)
                             }
                             placeholder='#dc2626'
-                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 text-xs transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                           />
                         </div>
                       </div>
@@ -294,7 +297,7 @@ export function DateListSettingsCard() {
                 <div className='flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
                     htmlFor='exclude-holidays'
-                    className='font-medium text-gray-700 text-sm'
+                    className='font-medium text-gray-700 text-xs sm:text-base'
                   >
                     休日（土日）をリストから除外する
                   </Label>
@@ -308,7 +311,7 @@ export function DateListSettingsCard() {
                 <div className='flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
                     htmlFor='exclude-jp-holidays'
-                    className='font-medium text-gray-700 text-sm'
+                    className='font-medium text-gray-700 text-xs sm:text-base'
                   >
                     祝日（日本）をリストから除外する
                   </Label>
@@ -323,7 +326,7 @@ export function DateListSettingsCard() {
             </CollapsibleContent>
           </Collapsible>
 
-          <div className='-mx-6 space-y-6'>
+          <div className='-mx-6 space-y-4 sm:space-y-6'>
             <Separator />
             <div className='space-y-1 px-6'>
               <Button
@@ -334,7 +337,6 @@ export function DateListSettingsCard() {
               >
                 リスト生成
               </Button>
-
               <Button
                 onClick={resetSettings}
                 variant='outline'
