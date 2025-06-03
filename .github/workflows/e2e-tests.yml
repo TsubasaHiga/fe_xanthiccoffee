@@ -40,11 +40,12 @@ jobs:
     
     - name: Install Playwright Browsers
       run: pnpm exec playwright install
+      env:
+        PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     
     - name: Run Playwright tests
       run: pnpm run test:e2e
       env:
-        # Ensure proper headless environment for clipboard operations
         PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     
     - uses: actions/upload-artifact@v4
