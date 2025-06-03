@@ -33,9 +33,6 @@ export default defineConfig({
     /* Timeout for each test */
     actionTimeout: 30 * 1000,
 
-    /* Grant clipboard permissions globally for all tests */
-    permissions: ['clipboard-read', 'clipboard-write'],
-
     /* Additional context options for better CI compatibility */
     ...(process.env.CI && {
       // Force headless mode in CI and ensure clipboard works
@@ -52,6 +49,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        permissions: ['clipboard-read', 'clipboard-write'],
         // Ensure clipboard permissions work in CI
         launchOptions: {
           args: process.env.CI
@@ -86,6 +84,7 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: {
         ...devices['Pixel 5'],
+        permissions: ['clipboard-read', 'clipboard-write'],
         // Ensure clipboard permissions work in CI for mobile tests too
         launchOptions: {
           args: process.env.CI
