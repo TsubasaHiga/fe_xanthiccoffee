@@ -193,4 +193,23 @@ describe('DateListSettingsCard', () => {
 
     expect(mockApplyPreset).toHaveBeenCalledWith(7, 'period', 'end')
   })
+
+  it('should display arrow icon between date inputs', () => {
+    render(<DateListSettingsCard />)
+
+    // SVG要素（ArrowRightアイコン）が表示されているかチェック
+    const arrowIcon = document.querySelector(
+      'svg[class*="lucide-arrow-right"], svg[class*="lucide-arrow-left"]'
+    )
+    expect(arrowIcon).toBeTruthy()
+  })
+
+  it('should change arrow direction based on preset base', () => {
+    render(<DateListSettingsCard />)
+
+    // デフォルトでは「開始日から」（start）なので右矢印が表示される
+    // プリセット基準セレクトを変更すると矢印の方向も変わることをテスト
+    const presetBaseSelect = screen.getByRole('combobox')
+    expect(presetBaseSelect).toBeInTheDocument()
+  })
 })

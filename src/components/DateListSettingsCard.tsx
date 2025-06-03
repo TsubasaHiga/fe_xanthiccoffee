@@ -24,7 +24,13 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { useDateListSettings } from '@/contexts/DateListSettingsContext'
-import { Calendar, ChevronDown, RotateCcw } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  ChevronDown,
+  RotateCcw
+} from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
 // プリセット設定の定数をメモ化
@@ -130,7 +136,7 @@ export function DateListSettingsCard() {
             />
           </div>
 
-          <div className='grid grid-cols-2 gap-2 sm:gap-4'>
+          <div className='grid grid-cols-[minmax(120px,_1fr)_16px_minmax(120px,_1fr)] items-center gap-1 xs:gap-2 sm:gap-4'>
             <div className='space-y-2'>
               <Label htmlFor='start-date' className='text-gray-700'>
                 開始日
@@ -148,6 +154,15 @@ export function DateListSettingsCard() {
                 required
               />
             </div>
+
+            <div className='flex items-center justify-center pt-6'>
+              {presetBase === 'start' ? (
+                <ArrowRight className='h-4 w-4 text-gray-400' />
+              ) : (
+                <ArrowLeft className='h-4 w-4 text-gray-400' />
+              )}
+            </div>
+
             <div className='space-y-2'>
               <Label htmlFor='end-date' className='text-gray-700'>
                 終了日
