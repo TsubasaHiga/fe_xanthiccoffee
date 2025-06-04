@@ -17,6 +17,8 @@ export const useDateListGenerator = () => {
   const [title, setTitle] = useState('スケジュール')
   const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
   const [generatedList, setGeneratedList] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFirstGeneration, setIsFirstGeneration] = useState(true)
 
   // プリセット選択状態
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>({
@@ -64,8 +66,12 @@ export const useDateListGenerator = () => {
     ]
   )
 
-  const handleGenerateList = useCallback(() => {
+  const handleGenerateList = useCallback(async () => {
     try {
+      if (isFirstGeneration) {
+        setIsLoading(true)
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
       const {
         startDate,
         endDate,
@@ -77,7 +83,6 @@ export const useDateListGenerator = () => {
         holidayColor,
         nationalHolidayColor
       } = generateListDependencies
-
       const result = generateDateList(
         startDate,
         endDate,
@@ -90,13 +95,20 @@ export const useDateListGenerator = () => {
         nationalHolidayColor
       )
       setGeneratedList(result)
+      if (isFirstGeneration) {
+        setIsFirstGeneration(false)
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'エラーが発生しました',
         { style: { color: '#b91c1c' } }
       )
+    } finally {
+      if (isFirstGeneration) {
+        setIsLoading(false)
+      }
     }
-  }, [generateListDependencies])
+  }, [generateListDependencies, isFirstGeneration])
 
   // プリセット選択状態を更新する関数（日付変更は行わない）
   const updateSelectedPreset = useCallback((preset: Preset) => {
@@ -180,6 +192,7 @@ export const useDateListGenerator = () => {
     setEnableHolidayColors(true)
     setHolidayColor(DEFAULT_HOLIDAY_COLOR)
     setNationalHolidayColor(DEFAULT_HOLIDAY_COLOR)
+    setIsLoading(false)
   }, [])
 
   // バリデーション状態をメモ化
@@ -197,6 +210,8 @@ export const useDateListGenerator = () => {
     dateFormat,
     setDateFormat,
     generatedList,
+    isLoading,
+    isFirstGeneration,
     handleGenerateList,
     updateSelectedPreset,
     applyPreset,

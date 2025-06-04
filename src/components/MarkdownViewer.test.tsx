@@ -32,12 +32,6 @@ vi.mock('./MdPreview', () => ({
   MdPreview: vi.fn(({ value }) => <div data-testid='md-preview'>{value}</div>)
 }))
 
-vi.mock('@/hooks/useMdEditorPreload', () => ({
-  useMdEditorPreload: () => ({
-    preloadMdEditor: vi.fn()
-  })
-}))
-
 // Mock @codemirror/view
 vi.mock('@codemirror/view', () => ({
   lineNumbers: vi.fn(() => 'lineNumbers-extension')

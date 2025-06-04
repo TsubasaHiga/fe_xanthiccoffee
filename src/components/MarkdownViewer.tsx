@@ -13,10 +13,12 @@ import { MdPreview } from './MdPreview'
 
 export function MarkdownViewer({
   generatedList,
-  copyToClipboard
+  copyToClipboard,
+  onMount
 }: {
   generatedList: string
   copyToClipboard: (text: string) => void
+  onMount?: () => void
 }) {
   const [value, setValue] = useState<string>(generatedList)
   const [isEditing, setIsEditing] = useState(false)
@@ -45,6 +47,10 @@ export function MarkdownViewer({
   const handleEditToggle = () => {
     setIsEditing((prev) => !prev)
   }
+
+  useEffect(() => {
+    if (onMount) onMount()
+  }, [onMount])
 
   return (
     <Card
@@ -117,15 +123,16 @@ export function MarkdownViewer({
                 'code'
               ]}
               ref={editorRef}
-              noUploadImg={true}
               preview={false}
-              showToolbarName={false}
               showCodeRowNumber={false}
               scrollAuto={true}
               theme='light'
               codeTheme='github'
               noKatex={true}
               noMermaid={true}
+              noHighlight={true}
+              noImgZoomIn={true}
+              noUploadImg={true}
             />
           ) : (
             <div className='rounded-md border border-gray-200 bg-white px-6 py-8 shadow-inner'>
@@ -138,6 +145,10 @@ export function MarkdownViewer({
                 }}
                 language='jp-JP'
                 previewTheme='github'
+                noKatex={true}
+                noMermaid={true}
+                noHighlight={true}
+                noImgZoomIn={true}
               />
             </div>
           )}

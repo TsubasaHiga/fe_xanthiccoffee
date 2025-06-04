@@ -22,6 +22,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { useDateListSettings } from '@/contexts/DateListSettingsContext'
 import {
@@ -45,7 +46,11 @@ const PRESET_CONFIGURATIONS = [
   { type: 'months' as const, value: 4, label: '4ヶ月' }
 ] as const
 
-export function DateSettings() {
+export function DateSettings({
+  handleGenerateList: handleGenerateListProp
+}: {
+  handleGenerateList?: () => void
+} = {}) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [presetBase, setPresetBase] = useState<'start' | 'end'>('start')
 
@@ -58,6 +63,8 @@ export function DateSettings() {
     setTitle,
     dateFormat,
     setDateFormat,
+    isLoading,
+    isFirstGeneration,
     handleGenerateList,
     applyPreset,
     resetSettings,
@@ -72,8 +79,11 @@ export function DateSettings() {
     holidayColor,
     setHolidayColor,
     nationalHolidayColor,
-    setNationalHolidayColor
+    setNationalHolidayColor,
+    generatedList
   } = useDateListSettings()
+
+  const handleGenerate = handleGenerateListProp || handleGenerateList
 
   // プリセット処理の統合関数
   const handlePresetClick = useCallback(
@@ -385,12 +395,22 @@ export function DateSettings() {
             <Separator />
             <div className='space-y-1 px-6'>
               <Button
-                onClick={handleGenerateList}
+                onClick={handleGenerate}
                 size='lg'
                 className='w-full rounded-lg bg-blue-600 py-3 font-bold text-base text-white shadow-md transition-all duration-200 hover:bg-blue-700 sm:text-lg'
-                disabled={isGenerateButtonDisabled}
+                disabled={
+                  isGenerateButtonDisabled ||
+                  (isLoading && isFirstGeneration && !generatedList)
+                }
               >
-                リスト生成
+                {isLoading && isFirstGeneration && !generatedList ? (
+                  <div className='flex items-center gap-2'>
+                    <Spinner size={16} className='text-white' />
+                    <span>生成中...</span>
+                  </div>
+                ) : (
+                  'リスト生成'
+                )}
               </Button>
               <Button
                 onClick={resetSettings}

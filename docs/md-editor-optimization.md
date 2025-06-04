@@ -57,7 +57,6 @@ src/components/
 └── MarkdownViewer.tsx        # メインコンポーネント（更新済み）
 
 src/hooks/
-└── useMdEditorPreload.ts     # 削除予定（不要になった）
 ```
 
 ## パフォーマンス効果

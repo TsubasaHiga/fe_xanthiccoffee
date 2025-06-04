@@ -121,8 +121,8 @@ describe('useDateListGenerator', () => {
 
     const { result } = renderHook(() => useDateListGenerator())
 
-    act(() => {
-      result.current.handleGenerateList()
+    await act(async () => {
+      await result.current.handleGenerateList()
     })
 
     const { toast } = await import('sonner')
@@ -325,8 +325,8 @@ describe('useDateListGenerator', () => {
   it('should copy to clipboard successfully', async () => {
     const { result } = renderHook(() => useDateListGenerator())
 
-    act(() => {
-      result.current.handleGenerateList()
+    await act(async () => {
+      await result.current.handleGenerateList()
     })
 
     await act(async () => {

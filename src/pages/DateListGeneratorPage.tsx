@@ -1,35 +1,77 @@
 import { ContentLayout } from '@/components/ContentLayout'
 import { DateSettings } from '@/components/DateSettings'
-import { MarkdownViewer } from '@/components/MarkdownViewer'
 import { Badge } from '@/components/ui/badge'
 import {
   DateListSettingsProvider,
   useDateListSettings
 } from '@/contexts/DateListSettingsContext'
-import { useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+
+// MarkdownViewerの遅延読み込み
+const MarkdownViewer = lazy(() =>
+  import('@/components/MarkdownViewer').then((module) => ({
+    default: module.MarkdownViewer
+  }))
+)
 
 function DateListGeneratorContent() {
   const settings = useDateListSettings()
   const generatedListRef = useRef<HTMLDivElement | null>(null)
+  const [showViewer, setShowViewer] = useState(false)
+  const [shouldScrollOnMount, setShouldScrollOnMount] = useState(false)
 
-  useEffect(() => {
-    if (settings.generatedList && generatedListRef.current) {
+  // スクロール関数
+  const scrollToViewer = () => {
+    if (generatedListRef.current) {
       generatedListRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       })
     }
-  }, [settings.generatedList])
+  }
+
+  // リスト生成ボタン押下時のラップ
+  const handleGenerateListWithScroll = async () => {
+    const wasFirst = settings.isFirstGeneration
+    await settings.handleGenerateList()
+    if (wasFirst) {
+      setShouldScrollOnMount(true) // 初回はonMountでスクロール
+    } else {
+      scrollToViewer() // 2回目以降は即スクロール
+    }
+  }
+
+  // MarkdownViewer遅延読み込み完了時のスクロール
+  const handleMarkdownMount = () => {
+    if (shouldScrollOnMount) {
+      scrollToViewer()
+      setShouldScrollOnMount(false)
+    }
+  }
+
+  // showViewer制御
+  useEffect(() => {
+    if (settings.generatedList && !showViewer) {
+      setShowViewer(true)
+      return
+    }
+    if (!settings.generatedList) {
+      setShowViewer(false)
+    }
+  }, [settings.generatedList, showViewer])
 
   return (
     <>
-      <DateSettings />
-      {settings.generatedList && (
+      <DateSettings handleGenerateList={handleGenerateListWithScroll} />
+      {showViewer && settings.generatedList && (
         <ContentLayout ref={generatedListRef}>
-          <MarkdownViewer
-            generatedList={settings.generatedList}
-            copyToClipboard={settings.copyToClipboard}
-          />
+          <Suspense fallback={null}>
+            <MarkdownViewer
+              generatedList={settings.generatedList}
+              copyToClipboard={settings.copyToClipboard}
+              onMount={handleMarkdownMount}
+            />
+          </Suspense>
         </ContentLayout>
       )}
     </>
