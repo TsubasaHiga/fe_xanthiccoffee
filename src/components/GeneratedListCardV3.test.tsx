@@ -69,7 +69,9 @@ describe('GeneratedListCardV3', () => {
     expect(screen.getByTestId('generated-list-card')).toBeInTheDocument()
     expect(screen.getByText('生成されたリスト')).toBeInTheDocument()
     expect(
-      screen.getByText('以下のマークダウンをコピーしてご利用ください')
+      screen.getByText(
+        '以下のマークダウンをコピーしてご利用ください。必要に応じて編集も可能です。'
+      )
     ).toBeInTheDocument()
     expect(screen.getByTestId('md-preview')).toHaveTextContent(
       '# Test Schedule'
