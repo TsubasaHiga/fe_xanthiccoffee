@@ -52,7 +52,7 @@ export const Footer = () => {
                 Issue
               </a>
             </div>
-            <p className='mt-2 text-center text-gray-400 text-xs'>
+            <p className='mt-2 text-center text-gray-450 text-xs'>
               © 2025 COFUS. All rights reserved.
             </p>
           </div>

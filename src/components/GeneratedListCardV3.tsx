@@ -6,23 +6,11 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { MdEditor, MdPreview, config } from 'md-editor-rt'
-import 'md-editor-rt/lib/style.css'
-import { lineNumbers } from '@codemirror/view'
-import JP_JP from '@vavt/cm-extension/dist/locale/jp-JP'
+import { useMdEditorPreload } from '@/hooks/useMdEditorPreload'
 import { Copy } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-
-config({
-  editorConfig: {
-    languageUserDefined: {
-      'jp-JP': JP_JP
-    }
-  },
-  codeMirrorExtensions(_theme, extensions) {
-    return [...extensions, lineNumbers()]
-  }
-})
+import { DynamicMdEditor } from './DynamicMdEditor'
+import { MdPreview } from './MdPreview'
 
 export function GeneratedListCardV3({
   generatedList,
@@ -33,12 +21,25 @@ export function GeneratedListCardV3({
 }) {
   const [value, setValue] = useState<string>(generatedList)
   const [isEditing, setIsEditing] = useState(false)
-  const editorRef = useRef<typeof MdEditor>(null)
+  const [previewHeight, setPreviewHeight] = useState<number | null>(null)
+  const editorRef = useRef<HTMLDivElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
+
+  // プリロード機能を使用
+  const { preloadMdEditor } = useMdEditorPreload()
 
   // generatedListの変更を反映
   useEffect(() => {
     setValue(generatedList)
   }, [generatedList])
+
+  // プレビューの高さを測定
+  useEffect(() => {
+    if (!isEditing && previewRef.current) {
+      const height = previewRef.current.scrollHeight
+      setPreviewHeight(height)
+    }
+  }, [isEditing])
 
   // コピー
   const handleCopy = useCallback(() => {
@@ -52,50 +53,59 @@ export function GeneratedListCardV3({
   return (
     <Card
       data-testid='generated-list-card'
-      className='z-10 mb-8 rounded-2xl border border-gray-200 bg-white shadow-xl'
+      className='z-10 mb-8 gap-4 rounded-2xl border border-gray-200 bg-white shadow-xl'
     >
       <CardHeader>
-        <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-10'>
-          <div>
-            <CardTitle className='font-bold text-base text-gray-800 sm:text-lg'>
-              生成されたリスト
-            </CardTitle>
-            <CardDescription className='text-gray-500 text-xs sm:text-sm'>
-              以下のマークダウンをコピーしてご利用ください
-            </CardDescription>
-          </div>
-          <div className='flex gap-2'>
-            <Button
-              onClick={handleCopy}
-              variant='outline'
-              size='sm'
-              className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
-            >
-              <Copy className='mr-2 h-4 w-4' />
-              コピー
-            </Button>
-            <Button
-              onClick={handleEditToggle}
-              variant='outline'
-              size='sm'
-              className='border border-gray-300 text-gray-700 transition hover:bg-gray-50'
-            >
-              {isEditing ? 'プレビューに戻す' : '編集する'}
-            </Button>
-          </div>
+        <div className='flex flex-col gap-2'>
+          <CardTitle className='font-bold text-base text-gray-800 sm:text-lg'>
+            生成されたリスト
+          </CardTitle>
+          <CardDescription className='text-gray-500 text-xs sm:text-sm'>
+            以下のマークダウンをコピーしてご利用ください。必要に応じて編集も可能です。
+          </CardDescription>
         </div>
       </CardHeader>
-      <CardContent>
-        <div data-testid='generated-list' data-color-mode='light'>
+      <CardContent className='space-y-4'>
+        <div className='flex gap-2'>
+          <Button
+            onClick={handleCopy}
+            variant='outline'
+            size='sm'
+            className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
+          >
+            <Copy className='mr-2 h-4 w-4' />
+            コピー
+          </Button>
+          <Button
+            onClick={handleEditToggle}
+            onMouseEnter={preloadMdEditor} // ホバー時にプリロード
+            onFocus={preloadMdEditor} // フォーカス時にプリロード
+            variant='outline'
+            size='sm'
+            className='border border-gray-300 text-gray-700 transition hover:bg-gray-50'
+          >
+            {isEditing ? 'プレビューに戻す' : '編集する'}
+          </Button>
+        </div>
+        <div
+          data-testid='generated-list'
+          ref={previewRef}
+          data-color-mode='light'
+          className='grid grid-cols-1 grid-rows-1'
+          style={{
+            minHeight: previewHeight ? `${previewHeight}px` : undefined
+          }}
+        >
           {isEditing ? (
-            <MdEditor
+            <DynamicMdEditor
               value={value}
               onChange={setValue}
               id='generated-list-md-editor-rt'
               style={{
                 background: '#f9fafb',
                 borderRadius: '0.5rem',
-                height: 'auto',
+                height: '100%',
+                width: '100%',
                 fontVariantNumeric: 'tabular-nums'
               }}
               placeholder='ここにマークダウンを編集できます'

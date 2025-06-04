@@ -16,6 +16,28 @@ vi.mock('md-editor-rt', () => ({
   config: vi.fn()
 }))
 
+// Mock dynamic components
+vi.mock('./DynamicMdEditor', () => ({
+  DynamicMdEditor: vi.fn(({ value, onChange, placeholder }) => (
+    <textarea
+      data-testid='md-editor'
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+    />
+  ))
+}))
+
+vi.mock('./MdPreview', () => ({
+  MdPreview: vi.fn(({ value }) => <div data-testid='md-preview'>{value}</div>)
+}))
+
+vi.mock('@/hooks/useMdEditorPreload', () => ({
+  useMdEditorPreload: () => ({
+    preloadMdEditor: vi.fn()
+  })
+}))
+
 // Mock @codemirror/view
 vi.mock('@codemirror/view', () => ({
   lineNumbers: vi.fn(() => 'lineNumbers-extension')
