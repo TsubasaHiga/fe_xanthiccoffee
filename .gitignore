@@ -32,3 +32,6 @@ playwright-report/
 playwright/.cache/
 blob-report/
 coverage/
+
+# GitHub Action temporary files
+.github/tmp
