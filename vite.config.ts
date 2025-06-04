@@ -34,34 +34,6 @@ const config = (mode: string): UserConfig => {
     build: {
       minify: true,
       emptyOutDir: true,
-      rollupOptions: {
-        output: {
-          manualChunks(id: string) {
-            // CodeMirror関連（エディター専用なので分離）
-            if (id.includes('@codemirror')) {
-              return 'codemirror'
-            }
-
-            // @vavt関連（エラー回避のため条件付き）
-            if (id.includes('@vavt') && !id.includes('dist/locale')) {
-              return 'vavt-core'
-            }
-
-            // React関連
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor'
-            }
-
-            // UI関連のライブラリ
-            if (id.includes('lucide-react') || id.includes('@radix-ui')) {
-              return 'ui-vendor'
-            }
-
-            // md-editor-rtはManualChunksから除外し、
-            // 動的インポートのみが自動的にチャンク分離される
-          }
-        }
-      },
       chunkSizeWarningLimit: 1000
     },
     test: {

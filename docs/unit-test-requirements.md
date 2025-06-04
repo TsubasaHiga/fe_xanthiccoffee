@@ -19,8 +19,9 @@
 - src/lib/utils.ts
 - src/hooks/useDateListGenerator.ts
 - src/contexts/DateListSettingsContext.tsx
-- src/components/DateListSettingsCard.tsx
-- src/components/GeneratedListCardV3.tsx
+- src/components/DateSettings.tsx
+- src/components/MarkdownViewer.tsx
+- src/components/ConfiguredMdEditor.tsx
 - src/pages/DateListGeneratorPage.tsx
 
 注：`src/components/ui/` 配下のコンポーネント（button.tsx, card.tsx, input.tsx等）はshadcn/uiライブラリのコンポーネントのため、ユニットテストの対象外とします。
@@ -28,7 +29,7 @@
 ## テスト内容例
 - 各ユーティリティ関数の正常系・異常系の返り値検証
 - useDateListGeneratorの状態遷移・関数の動作（例：プリセット選択、リセット、コピー、リスト生成）
-- DateListSettingsCard/GeneratedListCardV3等のコンポーネントがpropsや状態に応じて正しく描画・動作するか
+- DateSettings/MarkdownViewer/ConfiguredMdEditor等のコンポーネントがpropsや状態に応じて正しく描画・動作するか
 - バリデーション・エラーハンドリングのロジック
 - コンテキストの値が正しく伝播・更新されるか
 - イベントハンドラ（onClick, onChange等）が正しく動作するか

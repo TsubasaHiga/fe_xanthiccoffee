@@ -6,10 +6,9 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { useMdEditorPreload } from '@/hooks/useMdEditorPreload'
 import { Copy } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DynamicMdEditor } from './DynamicMdEditor'
+import { ConfiguredMdEditor } from './ConfiguredMdEditor'
 import { MdPreview } from './MdPreview'
 
 export function MarkdownViewer({
@@ -24,9 +23,6 @@ export function MarkdownViewer({
   const [previewHeight, setPreviewHeight] = useState<number | null>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
-
-  // プリロード機能を使用
-  const { preloadMdEditor } = useMdEditorPreload()
 
   // generatedListの変更を反映
   useEffect(() => {
@@ -78,8 +74,6 @@ export function MarkdownViewer({
           </Button>
           <Button
             onClick={handleEditToggle}
-            onMouseEnter={preloadMdEditor} // ホバー時にプリロード
-            onFocus={preloadMdEditor} // フォーカス時にプリロード
             variant='outline'
             size='sm'
             className='border border-gray-300 text-gray-700 transition hover:bg-gray-50'
@@ -97,7 +91,7 @@ export function MarkdownViewer({
           }}
         >
           {isEditing ? (
-            <DynamicMdEditor
+            <ConfiguredMdEditor
               value={value}
               onChange={setValue}
               id='generated-list-md-editor-rt'
@@ -120,9 +114,7 @@ export function MarkdownViewer({
                 'orderedList',
                 'task',
                 '-',
-                'code',
-                'preview',
-                'fullscreen'
+                'code'
               ]}
               ref={editorRef}
               noUploadImg={true}
@@ -132,6 +124,8 @@ export function MarkdownViewer({
               scrollAuto={true}
               theme='light'
               codeTheme='github'
+              noKatex={true}
+              noMermaid={true}
             />
           ) : (
             <div className='rounded-md border border-gray-200 bg-white px-6 py-8 shadow-inner'>

@@ -1,114 +1,108 @@
-# md-editor-rt Bundle Size Optimization
+# md-editor-rt Configuration Optimization
 
-このドキュメントでは、`md-editor-rt`パッケージのバンドルサイズ最適化のために実装した変更について説明します。
+このドキュメントでは、`md-editor-rt`パッケージの設定最適化のために実装した変更について説明します。
 
 ## 実装した最適化
 
-### 1. 動的インポート（Dynamic Imports）
-- **目的**: 編集機能が必要な時のみ`md-editor-rt`を読み込む
-- **実装**: `DynamicMdEditor`と`DynamicMdPreview`コンポーネントを作成
-- **効果**: 初期バンドルサイズの大幅削減
+### 1. 静的インポートへの変更（Static Imports）
+- **目的**: シンプルな実装と安定性の向上
+- **実装**: `ConfiguredMdEditor`コンポーネントを作成し、静的設定を適用
+- **効果**: 複雑な動的読み込みロジックを削除し、保守性を向上
 
 ```tsx
-// 編集ボタンを押下したときのみMdEditorが読み込まれる
-const MdEditor = lazy(async () => {
-  const [{ MdEditor }, { config }, { lineNumbers }] = await Promise.all([
-    import('md-editor-rt'),
-    import('md-editor-rt'),
-    import('@codemirror/view')
-  ])
-  // ...設定も動的に読み込み
-  return { default: MdEditor }
+// モジュールレベルで設定を実行（一度だけ設定される）
+import { config } from 'md-editor-rt'
+import JP_JP from '@vavt/cm-extension/dist/locale/jp-JP'
+import { lineNumbers } from '@codemirror/view'
+
+config({
+  editorConfig: {
+    languageUserDefined: {
+      'jp-JP': JP_JP
+    }
+  },
+  codeMirrorExtensions(_theme, extensions) {
+    return [...extensions, lineNumbers()]
+  }
 })
 ```
 
-### 2. コード分割（Code Splitting）
-- **設定場所**: `vite.config.ts`の`build.rollupOptions.output.manualChunks`
-- **効果**: ライブラリごとに独立したチャンクを作成し、キャッシュ効率を向上
+### 2. 事前設定の適用
+- **設定場所**: `ConfiguredMdEditor.tsx`のモジュールレベル
+- **効果**: 日本語ロケールとCodeMirror拡張が自動的に設定される
 
 ```typescript
-manualChunks: {
-  'md-editor': ['md-editor-rt'],
-  'codemirror': ['@codemirror/view'],
-  'vavt-cm': ['@vavt/cm-extension'],
-  'react-vendor': ['react', 'react-dom'],
-  'ui-vendor': ['lucide-react', '@radix-ui/react-*']
-}
+config({
+  editorConfig: {
+    languageUserDefined: {
+      'jp-JP': JP_JP
+    }
+  },
+  codeMirrorExtensions(_theme, extensions) {
+    return [...extensions, lineNumbers()]
+  }
+})
 ```
 
-### 3. プリロード機能
-- **実装**: `useMdEditorPreload`カスタムフック
-- **UX改善**: 編集ボタンのホバー/フォーカス時に事前読み込み
-- **効果**: 実際の編集開始時の待機時間短縮
-
-```tsx
-const { preloadMdEditor } = useMdEditorPreload()
-
-<Button
-  onMouseEnter={preloadMdEditor} // ホバー時にプリロード
-  onFocus={preloadMdEditor}     // フォーカス時にプリロード
->
-  編集する
-</Button>
-```
+### 3. 型安全性の向上
+- **実装**: md-editor-rtの公式型定義を使用
+- **効果**: カスタム型定義を削除し、ライブラリとの互換性を向上
 
 ## ファイル構成
 
 ```
 src/components/
-├── DynamicMdEditor.tsx        # 動的読み込みエディタ（編集時のみ）
-├── DynamicMdPreview.tsx       # プレビュー（メインバンドルに含む）
-└── GeneratedListCardV3.tsx    # メインコンポーネント（更新済み）
+├── ConfiguredMdEditor.tsx     # 事前設定済みエディタ
+├── MdPreview.tsx             # プレビューコンポーネント
+└── MarkdownViewer.tsx        # メインコンポーネント（更新済み）
 
 src/hooks/
-└── useMdEditorPreload.ts      # プリロード用フック
+└── useMdEditorPreload.ts     # 削除予定（不要になった）
 ```
 
 ## パフォーマンス効果
 
-### Before（最適化前）
-- `md-editor-rt`が初期バンドルに含まれる
-- 編集機能を使わなくてもフルライブラリが読み込まれる
-- 初期読み込み時間が長い
+### Before（動的インポート使用時）
+- 複雑な動的読み込みロジック
+- Suspense、lazy loading、エラーハンドリングが必要
+- プリロード機能の実装が複雑
 
-### After（最適化後）
-- **初期バンドル**: プレビューのみ（軽量プレビュー使用時はさらに軽量）
-- **編集時**: 必要な時のみ動的読み込み
-- **プリロード**: UX向上のため事前読み込み可能
-- **キャッシュ**: チャンク分割により効率的なキャッシュ
+### After（静的インポート使用時）
+- **シンプルな実装**: 複雑な動的読み込みロジックを削除
+- **安定性向上**: 静的インポートによる確実な読み込み
+- **型安全性**: md-editor-rtの公式型定義を使用
+- **保守性**: プリロードやSuspenseの複雑さを排除
 
 ## 使用方法
 
-### 基本使用（動的読み込み有効）
+### 基本使用（事前設定済み）
 ```tsx
-<GeneratedListCardV3 
+<MarkdownViewer 
   generatedList={list}
   copyToClipboard={copyFn}
 />
 ```
 
-### 軽量プレビュー使用
+### ConfiguredMdEditorの直接使用
 ```tsx
-<GeneratedListCardV3 
-  generatedList={list}
-  copyToClipboard={copyFn}
-  useLitePreview={true}  // md-editor-rtを使わない軽量プレビュー
+<ConfiguredMdEditor
+  value={markdownContent}
+  onChange={setMarkdownContent}
+  id="my-editor"
 />
 ```
 
 ## 注意事項
 
-1. **テスト**: 動的インポートのため、テストでは適切なモックが必要
-2. **TypeScript**: 型の互換性を保つため`Record<string, unknown>`でキャスト
-3. **CSS**: スタイルも動的読み込みで必要時のみ適用
-4. **フォールバック**: ローディング中はスケルトンコンポーネントを表示
+1. **設定**: モジュールレベルで一度だけ設定が実行される
+2. **TypeScript**: md-editor-rtの公式型定義を使用し型安全性を向上
+3. **CSS**: スタイルは静的にインポートされる
+4. **日本語対応**: JP_JPロケールとCodeMirror拡張が自動適用
 
-## バンドル分析
+## 今後の改善点
 
-最適化効果を確認するには以下のコマンドでバンドル分析を実行：
+静的インポートにより実装がシンプルになりましたが、必要に応じて以下の改善も検討可能です：
 
-```bash
-pnpm analyze
-```
-
-これにより`analyze/stats.html`が生成され、チャンクサイズとロード戦略を視覚的に確認できます。
+- バンドルサイズが問題になる場合は動的インポートに戻す
+- チャンク分割の最適化
+- プリロード機能の再実装（必要に応じて）
