@@ -5,6 +5,8 @@ on:
     types: [closed]
     branches:
       - main
+  workflow_dispatch:
+    # Allow manual execution
 
 jobs:
   bundle-size:

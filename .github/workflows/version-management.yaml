@@ -1,4 +1,4 @@
-name: 'Version Management'
+name: Version Management
 on:
   pull_request:
     types:
