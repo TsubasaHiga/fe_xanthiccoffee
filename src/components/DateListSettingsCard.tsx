@@ -189,7 +189,10 @@ export function DateListSettingsCard() {
                 value={presetBase}
                 onValueChange={(v) => setPresetBase(v as 'start' | 'end')}
               >
-                <SelectTrigger className='h-auto! w-32 py-1.5 text-xs shadow-none sm:text-sm'>
+                <SelectTrigger
+                  className='h-auto! w-32 py-1.5 text-xs shadow-none sm:text-sm'
+                  aria-label='期間プリセット開始日から/終了日から'
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
