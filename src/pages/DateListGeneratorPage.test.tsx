@@ -9,8 +9,8 @@ vi.mock('@/components/DateListSettingsCard', () => ({
   )
 }))
 
-vi.mock('@/components/MarkdownListEditor', () => ({
-  MarkdownListEditor: ({ generatedList }: { generatedList: string }) => (
+vi.mock('@/components/GeneratedListCardV3', () => ({
+  GeneratedListCardV3: ({ generatedList }: { generatedList: string }) => (
     <div data-testid='generated-list-card'>Generated List: {generatedList}</div>
   )
 }))

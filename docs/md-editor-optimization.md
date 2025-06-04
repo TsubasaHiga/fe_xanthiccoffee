@@ -58,7 +58,7 @@ const { preloadMdEditor } = useMdEditorPreload()
 src/components/
 ├── DynamicMdEditor.tsx        # 動的読み込みエディタ（編集時のみ）
 ├── DynamicMdPreview.tsx       # プレビュー（メインバンドルに含む）
-└── MarkdownListEditor.tsx    # メインコンポーネント（更新済み）
+└── GeneratedListCardV3.tsx    # メインコンポーネント（更新済み）
 
 src/hooks/
 └── useMdEditorPreload.ts      # プリロード用フック
@@ -81,7 +81,7 @@ src/hooks/
 
 ### 基本使用（動的読み込み有効）
 ```tsx
-<MarkdownListEditor 
+<GeneratedListCardV3 
   generatedList={list}
   copyToClipboard={copyFn}
 />
@@ -89,7 +89,7 @@ src/hooks/
 
 ### 軽量プレビュー使用
 ```tsx
-<MarkdownListEditor 
+<GeneratedListCardV3 
   generatedList={list}
   copyToClipboard={copyFn}
   useLitePreview={true}  // md-editor-rtを使わない軽量プレビュー

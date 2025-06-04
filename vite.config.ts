@@ -37,9 +37,14 @@ const config = (mode: string): UserConfig => {
       rollupOptions: {
         output: {
           manualChunks(id: string) {
-            // @uiw/react-md-editor関連（軽量なので分離の必要性低い）
-            if (id.includes('@uiw/react-md-editor')) {
-              return 'uiw-md-editor'
+            // CodeMirror関連（エディター専用なので分離）
+            if (id.includes('@codemirror')) {
+              return 'codemirror'
+            }
+
+            // @vavt関連（エラー回避のため条件付き）
+            if (id.includes('@vavt') && !id.includes('dist/locale')) {
+              return 'vavt-core'
             }
 
             // React関連
@@ -52,14 +57,8 @@ const config = (mode: string): UserConfig => {
               return 'ui-vendor'
             }
 
-            // その他のmarkdown関連
-            if (
-              id.includes('markdown') ||
-              id.includes('rehype') ||
-              id.includes('remark')
-            ) {
-              return 'markdown-vendor'
-            }
+            // md-editor-rtはManualChunksから除外し、
+            // 動的インポートのみが自動的にチャンク分離される
           }
         }
       },
