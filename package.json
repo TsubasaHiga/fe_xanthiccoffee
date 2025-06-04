@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc -b && vite build",
-		"preview": "vite preview",
+		"preview": "pnpm build && vite preview",
 		"lint": "biome check --write --unsafe .",
 		"analyze": "pnpm build --mode analyze",
 		"postinstall": "lefthook install && pnpm exec playwright install",
