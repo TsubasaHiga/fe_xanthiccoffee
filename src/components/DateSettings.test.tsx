@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DateListSettingsCard } from './DateListSettingsCard'
+import { DateSettings } from './DateSettings'
 
 // Mock the context
 const mockApplyPreset = vi.fn()
@@ -40,13 +40,13 @@ vi.mock('@/contexts/DateListSettingsContext', () => ({
   })
 }))
 
-describe('DateListSettingsCard', () => {
+describe('DateSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should render all required form fields', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     // Check for title input
     expect(screen.getByLabelText('タイトル')).toBeInTheDocument()
@@ -66,7 +66,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should render preset buttons', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     // Check for period preset buttons
     expect(screen.getByText('1週間')).toBeInTheDocument()
@@ -82,7 +82,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should call applyPreset with correct parameters when preset button is clicked', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const twoWeekButton = screen.getByText('2週間')
     fireEvent.click(twoWeekButton)
@@ -91,7 +91,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should call applyPreset with correct parameters for month preset', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const threeMonthButton = screen.getByText('3ヶ月')
     fireEvent.click(threeMonthButton)
@@ -100,7 +100,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should highlight selected preset button', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const twoWeekButton = screen.getByText('2週間')
 
@@ -109,7 +109,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should call handleGenerateList when generate button is clicked', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const generateButton = screen.getByText('リスト生成')
     fireEvent.click(generateButton)
@@ -118,7 +118,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should call resetSettings when reset button is clicked', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const resetButton = screen.getByText('リセット')
     fireEvent.click(resetButton)
@@ -127,7 +127,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should update title when title input changes', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const titleInput = screen.getByLabelText('タイトル')
     fireEvent.change(titleInput, { target: { value: '新しいタイトル' } })
@@ -136,7 +136,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should update start date when start date input changes', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const startDateInput = screen.getByLabelText('開始日')
     fireEvent.change(startDateInput, { target: { value: '2024-02-01' } })
@@ -145,7 +145,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should update end date when end date input changes', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     const endDateInput = screen.getByLabelText('終了日')
     fireEvent.change(endDateInput, { target: { value: '2024-02-15' } })
@@ -154,7 +154,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should show advanced options when collapsible is expanded', async () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     // Click on the advanced options trigger
     const advancedTrigger = screen.getByText('詳細オプション')
@@ -175,7 +175,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should change preset base when selector is changed', async () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     // Find and click the preset base selector
     const presetBaseSelect = screen.getByRole('combobox')
@@ -195,7 +195,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should display arrow icon between date inputs', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     // SVG要素（ArrowRightアイコン）が表示されているかチェック
     const arrowIcon = document.querySelector(
@@ -205,7 +205,7 @@ describe('DateListSettingsCard', () => {
   })
 
   it('should change arrow direction based on preset base', () => {
-    render(<DateListSettingsCard />)
+    render(<DateSettings />)
 
     // デフォルトでは「開始日から」（start）なので右矢印が表示される
     // プリセット基準セレクトを変更すると矢印の方向も変わることをテスト

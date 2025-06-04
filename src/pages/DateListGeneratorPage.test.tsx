@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { DateListGeneratorPage } from './DateListGeneratorPage'
 
 // Mock the components and hooks
-vi.mock('@/components/DateListSettingsCard', () => ({
-  DateListSettingsCard: () => (
+vi.mock('@/components/DateSettings', () => ({
+  DateSettings: () => (
     <div data-testid='date-list-settings-card'>Settings Card</div>
   )
 }))
 
-vi.mock('@/components/GeneratedListCardV3', () => ({
-  GeneratedListCardV3: ({ generatedList }: { generatedList: string }) => (
+vi.mock('@/components/MarkdownViewer', () => ({
+  MarkdownViewer: ({ generatedList }: { generatedList: string }) => (
     <div data-testid='generated-list-card'>Generated List: {generatedList}</div>
   )
 }))

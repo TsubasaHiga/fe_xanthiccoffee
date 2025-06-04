@@ -8,7 +8,7 @@ test.describe('Basic Page Load and Navigation', () => {
     await expect(page.locator('h1')).toContainText('MarkDays')
   })
 
-  test('should display DateListSettingsCard', async ({ page }) => {
+  test('should display DateSettings', async ({ page }) => {
     await page.goto('/')
 
     // Check that the settings card is visible

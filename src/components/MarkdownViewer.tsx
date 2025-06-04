@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { DynamicMdEditor } from './DynamicMdEditor'
 import { MdPreview } from './MdPreview'
 
-export function GeneratedListCardV3({
+export function MarkdownViewer({
   generatedList,
   copyToClipboard
 }: {

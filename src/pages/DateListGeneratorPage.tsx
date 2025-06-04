@@ -1,6 +1,6 @@
 import { ContentLayout } from '@/components/ContentLayout'
-import { DateListSettingsCard } from '@/components/DateListSettingsCard'
-import { GeneratedListCardV3 } from '@/components/GeneratedListCardV3'
+import { DateSettings } from '@/components/DateSettings'
+import { MarkdownViewer } from '@/components/MarkdownViewer'
 import { Badge } from '@/components/ui/badge'
 import {
   DateListSettingsProvider,
@@ -23,10 +23,10 @@ function DateListGeneratorContent() {
 
   return (
     <>
-      <DateListSettingsCard />
+      <DateSettings />
       {settings.generatedList && (
         <ContentLayout ref={generatedListRef}>
-          <GeneratedListCardV3
+          <MarkdownViewer
             generatedList={settings.generatedList}
             copyToClipboard={settings.copyToClipboard}
           />

@@ -45,7 +45,7 @@ const PRESET_CONFIGURATIONS = [
   { type: 'months' as const, value: 4, label: '4ヶ月' }
 ] as const
 
-export function DateListSettingsCard() {
+export function DateSettings() {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [presetBase, setPresetBase] = useState<'start' | 'end'>('start')
 
