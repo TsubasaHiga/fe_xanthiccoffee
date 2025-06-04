@@ -22,7 +22,7 @@
 
 ---
 
-### DateListSettingsCard/GeneratedListCardV3/その他ロジックに基づく追加テスト内容
+### DateListSettingsCard/MarkdownListEditor/その他ロジックに基づく追加テスト内容
 - タイトル入力・バリデーション（空欄時のエラー表示含む）
 - 開始日・終了日入力とバリデーション（未入力・不正値時のエラー表示）
 - 期間プリセットボタン（1週間～4ヶ月）の選択・反映

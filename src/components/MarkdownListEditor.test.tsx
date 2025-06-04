@@ -1,51 +1,41 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { GeneratedListCardV3 } from './GeneratedListCardV3'
+import { MarkdownListEditor } from './MarkdownListEditor'
 
-// Mock md-editor-rt components
-vi.mock('md-editor-rt', () => ({
-  MdEditor: vi.fn(({ value, onChange, placeholder }) => (
-    <textarea
-      data-testid='md-editor'
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
-      placeholder={placeholder}
-    />
-  )),
-  MdPreview: vi.fn(({ value }) => <div data-testid='md-preview'>{value}</div>),
-  config: vi.fn()
-}))
-
-// Mock dynamic components
-vi.mock('./DynamicMdEditor', () => ({
-  DynamicMdEditor: vi.fn(({ value, onChange, placeholder }) => (
-    <textarea
-      data-testid='md-editor'
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
-      placeholder={placeholder}
-    />
-  ))
-}))
-
-vi.mock('./MdPreview', () => ({
-  MdPreview: vi.fn(({ value }) => <div data-testid='md-preview'>{value}</div>)
-}))
-
-vi.mock('@/hooks/useMdEditorPreload', () => ({
-  useMdEditorPreload: () => ({
-    preloadMdEditor: vi.fn()
+// Mock @uiw/react-md-editor components
+vi.mock('@uiw/react-md-editor', () => ({
+  default: vi.fn(({ value, onChange, preview, hideToolbar }) => {
+    if (preview === 'preview' || hideToolbar) {
+      // プレビューモード
+      return <div data-testid='md-preview'>{value}</div>
+    }
+    // 編集モード
+    return (
+      <textarea
+        data-testid='md-editor'
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+    )
   })
 }))
 
-// Mock @codemirror/view
-vi.mock('@codemirror/view', () => ({
-  lineNumbers: vi.fn(() => 'lineNumbers-extension')
-}))
-
-// Mock @vavt/cm-extension
-vi.mock('@vavt/cm-extension/dist/locale/jp-JP', () => ({
-  default: 'jp-JP-locale'
+// Mock MdEditor component
+vi.mock('./MdEditor', () => ({
+  MdEditor: vi.fn(({ value, onChange, preview, readOnly }) => {
+    if (preview === 'preview' || readOnly) {
+      // プレビューモード
+      return <div data-testid='md-preview'>{value}</div>
+    }
+    // 編集モード
+    return (
+      <textarea
+        data-testid='md-editor'
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+    )
+  })
 }))
 
 // Mock lucide-react
@@ -53,7 +43,7 @@ vi.mock('lucide-react', () => ({
   Copy: vi.fn(() => <span data-testid='copy-icon'>Copy Icon</span>)
 }))
 
-describe('GeneratedListCardV3', () => {
+describe('MarkdownListEditor', () => {
   const defaultProps = {
     generatedList: '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）',
     copyToClipboard: vi.fn()
@@ -64,7 +54,7 @@ describe('GeneratedListCardV3', () => {
   })
 
   it('should render with generated list content', () => {
-    render(<GeneratedListCardV3 {...defaultProps} />)
+    render(<MarkdownListEditor {...defaultProps} />)
 
     expect(screen.getByTestId('generated-list-card')).toBeInTheDocument()
     expect(screen.getByText('生成されたリスト')).toBeInTheDocument()
@@ -79,7 +69,7 @@ describe('GeneratedListCardV3', () => {
   })
 
   it('should show copy button', () => {
-    render(<GeneratedListCardV3 {...defaultProps} />)
+    render(<MarkdownListEditor {...defaultProps} />)
 
     const copyButton = screen.getByRole('button', { name: /コピー/i })
     expect(copyButton).toBeInTheDocument()
@@ -89,7 +79,7 @@ describe('GeneratedListCardV3', () => {
   it('should call copyToClipboard when copy button is clicked', () => {
     const mockCopyToClipboard = vi.fn()
     render(
-      <GeneratedListCardV3
+      <MarkdownListEditor
         {...defaultProps}
         copyToClipboard={mockCopyToClipboard}
       />
@@ -104,7 +94,7 @@ describe('GeneratedListCardV3', () => {
   })
 
   it('should toggle between preview and edit mode', () => {
-    render(<GeneratedListCardV3 {...defaultProps} />)
+    render(<MarkdownListEditor {...defaultProps} />)
 
     // Initially in preview mode
     expect(screen.getByTestId('md-preview')).toBeInTheDocument()
@@ -131,7 +121,7 @@ describe('GeneratedListCardV3', () => {
   })
 
   it('should update value when generatedList prop changes', () => {
-    const { rerender } = render(<GeneratedListCardV3 {...defaultProps} />)
+    const { rerender } = render(<MarkdownListEditor {...defaultProps} />)
 
     expect(screen.getByTestId('md-preview')).toHaveTextContent(
       '# Test Schedule'
@@ -139,7 +129,7 @@ describe('GeneratedListCardV3', () => {
 
     // Change the generatedList prop
     rerender(
-      <GeneratedListCardV3
+      <MarkdownListEditor
         {...defaultProps}
         generatedList='# New Schedule\n\n- 02/01（木）'
       />
@@ -151,7 +141,7 @@ describe('GeneratedListCardV3', () => {
   it('should update editor value when typing in edit mode', () => {
     const mockCopyToClipboard = vi.fn()
     render(
-      <GeneratedListCardV3
+      <MarkdownListEditor
         {...defaultProps}
         copyToClipboard={mockCopyToClipboard}
       />
@@ -172,7 +162,7 @@ describe('GeneratedListCardV3', () => {
   })
 
   it('should have correct test ids and styling', () => {
-    render(<GeneratedListCardV3 {...defaultProps} />)
+    render(<MarkdownListEditor {...defaultProps} />)
 
     const card = screen.getByTestId('generated-list-card')
     expect(card).toHaveClass('z-10', 'mb-8', 'rounded-2xl', 'border')
