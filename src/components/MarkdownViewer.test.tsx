@@ -72,6 +72,21 @@ describe('MarkdownViewer', () => {
     )
   })
 
+  it('should call onMount callback when component mounts', () => {
+    const mockOnMount = vi.fn()
+    render(<MarkdownViewer {...defaultProps} onMount={mockOnMount} />)
+
+    // Verify that onMount callback is called
+    expect(mockOnMount).toHaveBeenCalledTimes(1)
+  })
+
+  it('should not call onMount when onMount prop is not provided', () => {
+    // Verify that rendering without onMount property doesn't cause errors
+    expect(() => {
+      render(<MarkdownViewer {...defaultProps} />)
+    }).not.toThrow()
+  })
+
   it('should show copy button', () => {
     render(<MarkdownViewer {...defaultProps} />)
 

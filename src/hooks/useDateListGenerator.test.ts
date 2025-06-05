@@ -47,7 +47,7 @@ describe('useDateListGenerator', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     expect(result.current.startDate).toBe('2024-01-01')
-    expect(result.current.title).toBe('スケジュール')
+    expect(result.current.title).toBe('Schedule')
     expect(result.current.dateFormat).toBe('MM/DD（ddd）')
     expect(result.current.generatedList).toBe('')
     expect(result.current.excludeHolidays).toBe(false)
@@ -104,8 +104,8 @@ describe('useDateListGenerator', () => {
       result.current.setEndDate('2024-01-02')
     })
 
-    act(() => {
-      result.current.handleGenerateList()
+    await act(async () => {
+      await result.current.handleGenerateList()
     })
 
     expect(result.current.generatedList).toBe(
@@ -384,7 +384,7 @@ describe('useDateListGenerator', () => {
       result.current.resetSettings()
     })
 
-    expect(result.current.title).toBe('スケジュール')
+    expect(result.current.title).toBe('Schedule')
     expect(result.current.dateFormat).toBe('MM/DD（ddd）')
     expect(result.current.excludeHolidays).toBe(false)
     expect(result.current.holidayColor).toBe('#dc2626')

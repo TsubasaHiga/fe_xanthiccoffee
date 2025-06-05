@@ -1,4 +1,4 @@
-// サイト外部リンクの定義
+// External site links configuration
 export const EXTERNAL_LINKS = {
   cofus: 'https://cofus.work',
   changelog: 'https://github.com/TsubasaHiga/markdays/releases',

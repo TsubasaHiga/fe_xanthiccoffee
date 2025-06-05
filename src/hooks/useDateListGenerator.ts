@@ -3,30 +3,30 @@ import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-// 型定義
+// Type definitions
 type PresetType = 'period' | 'months'
 type Preset = { type: PresetType; value: number }
 
-// 定数
+// Constants
 const INITIAL_END_DATE = 14
 const DEFAULT_HOLIDAY_COLOR = '#dc2626'
 
 export const useDateListGenerator = () => {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [title, setTitle] = useState('スケジュール')
+  const [title, setTitle] = useState('Schedule')
   const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
   const [generatedList, setGeneratedList] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isFirstGeneration, setIsFirstGeneration] = useState(true)
 
-  // プリセット選択状態
+  // Preset selection state
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>({
     type: 'period',
     value: INITIAL_END_DATE
   })
 
-  // 休日設定
+  // Holiday settings
   const [excludeHolidays, setExcludeHolidays] = useState(false)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
   const [enableHolidayColors, setEnableHolidayColors] = useState(true)
@@ -40,7 +40,7 @@ export const useDateListGenerator = () => {
     setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
   }, [])
 
-  // 生成処理の依存関係をメモ化
+  // Memoize generation process dependencies
   const generateListDependencies = useMemo(
     () => ({
       startDate,
@@ -100,7 +100,7 @@ export const useDateListGenerator = () => {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'エラーが発生しました',
+        error instanceof Error ? error.message : 'An error occurred',
         { style: { color: '#b91c1c' } }
       )
     } finally {
@@ -110,10 +110,10 @@ export const useDateListGenerator = () => {
     }
   }, [generateListDependencies, isFirstGeneration])
 
-  // プリセット選択状態を更新する関数（日付変更は行わない）
+  // Function to update preset selection state (does not change dates)
   const updateSelectedPreset = useCallback((preset: Preset) => {
     setSelectedPreset(preset)
-  }, []) // 日付計算の共通ロジック
+  }, []) // Common date calculation logic
   const calculateDateFromPreset = useCallback(
     (
       baseDate: string,
@@ -125,7 +125,7 @@ export const useDateListGenerator = () => {
 
       const multiplier = direction === 'backward' ? -1 : 1
 
-      // dayjsを使ってタイムゾーンの影響を避ける
+      // Use dayjs to avoid timezone effects
       let date = dayjs(baseDate)
 
       if (type === 'period') {
@@ -139,7 +139,7 @@ export const useDateListGenerator = () => {
     []
   )
 
-  // プリセット適用の統合関数
+  // Integrated function for preset application
   const applyPreset = useCallback(
     (value: number, type: PresetType, base: 'start' | 'end') => {
       if (base === 'start' && startDate) {
@@ -181,7 +181,7 @@ export const useDateListGenerator = () => {
   )
 
   const resetSettings = useCallback(() => {
-    setTitle('スケジュール')
+    setTitle('Schedule')
     setDateFormat('MM/DD（ddd）')
     setStartDate(getTodayString())
     setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
@@ -195,7 +195,7 @@ export const useDateListGenerator = () => {
     setIsLoading(false)
   }, [])
 
-  // バリデーション状態をメモ化
+  // Memoized validation state
   const isGenerateButtonDisabled = useMemo(() => {
     return !title.trim() || !startDate || !endDate
   }, [title, startDate, endDate])

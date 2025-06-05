@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import Holidays from 'date-holidays'
 
-// 日本語ロケールを設定
+// Set Japanese locale
 dayjs.locale('ja')
 
 const hd = new Holidays('JP')
@@ -61,16 +61,16 @@ export const generateDateList = (
   const end = dayjs(endDate)
 
   while (current.isBefore(end) || current.isSame(end)) {
-    // excludeHolidaysがtrueなら土日を除外
+    // Exclude weekends if excludeHolidays is true
     if (excludeHolidays) {
       const day = current.day()
       if (day === 0 || day === 6) {
-        // 0:日曜, 6:土曜
+        // 0:Sunday, 6:Saturday
         current = current.add(1, 'day')
         continue
       }
     }
-    // excludeJpHolidaysがtrueなら祝日を除外（date-holidays使用）
+    // Exclude Japanese holidays if excludeJpHolidays is true (using date-holidays)
     const holidayInfo = hd.isHoliday(current.toDate())
     if (excludeJpHolidays && holidayInfo) {
       current = current.add(1, 'day')
@@ -78,10 +78,10 @@ export const generateDateList = (
     }
     let dateContent = formatDate(current.toDate(), format)
     const day = current.day()
-    const isWeekend = day === 0 || day === 6 // 0:日曜, 6:土曜
+    const isWeekend = day === 0 || day === 6 // 0:Sunday, 6:Saturday
 
     if (!excludeJpHolidays && holidayInfo) {
-      // holidayInfoは配列またはオブジェクト
+      // holidayInfo is an array or object
       const name = Array.isArray(holidayInfo)
         ? holidayInfo[0] && typeof holidayInfo[0] === 'object'
           ? (holidayInfo[0] as { name?: string }).name
@@ -92,7 +92,7 @@ export const generateDateList = (
       }
     }
 
-    // 色の適用
+    // Apply colors
     if (enableHolidayColors && (isWeekend || holidayInfo)) {
       const color = holidayInfo ? nationalHolidayColor : holidayColor
       dateContent = `<span style="color: ${color || '#dc2626'}">${dateContent}</span>`

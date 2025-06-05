@@ -34,7 +34,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
-// プリセット設定の定数をメモ化
+// Memoized preset configuration constants
 const PRESET_CONFIGURATIONS = [
   { type: 'period' as const, value: 7, label: '1週間' },
   { type: 'period' as const, value: 14, label: '2週間' },
@@ -85,7 +85,7 @@ export function DateSettings({
 
   const handleGenerate = handleGenerateListProp || handleGenerateList
 
-  // プリセット処理の統合関数
+  // Integrated preset processing function
   const handlePresetClick = useCallback(
     (value: number, type: 'period' | 'months') => {
       applyPreset(value, type, presetBase)
@@ -93,7 +93,7 @@ export function DateSettings({
     [applyPreset, presetBase]
   )
 
-  // バリデーション状態をメモ化
+  // Memoized validation state
   const validationState = useMemo(
     () => ({
       isTitleError: !title.trim(),

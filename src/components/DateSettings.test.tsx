@@ -197,7 +197,7 @@ describe('DateSettings', () => {
   it('should display arrow icon between date inputs', () => {
     render(<DateSettings />)
 
-    // SVG要素（ArrowRightアイコン）が表示されているかチェック
+    // SVG element (ArrowRight icon) display check
     const arrowIcon = document.querySelector(
       'svg[class*="lucide-arrow-right"], svg[class*="lucide-arrow-left"]'
     )
@@ -207,8 +207,8 @@ describe('DateSettings', () => {
   it('should change arrow direction based on preset base', () => {
     render(<DateSettings />)
 
-    // デフォルトでは「開始日から」（start）なので右矢印が表示される
-    // プリセット基準セレクトを変更すると矢印の方向も変わることをテスト
+    // By default it's "start" so right arrow is displayed
+    // Test that changing preset base select also changes arrow direction
     const presetBaseSelect = screen.getByRole('combobox')
     expect(presetBaseSelect).toBeInTheDocument()
   })

@@ -7,7 +7,7 @@ import {
 } from '@/contexts/DateListSettingsContext'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 
-// MarkdownViewerの遅延読み込み
+// Lazy loading for MarkdownViewer
 const MarkdownViewer = lazy(() =>
   import('@/components/MarkdownViewer').then((module) => ({
     default: module.MarkdownViewer
@@ -20,7 +20,7 @@ function DateListGeneratorContent() {
   const [showViewer, setShowViewer] = useState(false)
   const [shouldScrollOnMount, setShouldScrollOnMount] = useState(false)
 
-  // スクロール関数
+  // Scroll function
   const scrollToViewer = () => {
     if (generatedListRef.current) {
       generatedListRef.current.scrollIntoView({
@@ -30,18 +30,18 @@ function DateListGeneratorContent() {
     }
   }
 
-  // リスト生成ボタン押下時のラップ
+  // Wrapper for list generation button press
   const handleGenerateListWithScroll = async () => {
     const wasFirst = settings.isFirstGeneration
     await settings.handleGenerateList()
     if (wasFirst) {
-      setShouldScrollOnMount(true) // 初回はonMountでスクロール
+      setShouldScrollOnMount(true) // Scroll on mount for first time
     } else {
-      scrollToViewer() // 2回目以降は即スクロール
+      scrollToViewer() // Scroll immediately from second time onwards
     }
   }
 
-  // MarkdownViewer遅延読み込み完了時のスクロール
+  // Scroll function when MarkdownViewer lazy loading completes
   const handleMarkdownMount = () => {
     if (shouldScrollOnMount) {
       scrollToViewer()
@@ -49,7 +49,7 @@ function DateListGeneratorContent() {
     }
   }
 
-  // showViewer制御
+  // showViewer control
   useEffect(() => {
     if (settings.generatedList && !showViewer) {
       setShowViewer(true)

@@ -2,7 +2,7 @@ import { useDateListGenerator } from '@/hooks/useDateListGenerator'
 import type React from 'react'
 import { createContext, useContext, useMemo } from 'react'
 
-// Context型
+// Context type
 export type DateListSettingsContextType = ReturnType<
   typeof useDateListGenerator
 >
@@ -15,7 +15,7 @@ export const DateListSettingsProvider: React.FC<{
   children: React.ReactNode
 }> = ({ children }) => {
   const value = useDateListGenerator()
-  // useMemoでラップして不要な再レンダリングを防ぐ
+  // Wrap with useMemo to prevent unnecessary re-renders
   const memoedValue = useMemo(() => value, [value])
   return (
     <DateListSettingsContext.Provider value={memoedValue}>

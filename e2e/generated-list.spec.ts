@@ -16,70 +16,66 @@ test.describe('Generated List Functionality', () => {
     const generateButton = page.getByRole('button', { name: /生成|リスト/ })
     await generateButton.click()
 
-    // Wait for list to be generated (wait replaced with explicit card appearance wait)
+    // Wait for list to be generated and lazy loaded component to appear
+    // Wait for the lazy-loaded MarkdownViewer component to be displayed
     const listCard = page.locator('[data-testid="generated-list-card"]').first()
-    await expect(listCard).toBeVisible()
+    await expect(listCard).toBeVisible({ timeout: 5000 })
   })
 
-  test('should display generated list card', async ({ page }) => {
-    // Check if generated list card is visible
+  test('should display generated list card after lazy loading', async ({
+    page
+  }) => {
+    // Check if generated list card is visible after lazy loading
     const listCard = page.locator('[data-testid="generated-list-card"]').first()
     await expect(listCard).toBeVisible()
+
+    // Verify that content is correctly displayed after lazy loading
+    await expect(listCard.locator('text=生成されたリスト')).toBeVisible()
   })
 
-  test('should have copy button', async ({ page }) => {
+  test('should have copy button after lazy loading', async ({ page }) => {
     // Look for copy button (usually has copy icon or copy text)
+    // Verify that the copy button becomes available after lazy loading
     const copyButton = page.getByRole('button', { name: 'コピー' })
 
-    if (await copyButton.isVisible()) {
-      await expect(copyButton).toBeVisible()
-    }
+    // Wait for the button to be displayed after lazy loading completion
+    await expect(copyButton).toBeVisible({ timeout: 3000 })
   })
 
-  test('should have edit/preview toggle functionality', async ({ page }) => {
-    // Look for edit/preview toggle buttons
+  test('should have edit/preview toggle functionality after lazy loading', async ({
+    page
+  }) => {
+    // Look for edit/preview toggle buttons after lazy loading
+    // Verify that edit/preview toggle buttons become available after lazy loading
     const editButton = page.locator('button', { hasText: /編集|edit/i })
-    const previewButton = page.locator('button', {
-      hasText: /プレビュー|preview/i
-    })
 
-    // Check if either edit or preview functionality exists
-    const hasToggle =
-      (await editButton.isVisible()) || (await previewButton.isVisible())
-
-    if (hasToggle) {
-      if (await editButton.isVisible()) {
-        await expect(editButton).toBeVisible()
-      }
-      if (await previewButton.isVisible()) {
-        await expect(previewButton).toBeVisible()
-      }
-    }
+    // Verify that the edit button is displayed after lazy loading
+    await expect(editButton).toBeVisible({ timeout: 3000 })
   })
 
-  test('should show generated content with dates', async ({ page }) => {
-    // Check if the generated content contains expected dates
-    const content = page.locator('body')
+  test('should show generated content with dates after lazy loading', async ({
+    page
+  }) => {
+    // Check if the generated content contains expected dates after lazy loading
+    // Verify that content is correctly displayed after lazy loading
+    const content = page.locator('[data-testid="generated-list"]')
 
-    // Look for 2024 year in content (since we set dates to 2024)
-    const hasDateContent = await content.locator('text=2024').isVisible()
-
-    if (hasDateContent) {
-      await expect(content.locator('text=2024')).toBeVisible()
-    }
+    // Verify that the start date (01/01) is displayed after lazy loading
+    await expect(content.locator('text=01/01')).toBeVisible({ timeout: 3000 })
   })
 
-  test('should display markdown formatted content', async ({ page }) => {
-    // Check if content appears to be markdown formatted
-    // Look for common markdown elements like lists or formatted text
-    const markdownElements = page.locator('ul, ol, li, h1, h2, h3, h4, h5, h6')
+  test('should display markdown formatted content after lazy loading', async ({
+    page
+  }) => {
+    // Check if content appears to be markdown formatted after lazy loading
+    // Verify that Markdown-formatted content is displayed after lazy loading
+    const markdownContainer = page.locator('[data-testid="generated-list"]')
 
-    if (await markdownElements.first().isVisible()) {
-      await expect(markdownElements.first()).toBeVisible()
-    }
+    // Verify that the Markdown container is displayed after lazy loading
+    await expect(markdownContainer).toBeVisible({ timeout: 3000 })
   })
 
-  test('should copy content to clipboard when copy button is clicked', async ({
+  test('should copy content to clipboard after lazy loading', async ({
     page
   }, testInfo) => {
     if (!['chromium', 'Mobile Chrome'].includes(testInfo.project.name)) {
@@ -88,22 +84,39 @@ test.describe('Generated List Functionality', () => {
       )
       test.skip()
     }
-    // Find copy button
+
+    // Find copy button after lazy loading
+    // Verify that the copy button becomes available after lazy loading
     const copyButton = page.getByRole('button', { name: 'コピー' }).first()
+    await expect(copyButton).toBeVisible({ timeout: 3000 })
 
-    if (await copyButton.isVisible()) {
-      await copyButton.click()
+    await copyButton.click()
 
-      // Wait for potential toast notification (wait replaced with explicit toast appearance wait)
-      const toast = page
-        .getByRole('region', { name: 'Notifications alt+T' })
-        .getByRole('listitem')
-        .getByText('クリップボードにコピーしました')
-      await expect(toast).toBeVisible({ timeout: 1500 })
+    // Wait for toast notification after copy
+    // Verify toast notification after copy
+    const toast = page
+      .getByRole('region', { name: 'Notifications alt+T' })
+      .getByRole('listitem')
+      .getByText('クリップボードにコピーしました')
+    await expect(toast).toBeVisible({ timeout: 1500 })
+  })
 
-      if (await toast.isVisible()) {
-        await expect(toast).toBeVisible()
-      }
-    }
+  test('should handle lazy loading gracefully on slow connections', async ({
+    page
+  }) => {
+    // Simulate slow network to test lazy loading behavior
+    // Simulate slow network to test lazy loading behavior
+    await page.route('**/*', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+      route.continue()
+    })
+
+    // Click the list generation button
+    const generateButton = page.getByRole('button', { name: /生成|リスト/ })
+    await generateButton.click()
+
+    // Verify that the lazy-loaded component is eventually displayed
+    const listCard = page.locator('[data-testid="generated-list-card"]').first()
+    await expect(listCard).toBeVisible({ timeout: 10000 })
   })
 })

@@ -26,12 +26,12 @@ export function MarkdownViewer({
   const editorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
-  // generatedListの変更を反映
+  // Reflect changes in generatedList
   useEffect(() => {
     setValue(generatedList)
   }, [generatedList])
 
-  // プレビューの高さを測定
+  // Measure preview height
   useEffect(() => {
     if (!isEditing && previewRef.current) {
       const height = previewRef.current.scrollHeight
@@ -39,7 +39,7 @@ export function MarkdownViewer({
     }
   }, [isEditing])
 
-  // コピー
+  // Copy function
   const handleCopy = useCallback(() => {
     copyToClipboard(value)
   }, [value, copyToClipboard])

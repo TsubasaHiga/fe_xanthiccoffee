@@ -177,6 +177,6 @@ test.describe('DateListSettings Functionality', () => {
     await resetButton.click()
 
     // Check if title is cleared
-    await expect(titleInput).toHaveValue('スケジュール')
+    await expect(titleInput).toHaveValue('Schedule')
   })
 })
