@@ -14,7 +14,7 @@ const DEFAULT_HOLIDAY_COLOR = '#dc2626'
 export const useDateListGenerator = () => {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [title, setTitle] = useState('Schedule')
+  const [title, setTitle] = useState('スケジュール')
   const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
   const [generatedList, setGeneratedList] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -181,7 +181,7 @@ export const useDateListGenerator = () => {
   )
 
   const resetSettings = useCallback(() => {
-    setTitle('Schedule')
+    setTitle('スケジュール')
     setDateFormat('MM/DD（ddd）')
     setStartDate(getTodayString())
     setEndDate(addDays(getTodayString(), INITIAL_END_DATE))

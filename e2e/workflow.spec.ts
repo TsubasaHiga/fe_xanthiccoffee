@@ -54,7 +54,7 @@ test.describe('ユーザーフロー全体', () => {
       await resetButton.click()
 
       // Verify form is reset
-      await expect(titleInput).toHaveValue('Schedule')
+      await expect(titleInput).toHaveValue('スケジュール')
     }
   })
 

@@ -47,7 +47,7 @@ describe('日付リスト生成カスタムフック', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     expect(result.current.startDate).toBe('2024-01-01')
-    expect(result.current.title).toBe('Schedule')
+    expect(result.current.title).toBe('スケジュール')
     expect(result.current.dateFormat).toBe('MM/DD（ddd）')
     expect(result.current.generatedList).toBe('')
     expect(result.current.excludeHolidays).toBe(false)
@@ -384,7 +384,7 @@ describe('日付リスト生成カスタムフック', () => {
       result.current.resetSettings()
     })
 
-    expect(result.current.title).toBe('Schedule')
+    expect(result.current.title).toBe('スケジュール')
     expect(result.current.dateFormat).toBe('MM/DD（ddd）')
     expect(result.current.excludeHolidays).toBe(false)
     expect(result.current.holidayColor).toBe('#dc2626')

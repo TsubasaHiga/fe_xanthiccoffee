@@ -175,6 +175,6 @@ test.describe('日付リスト設定機能', () => {
     await resetButton.click()
 
     // Check if title is cleared
-    await expect(titleInput).toHaveValue('Schedule')
+    await expect(titleInput).toHaveValue('スケジュール')
   })
 })
