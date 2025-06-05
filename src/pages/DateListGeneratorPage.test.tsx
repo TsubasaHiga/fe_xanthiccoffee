@@ -40,8 +40,8 @@ vi.mock('@/contexts/DateListSettingsContext', () => ({
 
 // Remove React.lazy and Suspense mocks to adopt a simpler approach
 
-describe('DateListGeneratorPage', () => {
-  it('should render the main page structure', () => {
+describe('日付リスト生成ページ', () => {
+  it('ページの基本構造が正しく表示される', () => {
     render(<DateListGeneratorPage />)
 
     // Check main title
@@ -66,14 +66,14 @@ describe('DateListGeneratorPage', () => {
     expect(screen.getByTestId('date-list-settings-card')).toBeInTheDocument()
   })
 
-  it('should not show generated list card when no generated list', () => {
+  it('生成リストがない場合はリストカードが表示されない', () => {
     render(<DateListGeneratorPage />)
 
     // Generated list card should not be visible when generatedList is empty
     expect(screen.queryByTestId('generated-list-card')).not.toBeInTheDocument()
   })
 
-  it('should have correct styling classes', () => {
+  it('メインコンテナのクラスが正しい', () => {
     const { container } = render(<DateListGeneratorPage />)
 
     // Check for main container classes (the root div of the page)
@@ -90,7 +90,7 @@ describe('DateListGeneratorPage', () => {
     )
   })
 
-  it('should have background pattern element', () => {
+  it('背景パターン要素が存在する', () => {
     const { container } = render(<DateListGeneratorPage />)
 
     // Check for background pattern div
@@ -100,8 +100,8 @@ describe('DateListGeneratorPage', () => {
   })
 })
 
-describe('DateListGeneratorContent', () => {
-  it('should conditionally render generated list based on context', () => {
+describe('DateListGeneratorContentの条件分岐', () => {
+  it('コンテキストの値に応じてリスト表示が切り替わる', () => {
     // This function tests the actual conditional branching logic
     // When mockGeneratedList is empty, MarkdownViewer is not displayed
     render(<DateListGeneratorPage />)
@@ -110,7 +110,7 @@ describe('DateListGeneratorContent', () => {
     expect(screen.queryByTestId('generated-list-card')).not.toBeInTheDocument()
   })
 
-  it('should handle component state changes', () => {
+  it('コンポーネントの状態変化を正しく処理できる', () => {
     // Test basic state changes of the component
     const { rerender } = render(<DateListGeneratorPage />)
 
@@ -127,7 +127,7 @@ describe('DateListGeneratorContent', () => {
     ).toBeInTheDocument()
   })
 
-  it('should support lazy loading architecture', () => {
+  it('遅延読み込みアーキテクチャをサポートする', () => {
     // Confirm that lazy loading architecture is supported
     // Actual lazy loading is tested in E2E tests
     render(<DateListGeneratorPage />)

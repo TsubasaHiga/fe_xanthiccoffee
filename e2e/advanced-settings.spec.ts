@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Advanced Settings', () => {
+test.describe('詳細設定機能', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
 
-  test('should have expandable advanced options', async ({ page }) => {
+  test('詳細オプションが展開できる', async ({ page }) => {
     // Look for details/summary element or button to expand options
     const expandButton = page.locator('summary, button', {
       hasText: /詳細|オプション|設定|advanced/i
@@ -26,7 +26,7 @@ test.describe('Advanced Settings', () => {
     }
   })
 
-  test('should have date format input', async ({ page }) => {
+  test('日付フォーマット入力欄が存在する', async ({ page }) => {
     // Expand advanced options if they exist
     const expandButton = page.locator('summary, button', {
       hasText: /詳細|オプション|設定|advanced/i
@@ -50,7 +50,7 @@ test.describe('Advanced Settings', () => {
     }
   })
 
-  test('should have holiday color toggle', async ({ page }) => {
+  test('休日色切替スイッチが存在する', async ({ page }) => {
     // Expand advanced options if they exist
     const expandButton = page.locator('summary, button', {
       hasText: /詳細|オプション|設定|advanced/i
@@ -69,9 +69,7 @@ test.describe('Advanced Settings', () => {
     // Look for holiday color toggle
     const holidayToggle = page
       .locator('input[type="checkbox"], [role="switch"]')
-      .filter({
-        hasText: /休日|祝日|holiday/i
-      })
+      .filter({ hasText: /休日|祝日|holiday/i })
       .or(
         page
           .locator('label', { hasText: /休日|祝日|holiday/i })
@@ -83,7 +81,7 @@ test.describe('Advanced Settings', () => {
     }
   })
 
-  test('should have weekend exclusion toggle', async ({ page }) => {
+  test('週末除外スイッチが存在する', async ({ page }) => {
     // Expand advanced options if they exist
     const expandButton = page.locator('summary, button', {
       hasText: /詳細|オプション|設定|advanced/i
@@ -102,9 +100,7 @@ test.describe('Advanced Settings', () => {
     // Look for weekend exclusion toggle
     const weekendToggle = page
       .locator('input[type="checkbox"], [role="switch"]')
-      .filter({
-        hasText: /土日|週末|weekend/i
-      })
+      .filter({ hasText: /土日|週末|weekend/i })
       .or(
         page
           .locator('label', { hasText: /土日|週末|weekend/i })
@@ -116,7 +112,7 @@ test.describe('Advanced Settings', () => {
     }
   })
 
-  test('should have holiday exclusion toggle', async ({ page }) => {
+  test('祝日除外スイッチが存在する', async ({ page }) => {
     // Expand advanced options if they exist
     const expandButton = page.locator('summary, button', {
       hasText: /詳細|オプション|設定|advanced/i
@@ -135,9 +131,7 @@ test.describe('Advanced Settings', () => {
     // Look for holiday exclusion toggle
     const holidayExclusionToggle = page
       .locator('input[type="checkbox"], [role="switch"]')
-      .filter({
-        hasText: /祝日.*除外|holiday.*exclude/i
-      })
+      .filter({ hasText: /祝日.*除外|holiday.*exclude/i })
       .or(
         page
           .locator('label', { hasText: /祝日.*除外|holiday.*exclude/i })
@@ -149,7 +143,7 @@ test.describe('Advanced Settings', () => {
     }
   })
 
-  test('should toggle switches correctly', async ({ page }) => {
+  test('スイッチのON/OFFが正しく切り替わる', async ({ page }) => {
     // Expand advanced options if they exist
     const expandButton = page.locator('summary, button', {
       hasText: /詳細|オプション|設定|advanced/i
@@ -188,9 +182,7 @@ test.describe('Advanced Settings', () => {
     }
   })
 
-  test('should persist advanced settings when generating list', async ({
-    page
-  }) => {
+  test('詳細設定を変更してもリスト生成後に保持される', async ({ page }) => {
     // Fill basic form
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('テストタイトル')

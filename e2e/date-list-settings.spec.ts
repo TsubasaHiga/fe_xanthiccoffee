@@ -1,13 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('DateListSettings Functionality', () => {
+test.describe('日付リスト設定機能', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
 
-  test('should have form inputs for title, start date, and end date', async ({
-    page
-  }) => {
+  test('タイトル・開始日・終了日の入力欄が存在する', async ({ page }) => {
     // Check for title input
     const titleInput = page.locator('input[type="text"]').first()
     await expect(titleInput).toBeVisible()
@@ -19,7 +17,7 @@ test.describe('DateListSettings Functionality', () => {
     await expect(endDateText).toBeVisible()
   })
 
-  test('should allow entering title and dates', async ({ page }) => {
+  test('タイトル・日付が入力できる', async ({ page }) => {
     // Fill title
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('テストタイトル')
@@ -37,7 +35,7 @@ test.describe('DateListSettings Functionality', () => {
     await expect(endDateInput).toHaveValue('2024-01-07')
   })
 
-  test('should have preset period buttons', async ({ page }) => {
+  test('期間プリセットボタンが存在する', async ({ page }) => {
     // Look for preset buttons (1週間, 2週間, etc.)
     const buttons = page.locator('button')
 
@@ -52,7 +50,7 @@ test.describe('DateListSettings Functionality', () => {
     }
   })
 
-  test('should have preset base selector (開始日から/終了日から)', async ({
+  test('プリセット基準セレクタ（開始日から/終了日から）が存在する', async ({
     page
   }) => {
     // Look for preset base selector text in the period preset section
@@ -69,7 +67,7 @@ test.describe('DateListSettings Functionality', () => {
     }
   })
 
-  test('should change end date when preset is clicked with "開始日から"', async ({
+  test('「開始日から」選択時にプリセットボタンで終了日が変わる', async ({
     page
   }) => {
     // Fill start date using the ID selector
@@ -86,7 +84,7 @@ test.describe('DateListSettings Functionality', () => {
     expect(endDateValue).toBe('2024-01-08') // Start date + 7 days
   })
 
-  test('should change start date when preset is clicked with "終了日から"', async ({
+  test('「終了日から」選択時にプリセットボタンで開始日が変わる', async ({
     page
   }) => {
     // Fill end date using the ID selector
@@ -117,7 +115,7 @@ test.describe('DateListSettings Functionality', () => {
     expect(startDateValue).toBe('2024-01-08') // End date - 7 days
   })
 
-  test('should highlight selected preset button', async ({ page }) => {
+  test('選択中のプリセットボタンがハイライトされる', async ({ page }) => {
     // Fill start date using the ID selector
     const startDateInput = page.locator('#start-date')
     await startDateInput.fill('2024-01-01')
@@ -130,19 +128,19 @@ test.describe('DateListSettings Functionality', () => {
     await expect(twoWeekButton).toHaveClass(/bg-blue-600|default/)
   })
 
-  test('should have generate button', async ({ page }) => {
+  test('リスト生成ボタンが存在する', async ({ page }) => {
     // Look for generate button
     const generateButton = page.locator('button', { hasText: /生成|リスト/ })
     await expect(generateButton).toBeVisible()
   })
 
-  test('should have reset button', async ({ page }) => {
+  test('リセットボタンが存在する', async ({ page }) => {
     // Look for reset button
     const resetButton = page.locator('button', { hasText: /リセット|クリア/ })
     await expect(resetButton).toBeVisible()
   })
 
-  test('should show generated list after filling form and clicking generate', async ({
+  test('フォーム入力後にリスト生成ボタンを押すとリストが表示される', async ({
     page
   }) => {
     // Fill form
@@ -167,7 +165,7 @@ test.describe('DateListSettings Functionality', () => {
     await expect(generatedContent).toBeVisible({ timeout: 1500 })
   })
 
-  test('should reset form when reset button is clicked', async ({ page }) => {
+  test('リセットボタン押下でフォームが初期化される', async ({ page }) => {
     // Fill form first
     const titleInput = page.getByRole('textbox', { name: 'タイトル' })
     await titleInput.fill('テストタイトル')

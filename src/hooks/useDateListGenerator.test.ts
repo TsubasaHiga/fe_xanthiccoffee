@@ -38,12 +38,12 @@ Object.defineProperty(navigator, 'clipboard', {
   writable: true
 })
 
-describe('useDateListGenerator', () => {
+describe('日付リスト生成カスタムフック', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('should initialize with default values', () => {
+  it('初期値が正しく設定される', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     expect(result.current.startDate).toBe('2024-01-01')
@@ -55,7 +55,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.enableHolidayColors).toBe(true)
   })
 
-  it('should update title', () => {
+  it('タイトルを更新できる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -65,7 +65,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.title).toBe('New Title')
   })
 
-  it('should update date format', () => {
+  it('日付フォーマットを更新できる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -75,7 +75,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.dateFormat).toBe('YYYY-MM-DD')
   })
 
-  it('should update start date and clear preset', () => {
+  it('開始日を更新するとプリセットがクリアされる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -85,7 +85,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.startDate).toBe('2024-02-01')
   })
 
-  it('should update end date', () => {
+  it('終了日を更新できる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -95,7 +95,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.endDate).toBe('2024-02-01')
   })
 
-  it('should generate list successfully', async () => {
+  it('リスト生成が正常に動作する', async () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -113,7 +113,7 @@ describe('useDateListGenerator', () => {
     )
   })
 
-  it('should handle generate list error', async () => {
+  it('リスト生成時にエラーが発生した場合はエラートーストを表示する', async () => {
     const { generateDateList } = await import('@/utils/dateUtils')
     vi.mocked(generateDateList).mockImplementationOnce(() => {
       throw new Error('Test error')
@@ -131,7 +131,7 @@ describe('useDateListGenerator', () => {
     })
   })
 
-  it('should set preset period', () => {
+  it('プリセット（期間）を設定できる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -141,7 +141,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'period', value: 30 })
   })
 
-  it('should set preset months', () => {
+  it('プリセット（月）を設定できる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -151,7 +151,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'months', value: 3 })
   })
 
-  it('should apply preset from start date - period', () => {
+  it('開始日からのプリセット適用（期間）', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -166,7 +166,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'period', value: 7 })
   })
 
-  it('should apply preset from start date - months', () => {
+  it('開始日からのプリセット適用（月）', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -181,7 +181,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'months', value: 2 })
   })
 
-  it('should apply preset from end date - period', () => {
+  it('終了日からのプリセット適用（期間）', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -196,7 +196,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'period', value: 7 })
   })
 
-  it('should apply preset from end date - months', () => {
+  it('終了日からのプリセット適用（月）', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -211,7 +211,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'months', value: 2 })
   })
 
-  it('should not apply preset when base date is empty', () => {
+  it('基準日が空の場合はプリセットを適用しない', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {
@@ -236,7 +236,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.startDate).toBe(originalStartDate)
   })
 
-  it('should update selected preset only without changing dates', () => {
+  it('日付を変更せずに選択されたプリセットのみを更新する', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     const originalStartDate = result.current.startDate
@@ -251,38 +251,38 @@ describe('useDateListGenerator', () => {
     expect(result.current.selectedPreset).toEqual({ type: 'months', value: 5 })
   })
 
-  it('should validate dates for edge cases', () => {
+  it('日付のエッジケースを検証する', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
-    // Test leap year calculation
+    // うるう年の計算をテスト
     act(() => {
-      result.current.setStartDate('2024-02-29') // Leap year
+      result.current.setStartDate('2024-02-29') // うるう年
     })
 
     act(() => {
       result.current.applyPreset(1, 'months', 'start')
     })
 
-    // Should handle leap year correctly
+    // うるう年を正しく処理できること
     expect(result.current.endDate).toBe('2024-03-29')
   })
 
   // Temporarily skip this test due to vitest comparison issue (functionality works correctly)
-  it.skip('should handle month boundaries correctly with dayjs', () => {
+  it.skip('dayjsを使用した月境界の処理', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
-    // Test case 1: Jan 31 + 1 month (leap year 2024)
+    // テストケース 1: 1月31日 + 1ヶ月（うるう年2024）
     act(() => {
       result.current.setStartDate('2024-01-31')
       result.current.applyPreset(1, 'months', 'start')
     })
 
-    // Use dayjs objects for comparison to avoid string comparison issues
+    // dayjsオブジェクトを使用して比較（文字列比較の問題を回避）
     const endDate1 = dayjs(result.current.endDate)
     const expected1 = dayjs('2024-01-31').add(1, 'month')
     expect(endDate1.isSame(expected1, 'day')).toBe(true)
 
-    // Test case 2: Regular month addition
+    // テストケース 2: 通常の月の加算
     act(() => {
       result.current.setStartDate('2024-01-15')
       result.current.applyPreset(1, 'months', 'start')
@@ -292,7 +292,7 @@ describe('useDateListGenerator', () => {
     const expected2 = dayjs('2024-01-15').add(1, 'month')
     expect(endDate2.isSame(expected2, 'day')).toBe(true)
 
-    // Test case 3: March 31 + 1 month (April has 30 days)
+    // テストケース 3: 3月31日 + 1ヶ月（4月は30日）
     act(() => {
       result.current.setStartDate('2024-03-31')
       result.current.applyPreset(1, 'months', 'start')
@@ -303,26 +303,26 @@ describe('useDateListGenerator', () => {
     expect(endDate3.isSame(expected3, 'day')).toBe(true)
   })
 
-  it('should preserve preset state when manually changing dates', () => {
+  it('手動で日付を変更してもプリセット状態が保持される', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
-    // Set a preset first
+    // まずプリセットを設定
     act(() => {
       result.current.applyPreset(7, 'period', 'start')
     })
 
     expect(result.current.selectedPreset).toEqual({ type: 'period', value: 7 })
 
-    // Manually change end date
+    // 終了日を手動で変更
     act(() => {
       result.current.setEndDate('2024-01-20')
     })
 
-    // Preset should still be remembered (but dates might not match the preset anymore)
+    // プリセットはまだ覚えているはず
     expect(result.current.selectedPreset).toEqual({ type: 'period', value: 7 })
   })
 
-  it('should copy to clipboard successfully', async () => {
+  it('クリップボードに正常にコピーできる', async () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     await act(async () => {
@@ -341,7 +341,7 @@ describe('useDateListGenerator', () => {
     expect(toast.success).toHaveBeenCalledWith('クリップボードにコピーしました')
   })
 
-  it('should copy custom text to clipboard', async () => {
+  it('カスタムテキストをクリップボードにコピーできる', async () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     await act(async () => {
@@ -351,7 +351,7 @@ describe('useDateListGenerator', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Custom text')
   })
 
-  it('should handle clipboard error', async () => {
+  it('クリップボードエラーを処理する', async () => {
     vi.mocked(navigator.clipboard.writeText).mockRejectedValueOnce(
       new Error('Clipboard error')
     )
@@ -368,10 +368,10 @@ describe('useDateListGenerator', () => {
     })
   })
 
-  it('should reset settings to defaults', () => {
+  it('設定をデフォルトにリセットできる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
-    // Change some values first
+    // まずいくつかの値を変更
     act(() => {
       result.current.setTitle('Changed Title')
       result.current.setDateFormat('YYYY-MM-DD')
@@ -379,7 +379,7 @@ describe('useDateListGenerator', () => {
       result.current.setHolidayColor('#ff0000')
     })
 
-    // Reset
+    // リセット
     act(() => {
       result.current.resetSettings()
     })
@@ -391,17 +391,17 @@ describe('useDateListGenerator', () => {
     expect(result.current.generatedList).toBe('')
   })
 
-  it('should disable generate button when required fields are empty', () => {
+  it('必須フィールドが空の場合、生成ボタンが無効になる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
-    // Set empty title
+    // タイトルを空に設定
     act(() => {
       result.current.setTitle('')
     })
 
     expect(result.current.isGenerateButtonDisabled).toBe(true)
 
-    // Set valid title
+    // 有効なタイトルを設定
     act(() => {
       result.current.setTitle('Valid Title')
     })
@@ -409,7 +409,7 @@ describe('useDateListGenerator', () => {
     expect(result.current.isGenerateButtonDisabled).toBe(false)
   })
 
-  it('should update holiday settings', () => {
+  it('休日設定を更新できる', () => {
     const { result } = renderHook(() => useDateListGenerator())
 
     act(() => {

@@ -38,7 +38,7 @@ vi.mock('@/hooks/useDateListGenerator', () => ({
   })
 }))
 
-describe('DateListSettingsContext', () => {
+describe('日付リスト設定コンテキスト', () => {
   const TestComponent = () => {
     const context = useDateListSettings()
     return (
@@ -58,7 +58,7 @@ describe('DateListSettingsContext', () => {
     <DateListSettingsProvider>{children}</DateListSettingsProvider>
   )
 
-  it('should provide context values to children', () => {
+  it('子コンポーネントに値を正しく提供する', () => {
     render(<TestComponent />, { wrapper })
 
     expect(screen.getByTestId('title')).toHaveTextContent('Test Schedule')
@@ -68,7 +68,7 @@ describe('DateListSettingsContext', () => {
     expect(screen.getByTestId('is-disabled')).toHaveTextContent('false')
   })
 
-  it('should provide all hook methods and properties', () => {
+  it('全てのフックメソッド・プロパティが提供される', () => {
     const { result } = renderHook(() => useDateListSettings(), { wrapper })
 
     expect(result.current).toMatchObject({
@@ -97,7 +97,7 @@ describe('DateListSettingsContext', () => {
     expect(typeof result.current.resetSettings).toBe('function')
   })
 
-  it('should throw error when useDateListSettings is used outside provider', () => {
+  it('Provider外でuseDateListSettingsを使うとエラー', () => {
     expect(() => {
       renderHook(() => useDateListSettings())
     }).toThrow(
@@ -105,7 +105,7 @@ describe('DateListSettingsContext', () => {
     )
   })
 
-  it('should call hook methods when context methods are called', () => {
+  it('各メソッド呼び出しが正しく動作する', () => {
     const { result } = renderHook(() => useDateListSettings(), { wrapper })
 
     act(() => {
@@ -128,12 +128,12 @@ describe('DateListSettingsContext', () => {
   })
 })
 
-describe('DateListSettingsContext - タイムゾーン関連テスト', () => {
+describe('日付リスト設定コンテキストのタイムゾーン関連テスト', () => {
   const TestWrapper = ({ children }: { children: ReactNode }) => (
     <DateListSettingsProvider>{children}</DateListSettingsProvider>
   )
 
-  it('異なるタイムゾーンでの初期値設定の一貫性', () => {
+  it('異なるタイムゾーンでの初期値設定が一貫する', () => {
     const { result } = renderHook(() => useDateListSettings(), {
       wrapper: TestWrapper
     })
@@ -163,7 +163,7 @@ describe('DateListSettingsContext - タイムゾーン関連テスト', () => {
     expect(result.current.setEndDate).toHaveBeenCalledWith('2024-07-31')
   })
 
-  it('月境界を跨ぐ日付設定でのタイムゾーン一貫性', () => {
+  it('月境界を跨ぐ日付設定での一貫性', () => {
     const { result } = renderHook(() => useDateListSettings(), {
       wrapper: TestWrapper
     })
@@ -182,7 +182,7 @@ describe('DateListSettingsContext - タイムゾーン関連テスト', () => {
     expect(result.current.setEndDate).toHaveBeenCalledWith('2024-02-03')
   })
 
-  it('うるう年での2月29日を含む期間のタイムゾーン処理', () => {
+  it('うるう年を含む期間のタイムゾーン処理', () => {
     const { result } = renderHook(() => useDateListSettings(), {
       wrapper: TestWrapper
     })

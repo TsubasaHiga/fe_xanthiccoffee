@@ -47,7 +47,7 @@ vi.mock('lucide-react', () => ({
   Copy: vi.fn(() => <span data-testid='copy-icon'>Copy Icon</span>)
 }))
 
-describe('MarkdownViewer', () => {
+describe('MarkdownViewerコンポーネント', () => {
   const defaultProps = {
     generatedList: '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）',
     copyToClipboard: vi.fn()
@@ -57,7 +57,7 @@ describe('MarkdownViewer', () => {
     vi.clearAllMocks()
   })
 
-  it('should render with generated list content', () => {
+  it('生成リスト内容が正しく表示される', () => {
     render(<MarkdownViewer {...defaultProps} />)
 
     expect(screen.getByTestId('generated-list-card')).toBeInTheDocument()
@@ -72,7 +72,7 @@ describe('MarkdownViewer', () => {
     )
   })
 
-  it('should call onMount callback when component mounts', () => {
+  it('onMountコールバックがマウント時に呼ばれる', () => {
     const mockOnMount = vi.fn()
     render(<MarkdownViewer {...defaultProps} onMount={mockOnMount} />)
 
@@ -80,14 +80,14 @@ describe('MarkdownViewer', () => {
     expect(mockOnMount).toHaveBeenCalledTimes(1)
   })
 
-  it('should not call onMount when onMount prop is not provided', () => {
+  it('onMount未指定でもエラーにならない', () => {
     // Verify that rendering without onMount property doesn't cause errors
     expect(() => {
       render(<MarkdownViewer {...defaultProps} />)
     }).not.toThrow()
   })
 
-  it('should show copy button', () => {
+  it('コピー用ボタンが表示される', () => {
     render(<MarkdownViewer {...defaultProps} />)
 
     const copyButton = screen.getByRole('button', { name: /コピー/i })
@@ -95,7 +95,7 @@ describe('MarkdownViewer', () => {
     expect(screen.getByTestId('copy-icon')).toBeInTheDocument()
   })
 
-  it('should call copyToClipboard when copy button is clicked', () => {
+  it('コピー用ボタン押下でcopyToClipboardが呼ばれる', () => {
     const mockCopyToClipboard = vi.fn()
     render(
       <MarkdownViewer {...defaultProps} copyToClipboard={mockCopyToClipboard} />
@@ -109,7 +109,7 @@ describe('MarkdownViewer', () => {
     )
   })
 
-  it('should toggle between preview and edit mode', () => {
+  it('プレビュー/編集モードが切り替えられる', () => {
     render(<MarkdownViewer {...defaultProps} />)
 
     // Initially in preview mode
@@ -136,7 +136,7 @@ describe('MarkdownViewer', () => {
     expect(screen.queryByTestId('md-editor')).not.toBeInTheDocument()
   })
 
-  it('should update value when generatedList prop changes', () => {
+  it('generatedListの変更で内容が更新される', () => {
     const { rerender } = render(<MarkdownViewer {...defaultProps} />)
 
     expect(screen.getByTestId('md-preview')).toHaveTextContent(
@@ -154,7 +154,7 @@ describe('MarkdownViewer', () => {
     expect(screen.getByTestId('md-preview')).toHaveTextContent('# New Schedule')
   })
 
-  it('should update editor value when typing in edit mode', () => {
+  it('編集モードで入力値が更新されコピーも反映される', () => {
     const mockCopyToClipboard = vi.fn()
     render(
       <MarkdownViewer {...defaultProps} copyToClipboard={mockCopyToClipboard} />
@@ -174,7 +174,7 @@ describe('MarkdownViewer', () => {
     expect(mockCopyToClipboard).toHaveBeenCalledWith('# Modified Schedule')
   })
 
-  it('should have correct test ids and styling', () => {
+  it('テストIDやスタイルが正しい', () => {
     render(<MarkdownViewer {...defaultProps} />)
 
     const card = screen.getByTestId('generated-list-card')

@@ -1,13 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Form Validation', () => {
+test.describe('フォームバリデーション', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
 
-  test('should disable generate button when form is empty', async ({
-    page
-  }) => {
+  test('全項目が空のとき生成ボタンが無効になる', async ({ page }) => {
     // Find generate button
     const generateButton = page.locator('button', { hasText: /生成|リスト/ })
 
@@ -20,9 +18,7 @@ test.describe('Form Validation', () => {
     }
   })
 
-  test('should disable generate button when title is empty', async ({
-    page
-  }) => {
+  test('タイトルが空のとき生成ボタンが無効になる', async ({ page }) => {
     // Fill only dates, leave title empty
     const dateInputs = page.locator('input[type="date"]')
     await dateInputs.first().fill('2024-01-01')
@@ -39,9 +35,7 @@ test.describe('Form Validation', () => {
     }
   })
 
-  test('should disable generate button when start date is empty', async ({
-    page
-  }) => {
+  test('開始日が空のとき生成ボタンが無効になる', async ({ page }) => {
     // Fill title and end date, leave start date empty
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('テストタイトル')
@@ -60,9 +54,7 @@ test.describe('Form Validation', () => {
     }
   })
 
-  test('should disable generate button when end date is empty', async ({
-    page
-  }) => {
+  test('終了日が空のとき生成ボタンが無効になる', async ({ page }) => {
     // Fill title and start date, leave end date empty
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('テストタイトル')
@@ -81,7 +73,7 @@ test.describe('Form Validation', () => {
     }
   })
 
-  test('should enable generate button when all required fields are filled', async ({
+  test('全ての必須項目が入力されていれば生成ボタンが有効になる', async ({
     page
   }) => {
     // Fill all required fields
@@ -100,7 +92,7 @@ test.describe('Form Validation', () => {
     }
   })
 
-  test('should show error for invalid date range', async ({ page }) => {
+  test('開始日より終了日が前の場合はエラーが表示される', async ({ page }) => {
     // Fill form with end date before start date
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('テストタイトル')
@@ -126,7 +118,7 @@ test.describe('Form Validation', () => {
     }
   })
 
-  test('should validate date format', async ({ page }) => {
+  test('日付入力欄は正しいフォーマットを受け付ける', async ({ page }) => {
     // HTML5 date inputs handle format validation automatically
     // Just check that date inputs accept valid dates
     const dateInputs = page.locator('input[type="date"]')

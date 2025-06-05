@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Basic Page Load and Navigation', () => {
-  test('should load the main page successfully', async ({ page }) => {
+test.describe('基本ページ表示とナビゲーション', () => {
+  test('トップページが正常に表示される', async ({ page }) => {
     await page.goto('/')
 
     // Check that the main title is present
     await expect(page.locator('h1')).toContainText('MarkDays')
   })
 
-  test('should display DateSettings', async ({ page }) => {
+  test('日付設定フォームが表示される', async ({ page }) => {
     await page.goto('/')
 
     // Check that the settings card is visible
@@ -19,7 +19,7 @@ test.describe('Basic Page Load and Navigation', () => {
     ).toBeVisible()
   })
 
-  test('should display footer', async ({ page }) => {
+  test('フッターが表示される', async ({ page }) => {
     await page.goto('/')
 
     // Check that footer is present
@@ -27,8 +27,8 @@ test.describe('Basic Page Load and Navigation', () => {
   })
 })
 
-test.describe('Responsive Design', () => {
-  test('should work on mobile viewport', async ({ page }) => {
+test.describe('レスポンシブデザイン', () => {
+  test('モバイル画面で正常に動作する', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 })
     await page.goto('/')
 
@@ -39,7 +39,7 @@ test.describe('Responsive Design', () => {
     await expect(page.locator('body')).toBeVisible()
   })
 
-  test('should work on tablet viewport', async ({ page }) => {
+  test('タブレット画面で正常に動作する', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 })
     await page.goto('/')
 

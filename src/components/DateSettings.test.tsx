@@ -40,12 +40,12 @@ vi.mock('@/contexts/DateListSettingsContext', () => ({
   })
 }))
 
-describe('DateSettings', () => {
+describe('日付設定コンポーネント', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('should render all required form fields', () => {
+  it('全ての必須フォーム項目が表示される', () => {
     render(<DateSettings />)
 
     // Check for title input
@@ -65,7 +65,7 @@ describe('DateSettings', () => {
     expect(screen.getByText('リセット')).toBeInTheDocument()
   })
 
-  it('should render preset buttons', () => {
+  it('プリセットボタンが表示される', () => {
     render(<DateSettings />)
 
     // Check for period preset buttons
@@ -81,7 +81,7 @@ describe('DateSettings', () => {
     expect(screen.getByText('4ヶ月')).toBeInTheDocument()
   })
 
-  it('should call applyPreset with correct parameters when preset button is clicked', () => {
+  it('期間プリセットボタン押下でapplyPresetが呼ばれる', () => {
     render(<DateSettings />)
 
     const twoWeekButton = screen.getByText('2週間')
@@ -90,7 +90,7 @@ describe('DateSettings', () => {
     expect(mockApplyPreset).toHaveBeenCalledWith(14, 'period', 'start')
   })
 
-  it('should call applyPreset with correct parameters for month preset', () => {
+  it('月プリセットボタン押下でapplyPresetが呼ばれる', () => {
     render(<DateSettings />)
 
     const threeMonthButton = screen.getByText('3ヶ月')
@@ -99,7 +99,7 @@ describe('DateSettings', () => {
     expect(mockApplyPreset).toHaveBeenCalledWith(3, 'months', 'start')
   })
 
-  it('should highlight selected preset button', () => {
+  it('選択中のプリセットボタンがハイライトされる', () => {
     render(<DateSettings />)
 
     const twoWeekButton = screen.getByText('2週間')
@@ -108,7 +108,7 @@ describe('DateSettings', () => {
     expect(twoWeekButton).toHaveClass('bg-blue-600')
   })
 
-  it('should call handleGenerateList when generate button is clicked', () => {
+  it('リスト生成ボタン押下でhandleGenerateListが呼ばれる', () => {
     render(<DateSettings />)
 
     const generateButton = screen.getByText('リスト生成')
@@ -117,7 +117,7 @@ describe('DateSettings', () => {
     expect(mockHandleGenerateList).toHaveBeenCalledTimes(1)
   })
 
-  it('should call resetSettings when reset button is clicked', () => {
+  it('リセットボタン押下でresetSettingsが呼ばれる', () => {
     render(<DateSettings />)
 
     const resetButton = screen.getByText('リセット')
@@ -126,7 +126,7 @@ describe('DateSettings', () => {
     expect(mockResetSettings).toHaveBeenCalledTimes(1)
   })
 
-  it('should update title when title input changes', () => {
+  it('タイトル入力変更でsetTitleが呼ばれる', () => {
     render(<DateSettings />)
 
     const titleInput = screen.getByLabelText('タイトル')
@@ -135,7 +135,7 @@ describe('DateSettings', () => {
     expect(mockSetTitle).toHaveBeenCalledWith('新しいタイトル')
   })
 
-  it('should update start date when start date input changes', () => {
+  it('開始日入力変更でsetStartDateが呼ばれる', () => {
     render(<DateSettings />)
 
     const startDateInput = screen.getByLabelText('開始日')
@@ -144,7 +144,7 @@ describe('DateSettings', () => {
     expect(mockSetStartDate).toHaveBeenCalledWith('2024-02-01')
   })
 
-  it('should update end date when end date input changes', () => {
+  it('終了日入力変更でsetEndDateが呼ばれる', () => {
     render(<DateSettings />)
 
     const endDateInput = screen.getByLabelText('終了日')
@@ -153,7 +153,7 @@ describe('DateSettings', () => {
     expect(mockSetEndDate).toHaveBeenCalledWith('2024-02-15')
   })
 
-  it('should show advanced options when collapsible is expanded', async () => {
+  it('詳細オプション展開時に各項目が表示される', async () => {
     render(<DateSettings />)
 
     // Click on the advanced options trigger
@@ -174,7 +174,7 @@ describe('DateSettings', () => {
     ).toBeInTheDocument()
   })
 
-  it('should change preset base when selector is changed', async () => {
+  it('プリセット基準セレクタ変更でapplyPresetの引数が変わる', async () => {
     render(<DateSettings />)
 
     // Find and click the preset base selector
@@ -194,7 +194,7 @@ describe('DateSettings', () => {
     expect(mockApplyPreset).toHaveBeenCalledWith(7, 'period', 'end')
   })
 
-  it('should display arrow icon between date inputs', () => {
+  it('日付入力欄間に矢印アイコンが表示される', () => {
     render(<DateSettings />)
 
     // SVG element (ArrowRight icon) display check
@@ -204,7 +204,7 @@ describe('DateSettings', () => {
     expect(arrowIcon).toBeTruthy()
   })
 
-  it('should change arrow direction based on preset base', () => {
+  it('プリセット基準に応じて矢印方向が変わる', () => {
     render(<DateSettings />)
 
     // By default it's "start" so right arrow is displayed

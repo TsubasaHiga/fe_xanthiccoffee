@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Generated List Functionality', () => {
+test.describe('生成リスト機能', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
 
@@ -22,9 +22,7 @@ test.describe('Generated List Functionality', () => {
     await expect(listCard).toBeVisible({ timeout: 5000 })
   })
 
-  test('should display generated list card after lazy loading', async ({
-    page
-  }) => {
+  test('遅延読み込み後に生成リストカードが表示される', async ({ page }) => {
     // Check if generated list card is visible after lazy loading
     const listCard = page.locator('[data-testid="generated-list-card"]').first()
     await expect(listCard).toBeVisible()
@@ -33,7 +31,7 @@ test.describe('Generated List Functionality', () => {
     await expect(listCard.locator('text=生成されたリスト')).toBeVisible()
   })
 
-  test('should have copy button after lazy loading', async ({ page }) => {
+  test('遅延読み込み後にコピー用ボタンが表示される', async ({ page }) => {
     // Look for copy button (usually has copy icon or copy text)
     // Verify that the copy button becomes available after lazy loading
     const copyButton = page.getByRole('button', { name: 'コピー' })
@@ -42,9 +40,7 @@ test.describe('Generated List Functionality', () => {
     await expect(copyButton).toBeVisible({ timeout: 3000 })
   })
 
-  test('should have edit/preview toggle functionality after lazy loading', async ({
-    page
-  }) => {
+  test('遅延読み込み後に編集/プレビュー切替ができる', async ({ page }) => {
     // Look for edit/preview toggle buttons after lazy loading
     // Verify that edit/preview toggle buttons become available after lazy loading
     const editButton = page.locator('button', { hasText: /編集|edit/i })
@@ -53,9 +49,7 @@ test.describe('Generated List Functionality', () => {
     await expect(editButton).toBeVisible({ timeout: 3000 })
   })
 
-  test('should show generated content with dates after lazy loading', async ({
-    page
-  }) => {
+  test('遅延読み込み後に日付が正しく表示される', async ({ page }) => {
     // Check if the generated content contains expected dates after lazy loading
     // Verify that content is correctly displayed after lazy loading
     const content = page.locator('[data-testid="generated-list"]')
@@ -64,9 +58,7 @@ test.describe('Generated List Functionality', () => {
     await expect(content.locator('text=01/01')).toBeVisible({ timeout: 3000 })
   })
 
-  test('should display markdown formatted content after lazy loading', async ({
-    page
-  }) => {
+  test('遅延読み込み後にMarkdown形式で内容が表示される', async ({ page }) => {
     // Check if content appears to be markdown formatted after lazy loading
     // Verify that Markdown-formatted content is displayed after lazy loading
     const markdownContainer = page.locator('[data-testid="generated-list"]')
@@ -75,7 +67,7 @@ test.describe('Generated List Functionality', () => {
     await expect(markdownContainer).toBeVisible({ timeout: 3000 })
   })
 
-  test('should copy content to clipboard after lazy loading', async ({
+  test('遅延読み込み後にコピー操作でトーストが表示される', async ({
     page
   }, testInfo) => {
     if (!['chromium', 'Mobile Chrome'].includes(testInfo.project.name)) {
@@ -101,7 +93,7 @@ test.describe('Generated List Functionality', () => {
     await expect(toast).toBeVisible({ timeout: 1500 })
   })
 
-  test('should handle lazy loading gracefully on slow connections', async ({
+  test('遅延読み込みが遅い場合もリストが最終的に表示される', async ({
     page
   }) => {
     // Simulate slow network to test lazy loading behavior

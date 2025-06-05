@@ -1,10 +1,8 @@
 import { expect, test } from '@playwright/test'
 import { selectors, testData } from './test-data'
 
-test.describe('Complete User Flow', () => {
-  test('should complete a full date list generation workflow', async ({
-    page
-  }) => {
+test.describe('ユーザーフロー全体', () => {
+  test('日付リスト生成の一連の流れが完了できる', async ({ page }) => {
     await page.goto('/')
 
     // Step 1: Verify page loaded
@@ -60,7 +58,7 @@ test.describe('Complete User Flow', () => {
     }
   })
 
-  test('should handle different form configurations', async ({ page }) => {
+  test('様々なフォーム構成で動作する', async ({ page }) => {
     await page.goto('/')
 
     // Test with short period
@@ -85,7 +83,9 @@ test.describe('Complete User Flow', () => {
     expect(pageContent).toContain(testData.shortPeriodForm.title)
   })
 
-  test('should work across different viewports', async ({ page }) => {
+  test('各種画面サイズ（モバイル/デスクトップ）で動作する', async ({
+    page
+  }) => {
     // Test mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })
     await page.goto('/')
@@ -118,9 +118,7 @@ test.describe('Complete User Flow', () => {
     await expect(page.locator('h1')).toContainText('MarkDays')
   })
 
-  test('should complete workflow using preset functionality', async ({
-    page
-  }) => {
+  test('プリセット機能を使ったワークフローが完了できる', async ({ page }) => {
     await page.goto('/')
 
     // Step 1: Fill title
@@ -153,7 +151,7 @@ test.describe('Complete User Flow', () => {
     await expect(generatedContent).toBeVisible({ timeout: 1500 })
   })
 
-  test('should complete workflow using "終了日から" preset', async ({
+  test('「終了日から」プリセットでもワークフローが完了できる', async ({
     page
   }) => {
     await page.goto('/')

@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test'
 
-test.describe('Lazy Loading Functionality', () => {
+test.describe('遅延読み込み機能', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
 
-  test('should not load MarkdownViewer initially', async ({ page }) => {
+  test('初期状態でMarkdownViewerが読み込まれない', async ({ page }) => {
     // Verify that MarkdownViewer component is not loaded in the initial state
     const listCard = page.locator('[data-testid="generated-list-card"]')
     await expect(listCard).not.toBeVisible()
   })
 
-  test('should lazy load MarkdownViewer only when list is generated', async ({
+  test('リスト生成時のみMarkdownViewerが遅延読み込みされる', async ({
     page
   }) => {
     // Fill in the form
@@ -40,7 +40,7 @@ test.describe('Lazy Loading Functionality', () => {
     await expect(page.getByRole('button', { name: '編集する' })).toBeVisible()
   })
 
-  test('should handle lazy loading with network delays', async ({ page }) => {
+  test('ネットワーク遅延時も遅延読み込みが正しく動作する', async ({ page }) => {
     // Simulate network delay
     await page.route('**/*.js', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 200))
@@ -63,7 +63,9 @@ test.describe('Lazy Loading Functionality', () => {
     await expect(listCard).toBeVisible({ timeout: 10000 })
   })
 
-  test('should preserve lazy loading state on navigation', async ({ page }) => {
+  test('ページリロード後に遅延読み込み状態がリセットされる', async ({
+    page
+  }) => {
     // Generate a list
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('ナビゲーションテスト')
@@ -87,7 +89,9 @@ test.describe('Lazy Loading Functionality', () => {
     await expect(listCard).not.toBeVisible()
   })
 
-  test('should handle multiple rapid generations', async ({ page }) => {
+  test('連続で複数回リスト生成しても遅延読み込みが正しく動作する', async ({
+    page
+  }) => {
     // Verify that lazy loading works correctly even with multiple consecutive generations
     const titleInput = page.locator('input[type="text"]').first()
     const dateInputs = page.locator('input[type="date"]')
@@ -114,7 +118,7 @@ test.describe('Lazy Loading Functionality', () => {
     })
   })
 
-  test('should show loading state during lazy loading', async ({ page }) => {
+  test('遅延読み込み中はローディング状態が表示される', async ({ page }) => {
     // Test the state during lazy loading
     const titleInput = page.locator('input[type="text"]').first()
     await titleInput.fill('ローディングテスト')
