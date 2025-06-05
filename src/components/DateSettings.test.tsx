@@ -49,11 +49,11 @@ describe('日付設定コンポーネント', () => {
     render(<DateSettings />)
 
     // Check for title input
-    expect(screen.getByLabelText('タイトル *')).toBeInTheDocument()
+    expect(screen.getByLabelText('タイトル')).toBeInTheDocument()
 
     // Check for date inputs
-    expect(screen.getByLabelText('開始日 *')).toBeInTheDocument()
-    expect(screen.getByLabelText('終了日 *')).toBeInTheDocument()
+    expect(screen.getByLabelText('開始日')).toBeInTheDocument()
+    expect(screen.getByLabelText('終了日')).toBeInTheDocument()
 
     // Check for preset base selector
     expect(screen.getByText('期間プリセット')).toBeInTheDocument()
@@ -129,7 +129,7 @@ describe('日付設定コンポーネント', () => {
   it('タイトル入力変更でsetTitleが呼ばれる', () => {
     render(<DateSettings />)
 
-    const titleInput = screen.getByLabelText('タイトル *')
+    const titleInput = screen.getByLabelText('タイトル')
     fireEvent.change(titleInput, { target: { value: '新しいタイトル' } })
 
     expect(mockSetTitle).toHaveBeenCalledWith('新しいタイトル')
@@ -138,7 +138,7 @@ describe('日付設定コンポーネント', () => {
   it('開始日入力変更でsetStartDateが呼ばれる', () => {
     render(<DateSettings />)
 
-    const startDateInput = screen.getByLabelText('開始日 *')
+    const startDateInput = screen.getByLabelText('開始日')
     fireEvent.change(startDateInput, { target: { value: '2024-02-01' } })
 
     expect(mockSetStartDate).toHaveBeenCalledWith('2024-02-01')
@@ -147,7 +147,7 @@ describe('日付設定コンポーネント', () => {
   it('終了日入力変更でsetEndDateが呼ばれる', () => {
     render(<DateSettings />)
 
-    const endDateInput = screen.getByLabelText('終了日 *')
+    const endDateInput = screen.getByLabelText('終了日')
     fireEvent.change(endDateInput, { target: { value: '2024-02-15' } })
 
     expect(mockSetEndDate).toHaveBeenCalledWith('2024-02-15')

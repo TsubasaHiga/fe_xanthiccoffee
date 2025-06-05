@@ -80,9 +80,7 @@ export function DateSettings({
     setHolidayColor,
     nationalHolidayColor,
     setNationalHolidayColor,
-    generatedList,
-    // New validation features
-    validationErrors
+    generatedList
   } = useDateListSettings()
 
   const handleGenerate = handleGenerateListProp || handleGenerateList
@@ -95,25 +93,17 @@ export function DateSettings({
     [applyPreset, presetBase]
   )
 
-  // Use validation errors from the hook
+  // Memoized validation state
   const validationState = useMemo(
     () => ({
-      isTitleError: !!validationErrors?.title,
-      isDateRangeError: !!validationErrors?.dateRange,
-      isDateFormatError: !!validationErrors?.dateFormat,
-      isHolidayColorError: !!validationErrors?.holidayColor,
-      isNationalHolidayColorError: !!validationErrors?.nationalHolidayColor
+      isTitleError: !title.trim(),
+      isStartDateError: !startDate,
+      isEndDateError: !endDate
     }),
-    [validationErrors]
+    [title, startDate, endDate]
   )
 
-  const {
-    isTitleError,
-    isDateRangeError,
-    isDateFormatError,
-    isHolidayColorError,
-    isNationalHolidayColorError
-  } = validationState
+  const { isTitleError, isStartDateError, isEndDateError } = validationState
 
   return (
     <ContentLayout>
@@ -139,7 +129,7 @@ export function DateSettings({
         <CardContent className='space-y-4 sm:space-y-6'>
           <div className='space-y-2'>
             <Label htmlFor='title' className='text-gray-700'>
-              タイトル <span className='text-red-500'>*</span>
+              タイトル
             </Label>
             <Input
               id='title'
@@ -152,25 +142,14 @@ export function DateSettings({
                   ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
                   : 'border-gray-300'
               }`}
-              aria-invalid={isTitleError}
-              aria-describedby={isTitleError ? 'title-error' : undefined}
               required
             />
-            {isTitleError && validationErrors?.title && (
-              <p
-                id='title-error'
-                className='text-destructive text-sm'
-                role='alert'
-              >
-                {validationErrors.title}
-              </p>
-            )}
           </div>
 
-          <div className='grid grid-cols-[minmax(120px,_1fr)_16px_minmax(120px,_1fr)] items-start gap-1 xs:gap-2 sm:gap-4'>
+          <div className='grid grid-cols-[minmax(120px,_1fr)_16px_minmax(120px,_1fr)] items-center gap-1 xs:gap-2 sm:gap-4'>
             <div className='space-y-2'>
               <Label htmlFor='start-date' className='text-gray-700'>
-                開始日 <span className='text-red-500'>*</span>
+                開始日
               </Label>
               <Input
                 id='start-date'
@@ -178,35 +157,25 @@ export function DateSettings({
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className={`appearance-none rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-                  isDateRangeError
-                    ? 'border-destructive bg-destructive/10'
+                  isStartDateError
+                    ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
                     : 'border-gray-300'
                 }`}
-                aria-invalid={isDateRangeError}
-                aria-describedby={
-                  isDateRangeError ? 'date-range-error' : undefined
-                }
                 required
               />
             </div>
 
             <div className='flex items-center justify-center pt-6'>
               {presetBase === 'start' ? (
-                <ArrowRight
-                  className='h-4 w-4 text-gray-400'
-                  aria-hidden='true'
-                />
+                <ArrowRight className='h-4 w-4 text-gray-400' />
               ) : (
-                <ArrowLeft
-                  className='h-4 w-4 text-gray-400'
-                  aria-hidden='true'
-                />
+                <ArrowLeft className='h-4 w-4 text-gray-400' />
               )}
             </div>
 
             <div className='space-y-2'>
               <Label htmlFor='end-date' className='text-gray-700'>
-                終了日 <span className='text-red-500'>*</span>
+                終了日
               </Label>
               <Input
                 id='end-date'
@@ -214,28 +183,14 @@ export function DateSettings({
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className={`appearance-none rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-                  isDateRangeError
-                    ? 'border-destructive bg-destructive/10'
+                  isEndDateError
+                    ? 'border-destructive bg-destructive/10 placeholder:text-destructive'
                     : 'border-gray-300'
                 }`}
-                aria-invalid={isDateRangeError}
-                aria-describedby={
-                  isDateRangeError ? 'date-range-error' : undefined
-                }
                 required
               />
             </div>
           </div>
-
-          {isDateRangeError && validationErrors?.dateRange && (
-            <p
-              id='date-range-error'
-              className='text-destructive text-sm'
-              role='alert'
-            >
-              {validationErrors.dateRange}
-            </p>
-          )}
 
           <div className='space-y-3'>
             <div className='flex items-center gap-3'>
@@ -256,8 +211,7 @@ export function DateSettings({
                 </SelectContent>
               </Select>
             </div>
-            <fieldset className='grid grid-cols-4 gap-2'>
-              <legend className='sr-only'>期間プリセット選択</legend>
+            <div className='grid grid-cols-4 gap-2'>
               {PRESET_CONFIGURATIONS.map((preset) => (
                 <Button
                   key={preset.type + preset.value}
@@ -276,16 +230,11 @@ export function DateSettings({
                       ? 'border-blue-600 bg-blue-600 text-white shadow-sm hover:bg-blue-700 hover:text-white'
                       : 'border border-blue-300 text-blue-600 transition hover:bg-blue-50'
                   }
-                  aria-pressed={
-                    selectedPreset?.type === preset.type &&
-                    selectedPreset.value === preset.value
-                  }
-                  aria-label={`${preset.label}の期間を設定`}
                 >
                   {preset.label}
                 </Button>
               ))}
-            </fieldset>
+            </div>
           </div>
 
           <Collapsible
@@ -297,17 +246,14 @@ export function DateSettings({
               <Button
                 variant='ghost'
                 className={`flex h-auto w-full items-center justify-between p-3 text-gray-700 transition hover:bg-gray-100 ${isAdvancedOpen ? 'rounded-br-none rounded-bl-none bg-gray-100' : ''}`}
-                aria-expanded={isAdvancedOpen}
-                aria-controls='advanced-options'
               >
                 <span className='font-medium text-sm'>詳細オプション</span>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`}
-                  aria-hidden='true'
                 />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent id='advanced-options' className='p-3 pt-3'>
+            <CollapsibleContent className='p-3 pt-3'>
               <div className='space-y-2'>
                 <div className='flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
@@ -322,31 +268,9 @@ export function DateSettings({
                     value={dateFormat}
                     onChange={(e) => setDateFormat(e.target.value)}
                     placeholder='例: M/D（dd）, YYYY-MM-DD, MM月DD日（ddd）'
-                    className={`rounded-lg border bg-gray-50 text-gray-800 transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-                      isDateFormatError
-                        ? 'border-destructive bg-destructive/10'
-                        : 'border-gray-300'
-                    }`}
-                    aria-invalid={isDateFormatError}
-                    aria-describedby={
-                      isDateFormatError
-                        ? 'date-format-error'
-                        : 'date-format-help'
-                    }
+                    className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                   />
-                  {isDateFormatError && validationErrors?.dateFormat && (
-                    <p
-                      id='date-format-error'
-                      className='text-destructive text-sm'
-                      role='alert'
-                    >
-                      {validationErrors.dateFormat}
-                    </p>
-                  )}
-                  <div
-                    id='date-format-help'
-                    className='mt-1 flex flex-col space-y-1 pl-2 text-gray-500 text-xs'
-                  >
+                  <div className='mt-1 flex flex-col space-y-1 pl-2 text-gray-500 text-xs'>
                     <span>
                       設定例：（<span className='font-bold'>dayjs</span>{' '}
                       形式を使用）
@@ -376,11 +300,7 @@ export function DateSettings({
                       id='enable-holiday-colors'
                       checked={enableHolidayColors}
                       onCheckedChange={setEnableHolidayColors}
-                      aria-describedby='holiday-colors-help'
                     />
-                  </div>
-                  <div id='holiday-colors-help' className='sr-only'>
-                    有効にすると休日と祝日に色を設定できます
                   </div>
                   {enableHolidayColors && (
                     <div className='grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2'>
@@ -398,37 +318,15 @@ export function DateSettings({
                             value={holidayColor}
                             onChange={(e) => setHolidayColor(e.target.value)}
                             className='h-8 w-12 rounded border border-gray-300 p-1'
-                            aria-label='休日の色を選択'
                           />
                           <Input
                             type='text'
                             value={holidayColor}
                             onChange={(e) => setHolidayColor(e.target.value)}
                             placeholder='#dc2626'
-                            className={`flex-1 rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-                              isHolidayColorError
-                                ? 'border-destructive bg-destructive/10'
-                                : 'border-gray-300'
-                            }`}
-                            aria-invalid={isHolidayColorError}
-                            aria-describedby={
-                              isHolidayColorError
-                                ? 'holiday-color-error'
-                                : undefined
-                            }
-                            aria-label='休日の色コードを直接入力'
+                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                           />
                         </div>
-                        {isHolidayColorError &&
-                          validationErrors?.holidayColor && (
-                            <p
-                              id='holiday-color-error'
-                              className='text-destructive text-sm'
-                              role='alert'
-                            >
-                              {validationErrors.holidayColor}
-                            </p>
-                          )}
                       </div>
                       <div className='space-y-2'>
                         <Label
@@ -446,7 +344,6 @@ export function DateSettings({
                               setNationalHolidayColor(e.target.value)
                             }
                             className='h-8 w-12 rounded border border-gray-300 p-1'
-                            aria-label='祝日の色を選択'
                           />
                           <Input
                             type='text'
@@ -455,30 +352,9 @@ export function DateSettings({
                               setNationalHolidayColor(e.target.value)
                             }
                             placeholder='#dc2626'
-                            className={`flex-1 rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-                              isNationalHolidayColorError
-                                ? 'border-destructive bg-destructive/10'
-                                : 'border-gray-300'
-                            }`}
-                            aria-invalid={isNationalHolidayColorError}
-                            aria-describedby={
-                              isNationalHolidayColorError
-                                ? 'national-holiday-color-error'
-                                : undefined
-                            }
-                            aria-label='祝日の色コードを直接入力'
+                            className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                           />
                         </div>
-                        {isNationalHolidayColorError &&
-                          validationErrors?.nationalHolidayColor && (
-                            <p
-                              id='national-holiday-color-error'
-                              className='text-destructive text-sm'
-                              role='alert'
-                            >
-                              {validationErrors.nationalHolidayColor}
-                            </p>
-                          )}
                       </div>
                     </div>
                   )}
@@ -495,11 +371,7 @@ export function DateSettings({
                     id='exclude-holidays'
                     checked={excludeHolidays}
                     onCheckedChange={setExcludeHolidays}
-                    aria-describedby='exclude-holidays-help'
                   />
-                </div>
-                <div id='exclude-holidays-help' className='sr-only'>
-                  有効にすると土曜日と日曜日がリストから除外されます
                 </div>
                 <div className='flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3'>
                   <Label
@@ -513,11 +385,7 @@ export function DateSettings({
                     id='exclude-jp-holidays'
                     checked={excludeJpHolidays}
                     onCheckedChange={setExcludeJpHolidays}
-                    aria-describedby='exclude-jp-holidays-help'
                   />
-                </div>
-                <div id='exclude-jp-holidays-help' className='sr-only'>
-                  有効にすると日本の祝日がリストから除外されます
                 </div>
               </div>
             </CollapsibleContent>
@@ -534,7 +402,6 @@ export function DateSettings({
                   isGenerateButtonDisabled ||
                   (isLoading && isFirstGeneration && !generatedList)
                 }
-                aria-describedby='generate-button-help'
               >
                 {isLoading && isFirstGeneration && !generatedList ? (
                   <div className='flex items-center gap-2'>
@@ -545,17 +412,13 @@ export function DateSettings({
                   'リスト生成'
                 )}
               </Button>
-              <div id='generate-button-help' className='sr-only'>
-                入力された設定に基づいて日付リストを生成します
-              </div>
               <Button
                 onClick={resetSettings}
                 variant='outline'
                 size='lg'
                 className='mt-2 w-full border border-gray-300 text-gray-500 transition hover:bg-gray-100'
-                aria-label='すべての設定を初期値にリセット'
               >
-                <RotateCcw className='mr-2 h-4 w-4' aria-hidden='true' />
+                <RotateCcw className='mr-2 h-4 w-4' />
                 リセット
               </Button>
             </div>

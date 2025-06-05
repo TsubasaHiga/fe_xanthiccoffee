@@ -1,16 +1,4 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
-import {
-  type PersistedSettings,
-  loadSettingsFromStorage,
-  saveSettingsToStorage
-} from '@/utils/localStorage'
-import {
-  sanitizeInput,
-  validateColorHex,
-  validateDateFormat,
-  validateDateRange,
-  validateTitle
-} from '@/utils/validation'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -32,15 +20,6 @@ export const useDateListGenerator = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isFirstGeneration, setIsFirstGeneration] = useState(true)
 
-  // Validation state
-  const [validationErrors, setValidationErrors] = useState<{
-    dateRange?: string
-    title?: string
-    dateFormat?: string
-    holidayColor?: string
-    nationalHolidayColor?: string
-  }>({})
-
   // Preset selection state
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>({
     type: 'period',
@@ -56,220 +35,10 @@ export const useDateListGenerator = () => {
     DEFAULT_HOLIDAY_COLOR
   )
 
-  // Initialize settings from localStorage and set default dates
   useEffect(() => {
-    const storedSettings = loadSettingsFromStorage()
-    const today = getTodayString()
-
-    setStartDate(today)
-    setEndDate(addDays(today, INITIAL_END_DATE))
-
-    if (storedSettings) {
-      if (storedSettings.title) setTitle(storedSettings.title)
-      if (storedSettings.dateFormat) setDateFormat(storedSettings.dateFormat)
-      if (typeof storedSettings.excludeHolidays === 'boolean') {
-        setExcludeHolidays(storedSettings.excludeHolidays)
-      }
-      if (typeof storedSettings.excludeJpHolidays === 'boolean') {
-        setExcludeJpHolidays(storedSettings.excludeJpHolidays)
-      }
-      if (typeof storedSettings.enableHolidayColors === 'boolean') {
-        setEnableHolidayColors(storedSettings.enableHolidayColors)
-      }
-      if (storedSettings.holidayColor)
-        setHolidayColor(storedSettings.holidayColor)
-      if (storedSettings.nationalHolidayColor) {
-        setNationalHolidayColor(storedSettings.nationalHolidayColor)
-      }
-    }
+    setStartDate(getTodayString())
+    setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
   }, [])
-
-  // Auto-save settings to localStorage when they change
-  useEffect(() => {
-    const settings: PersistedSettings = {
-      title,
-      dateFormat,
-      excludeHolidays,
-      excludeJpHolidays,
-      enableHolidayColors,
-      holidayColor,
-      nationalHolidayColor
-    }
-    saveSettingsToStorage(settings)
-  }, [
-    title,
-    dateFormat,
-    excludeHolidays,
-    excludeJpHolidays,
-    enableHolidayColors,
-    holidayColor,
-    nationalHolidayColor
-  ])
-
-  // Validation functions
-  const validateAllInputs = useCallback(() => {
-    const errors: typeof validationErrors = {}
-
-    // Validate date range
-    const dateRangeResult = validateDateRange(startDate, endDate)
-    if (!dateRangeResult.isValid) {
-      errors.dateRange = dateRangeResult.errorMessage
-    }
-
-    // Validate title
-    const titleResult = validateTitle(title)
-    if (!titleResult.isValid) {
-      errors.title = titleResult.errorMessage
-    }
-
-    // Validate date format
-    const dateFormatResult = validateDateFormat(dateFormat)
-    if (!dateFormatResult.isValid) {
-      errors.dateFormat = dateFormatResult.errorMessage
-    }
-
-    // Validate holiday colors
-    const holidayColorResult = validateColorHex(holidayColor)
-    if (!holidayColorResult.isValid) {
-      errors.holidayColor = holidayColorResult.errorMessage
-    }
-
-    const nationalHolidayColorResult = validateColorHex(nationalHolidayColor)
-    if (!nationalHolidayColorResult.isValid) {
-      errors.nationalHolidayColor = nationalHolidayColorResult.errorMessage
-    }
-
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }, [
-    startDate,
-    endDate,
-    title,
-    dateFormat,
-    holidayColor,
-    nationalHolidayColor
-  ])
-
-  // Clear validation errors for a specific field
-  const clearValidationError = useCallback(
-    (field: keyof typeof validationErrors) => {
-      setValidationErrors((prev) => {
-        const { [field]: _, ...rest } = prev
-        return rest
-      })
-    },
-    []
-  )
-
-  // Enhanced setters with validation
-  const setTitleWithValidation = useCallback(
-    (newTitle: string) => {
-      const sanitized = sanitizeInput(newTitle)
-      setTitle(sanitized)
-
-      const result = validateTitle(sanitized)
-      if (result.isValid) {
-        clearValidationError('title')
-      } else {
-        setValidationErrors((prev) => ({ ...prev, title: result.errorMessage }))
-      }
-    },
-    [clearValidationError]
-  )
-
-  const setDateFormatWithValidation = useCallback(
-    (newFormat: string) => {
-      const sanitized = sanitizeInput(newFormat)
-      setDateFormat(sanitized)
-
-      const result = validateDateFormat(sanitized)
-      if (result.isValid) {
-        clearValidationError('dateFormat')
-      } else {
-        setValidationErrors((prev) => ({
-          ...prev,
-          dateFormat: result.errorMessage
-        }))
-      }
-    },
-    [clearValidationError]
-  )
-
-  const setHolidayColorWithValidation = useCallback(
-    (newColor: string) => {
-      const sanitized = sanitizeInput(newColor)
-      setHolidayColor(sanitized)
-
-      const result = validateColorHex(sanitized)
-      if (result.isValid) {
-        clearValidationError('holidayColor')
-      } else {
-        setValidationErrors((prev) => ({
-          ...prev,
-          holidayColor: result.errorMessage
-        }))
-      }
-    },
-    [clearValidationError]
-  )
-
-  const setNationalHolidayColorWithValidation = useCallback(
-    (newColor: string) => {
-      const sanitized = sanitizeInput(newColor)
-      setNationalHolidayColor(sanitized)
-
-      const result = validateColorHex(sanitized)
-      if (result.isValid) {
-        clearValidationError('nationalHolidayColor')
-      } else {
-        setValidationErrors((prev) => ({
-          ...prev,
-          nationalHolidayColor: result.errorMessage
-        }))
-      }
-    },
-    [clearValidationError]
-  )
-
-  const setStartDateWithValidation = useCallback(
-    (newStartDate: string) => {
-      setStartDate(newStartDate)
-
-      // Validate date range when start date changes
-      setTimeout(() => {
-        const result = validateDateRange(newStartDate, endDate)
-        if (result.isValid) {
-          clearValidationError('dateRange')
-        } else {
-          setValidationErrors((prev) => ({
-            ...prev,
-            dateRange: result.errorMessage
-          }))
-        }
-      }, 0)
-    },
-    [endDate, clearValidationError]
-  )
-
-  const setEndDateWithValidation = useCallback(
-    (newEndDate: string) => {
-      setEndDate(newEndDate)
-
-      // Validate date range when end date changes
-      setTimeout(() => {
-        const result = validateDateRange(startDate, newEndDate)
-        if (result.isValid) {
-          clearValidationError('dateRange')
-        } else {
-          setValidationErrors((prev) => ({
-            ...prev,
-            dateRange: result.errorMessage
-          }))
-        }
-      }, 0)
-    },
-    [startDate, clearValidationError]
-  )
 
   // Memoize generation process dependencies
   const generateListDependencies = useMemo(
@@ -298,14 +67,6 @@ export const useDateListGenerator = () => {
   )
 
   const handleGenerateList = useCallback(async () => {
-    // Validate all inputs before generating
-    if (!validateAllInputs()) {
-      toast.error('入力内容に誤りがあります。確認してください。', {
-        style: { color: '#b91c1c' }
-      })
-      return
-    }
-
     try {
       if (isFirstGeneration) {
         setIsLoading(true)
@@ -339,9 +100,7 @@ export const useDateListGenerator = () => {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : 'リスト生成中にエラーが発生しました',
+        error instanceof Error ? error.message : 'An error occurred',
         { style: { color: '#b91c1c' } }
       )
     } finally {
@@ -349,14 +108,12 @@ export const useDateListGenerator = () => {
         setIsLoading(false)
       }
     }
-  }, [generateListDependencies, isFirstGeneration, validateAllInputs])
+  }, [generateListDependencies, isFirstGeneration])
 
   // Function to update preset selection state (does not change dates)
   const updateSelectedPreset = useCallback((preset: Preset) => {
     setSelectedPreset(preset)
-  }, [])
-
-  // Common date calculation logic
+  }, []) // Common date calculation logic
   const calculateDateFromPreset = useCallback(
     (
       baseDate: string,
@@ -382,7 +139,7 @@ export const useDateListGenerator = () => {
     []
   )
 
-  // Integrated function for preset application with validation
+  // Integrated function for preset application
   const applyPreset = useCallback(
     (value: number, type: PresetType, base: 'start' | 'end') => {
       if (base === 'start' && startDate) {
@@ -392,7 +149,7 @@ export const useDateListGenerator = () => {
           type,
           'forward'
         )
-        setEndDateWithValidation(newEndDate)
+        setEndDate(newEndDate)
       } else if (base === 'end' && endDate) {
         const newStartDate = calculateDateFromPreset(
           endDate,
@@ -400,19 +157,12 @@ export const useDateListGenerator = () => {
           type,
           'backward'
         )
-        setStartDateWithValidation(newStartDate)
+        setStartDate(newStartDate)
       }
 
       updateSelectedPreset({ type, value })
     },
-    [
-      startDate,
-      endDate,
-      calculateDateFromPreset,
-      updateSelectedPreset,
-      setStartDateWithValidation,
-      setEndDateWithValidation
-    ]
+    [startDate, endDate, calculateDateFromPreset, updateSelectedPreset]
   )
 
   const copyToClipboard = useCallback(
@@ -443,28 +193,22 @@ export const useDateListGenerator = () => {
     setHolidayColor(DEFAULT_HOLIDAY_COLOR)
     setNationalHolidayColor(DEFAULT_HOLIDAY_COLOR)
     setIsLoading(false)
-    setValidationErrors({})
   }, [])
 
-  // Enhanced validation state
+  // Memoized validation state
   const isGenerateButtonDisabled = useMemo(() => {
-    return (
-      !title.trim() ||
-      !startDate ||
-      !endDate ||
-      Object.keys(validationErrors).length > 0
-    )
-  }, [title, startDate, endDate, validationErrors])
+    return !title.trim() || !startDate || !endDate
+  }, [title, startDate, endDate])
 
   return {
     startDate,
-    setStartDate: setStartDateWithValidation,
+    setStartDate,
     endDate,
-    setEndDate: setEndDateWithValidation,
+    setEndDate,
     title,
-    setTitle: setTitleWithValidation,
+    setTitle,
     dateFormat,
-    setDateFormat: setDateFormatWithValidation,
+    setDateFormat,
     generatedList,
     isLoading,
     isFirstGeneration,
@@ -482,12 +226,8 @@ export const useDateListGenerator = () => {
     enableHolidayColors,
     setEnableHolidayColors,
     holidayColor,
-    setHolidayColor: setHolidayColorWithValidation,
+    setHolidayColor,
     nationalHolidayColor,
-    setNationalHolidayColor: setNationalHolidayColorWithValidation,
-    // New validation features
-    validationErrors,
-    validateAllInputs,
-    clearValidationError
+    setNationalHolidayColor
   }
 }
