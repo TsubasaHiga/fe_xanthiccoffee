@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { Copy } from 'lucide-react'
+import { Calendar, Copy, FileSpreadsheet, FileText } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ConfiguredMdEditor } from './ConfiguredMdEditor'
 import { MdPreview } from './MdPreview'
@@ -14,10 +14,18 @@ import { MdPreview } from './MdPreview'
 export function MarkdownViewer({
   generatedList,
   copyToClipboard,
+  exportCSV,
+  exportExcel,
+  exportPDF,
+  exportICS,
   onMount
 }: {
   generatedList: string
   copyToClipboard: (text: string) => void
+  exportCSV?: () => void
+  exportExcel?: () => void
+  exportPDF?: () => void
+  exportICS?: () => void
   onMount?: () => void
 }) {
   const [value, setValue] = useState<string>(generatedList)
@@ -68,7 +76,7 @@ export function MarkdownViewer({
         </div>
       </CardHeader>
       <CardContent className='space-y-4'>
-        <div className='flex gap-2'>
+        <div className='flex flex-wrap gap-2'>
           <Button
             onClick={handleCopy}
             variant='outline'
@@ -86,6 +94,50 @@ export function MarkdownViewer({
           >
             {isEditing ? 'プレビューに戻す' : '編集する'}
           </Button>
+          {exportCSV && (
+            <Button
+              onClick={exportCSV}
+              variant='outline'
+              size='sm'
+              className='border border-green-300 text-green-600 transition hover:bg-green-50'
+            >
+              <FileSpreadsheet className='mr-2 h-4 w-4' />
+              CSV
+            </Button>
+          )}
+          {exportExcel && (
+            <Button
+              onClick={exportExcel}
+              variant='outline'
+              size='sm'
+              className='border border-green-300 text-green-600 transition hover:bg-green-50'
+            >
+              <FileSpreadsheet className='mr-2 h-4 w-4' />
+              Excel
+            </Button>
+          )}
+          {exportPDF && (
+            <Button
+              onClick={exportPDF}
+              variant='outline'
+              size='sm'
+              className='border border-red-300 text-red-600 transition hover:bg-red-50'
+            >
+              <FileText className='mr-2 h-4 w-4' />
+              PDF
+            </Button>
+          )}
+          {exportICS && (
+            <Button
+              onClick={exportICS}
+              variant='outline'
+              size='sm'
+              className='border border-purple-300 text-purple-600 transition hover:bg-purple-50'
+            >
+              <Calendar className='mr-2 h-4 w-4' />
+              カレンダー
+            </Button>
+          )}
         </div>
         <div
           data-testid='generated-list'

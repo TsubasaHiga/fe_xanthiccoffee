@@ -30,6 +30,14 @@ vi.mock('@/utils/dateUtils', () => ({
   )
 }))
 
+// Mock the exportUtils
+vi.mock('@/utils/exportUtils', () => ({
+  exportAsCSV: vi.fn(),
+  exportAsExcel: vi.fn(),
+  exportAsPDF: vi.fn(),
+  exportAsICS: vi.fn()
+}))
+
 // Mock navigator.clipboard
 Object.defineProperty(navigator, 'clipboard', {
   value: {
@@ -778,5 +786,199 @@ describe('useDateListGenerator - タイムゾーン関連テスト', () => {
 
     expect(result.current.startDate).toBe('2020-01-01')
     expect(result.current.endDate).toBe('2020-01-07')
+  })
+})
+
+describe('useDateListGenerator - エクスポート機能テスト', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('CSV エクスポートが正常に動作する', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // CSV エクスポートを実行
+    act(() => {
+      result.current.exportCSV()
+    })
+
+    const { exportAsCSV } = await import('@/utils/exportUtils')
+    const { toast } = await import('sonner')
+
+    expect(exportAsCSV).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    )
+    expect(toast.success).toHaveBeenCalledWith(
+      'CSVファイルをダウンロードしました'
+    )
+  })
+
+  it('Excel エクスポートが正常に動作する', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // Excel エクスポートを実行
+    act(() => {
+      result.current.exportExcel()
+    })
+
+    const { exportAsExcel } = await import('@/utils/exportUtils')
+    const { toast } = await import('sonner')
+
+    expect(exportAsExcel).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    )
+    expect(toast.success).toHaveBeenCalledWith(
+      'Excelファイルをダウンロードしました'
+    )
+  })
+
+  it('PDF エクスポートが正常に動作する', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // PDF エクスポートを実行
+    act(() => {
+      result.current.exportPDF()
+    })
+
+    const { exportAsPDF } = await import('@/utils/exportUtils')
+    const { toast } = await import('sonner')
+
+    expect(exportAsPDF).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    )
+    expect(toast.success).toHaveBeenCalledWith('PDF印刷ダイアログを開きました')
+  })
+
+  it('カレンダー（ICS）エクスポートが正常に動作する', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // ICS エクスポートを実行
+    act(() => {
+      result.current.exportICS()
+    })
+
+    const { exportAsICS } = await import('@/utils/exportUtils')
+    const { toast } = await import('sonner')
+
+    expect(exportAsICS).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    )
+    expect(toast.success).toHaveBeenCalledWith(
+      'カレンダーファイルをダウンロードしました'
+    )
+  })
+
+  it('CSV エクスポートエラーを処理する', async () => {
+    const { exportAsCSV } = await import('@/utils/exportUtils')
+    vi.mocked(exportAsCSV).mockImplementationOnce(() => {
+      throw new Error('CSV export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportCSV()
+    })
+
+    const { toast } = await import('sonner')
+    expect(toast.error).toHaveBeenCalledWith('CSV エクスポートに失敗しました', {
+      style: { color: '#b91c1c' }
+    })
+  })
+
+  it('Excel エクスポートエラーを処理する', async () => {
+    const { exportAsExcel } = await import('@/utils/exportUtils')
+    vi.mocked(exportAsExcel).mockImplementationOnce(() => {
+      throw new Error('Excel export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportExcel()
+    })
+
+    const { toast } = await import('sonner')
+    expect(toast.error).toHaveBeenCalledWith(
+      'Excel エクスポートに失敗しました',
+      {
+        style: { color: '#b91c1c' }
+      }
+    )
+  })
+
+  it('PDF エクスポートエラーを処理する', async () => {
+    const { exportAsPDF } = await import('@/utils/exportUtils')
+    vi.mocked(exportAsPDF).mockImplementationOnce(() => {
+      throw new Error('PDF export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportPDF()
+    })
+
+    const { toast } = await import('sonner')
+    expect(toast.error).toHaveBeenCalledWith('PDF エクスポートに失敗しました', {
+      style: { color: '#b91c1c' }
+    })
+  })
+
+  it('カレンダー（ICS）エクスポートエラーを処理する', async () => {
+    const { exportAsICS } = await import('@/utils/exportUtils')
+    vi.mocked(exportAsICS).mockImplementationOnce(() => {
+      throw new Error('ICS export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportICS()
+    })
+
+    const { toast } = await import('sonner')
+    expect(toast.error).toHaveBeenCalledWith(
+      'カレンダー エクスポートに失敗しました',
+      {
+        style: { color: '#b91c1c' }
+      }
+    )
   })
 })

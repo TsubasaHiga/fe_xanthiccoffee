@@ -44,7 +44,14 @@ vi.mock('@vavt/cm-extension/dist/locale/jp-JP', () => ({
 
 // Mock lucide-react
 vi.mock('lucide-react', () => ({
-  Copy: vi.fn(() => <span data-testid='copy-icon'>Copy Icon</span>)
+  Copy: vi.fn(() => <span data-testid='copy-icon'>Copy Icon</span>),
+  FileSpreadsheet: vi.fn(() => (
+    <span data-testid='spreadsheet-icon'>Spreadsheet Icon</span>
+  )),
+  FileText: vi.fn(() => (
+    <span data-testid='file-text-icon'>File Text Icon</span>
+  )),
+  Calendar: vi.fn(() => <span data-testid='calendar-icon'>Calendar Icon</span>)
 }))
 
 describe('MarkdownViewerコンポーネント', () => {
@@ -182,5 +189,111 @@ describe('MarkdownViewerコンポーネント', () => {
 
     const listContainer = screen.getByTestId('generated-list')
     expect(listContainer).toHaveAttribute('data-color-mode', 'light')
+  })
+
+  describe('エクスポート機能', () => {
+    it('CSV エクスポートボタンが正しく動作する', () => {
+      const mockExportCSV = vi.fn()
+      render(<MarkdownViewer {...defaultProps} exportCSV={mockExportCSV} />)
+
+      const csvButton = screen.getByRole('button', { name: /CSV/i })
+      fireEvent.click(csvButton)
+
+      expect(mockExportCSV).toHaveBeenCalled()
+    })
+
+    it('Excel エクスポートボタンが正しく動作する', () => {
+      const mockExportExcel = vi.fn()
+      render(<MarkdownViewer {...defaultProps} exportExcel={mockExportExcel} />)
+
+      const excelButton = screen.getByRole('button', { name: /Excel/i })
+      fireEvent.click(excelButton)
+
+      expect(mockExportExcel).toHaveBeenCalled()
+    })
+
+    it('PDF エクスポートボタンが正しく動作する', () => {
+      const mockExportPDF = vi.fn()
+      render(<MarkdownViewer {...defaultProps} exportPDF={mockExportPDF} />)
+
+      const pdfButton = screen.getByRole('button', { name: /PDF/i })
+      fireEvent.click(pdfButton)
+
+      expect(mockExportPDF).toHaveBeenCalled()
+    })
+
+    it('カレンダー エクスポートボタンが正しく動作する', () => {
+      const mockExportICS = vi.fn()
+      render(<MarkdownViewer {...defaultProps} exportICS={mockExportICS} />)
+
+      const icsButton = screen.getByRole('button', { name: /カレンダー/i })
+      fireEvent.click(icsButton)
+
+      expect(mockExportICS).toHaveBeenCalled()
+    })
+
+    it('エクスポート関数が提供されない場合はボタンが表示されない', () => {
+      render(<MarkdownViewer {...defaultProps} />)
+
+      expect(
+        screen.queryByRole('button', { name: /CSV/i })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /Excel/i })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /PDF/i })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /カレンダー/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('すべてのエクスポート機能が提供された場合、すべてのボタンが表示される', () => {
+      const mockExportCSV = vi.fn()
+      const mockExportExcel = vi.fn()
+      const mockExportPDF = vi.fn()
+      const mockExportICS = vi.fn()
+
+      render(
+        <MarkdownViewer
+          {...defaultProps}
+          exportCSV={mockExportCSV}
+          exportExcel={mockExportExcel}
+          exportPDF={mockExportPDF}
+          exportICS={mockExportICS}
+        />
+      )
+
+      expect(screen.getByRole('button', { name: /CSV/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Excel/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /PDF/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /カレンダー/i })
+      ).toBeInTheDocument()
+    })
+
+    it('エクスポートボタンが適切なスタイルクラスを持つ', () => {
+      const mockExportCSV = vi.fn()
+      const mockExportPDF = vi.fn()
+      const mockExportICS = vi.fn()
+
+      render(
+        <MarkdownViewer
+          {...defaultProps}
+          exportCSV={mockExportCSV}
+          exportPDF={mockExportPDF}
+          exportICS={mockExportICS}
+        />
+      )
+
+      const csvButton = screen.getByRole('button', { name: /CSV/i })
+      const pdfButton = screen.getByRole('button', { name: /PDF/i })
+      const icsButton = screen.getByRole('button', { name: /カレンダー/i })
+
+      expect(csvButton).toHaveClass('border-green-300', 'text-green-600')
+      expect(pdfButton).toHaveClass('border-red-300', 'text-red-600')
+      expect(icsButton).toHaveClass('border-purple-300', 'text-purple-600')
+    })
   })
 })

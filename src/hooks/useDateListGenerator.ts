@@ -1,4 +1,10 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
+import {
+  exportAsCSV,
+  exportAsExcel,
+  exportAsICS,
+  exportAsPDF
+} from '@/utils/exportUtils'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -180,6 +186,55 @@ export const useDateListGenerator = () => {
     [generatedList]
   )
 
+  // Export functions
+  const exportCSV = useCallback(() => {
+    try {
+      exportAsCSV(generatedList)
+      toast.success('CSVファイルをダウンロードしました')
+    } catch (err) {
+      console.error('CSV エクスポートに失敗しました:', err)
+      toast.error('CSV エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [generatedList])
+
+  const exportExcel = useCallback(() => {
+    try {
+      exportAsExcel(generatedList)
+      toast.success('Excelファイルをダウンロードしました')
+    } catch (err) {
+      console.error('Excel エクスポートに失敗しました:', err)
+      toast.error('Excel エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [generatedList])
+
+  const exportPDF = useCallback(() => {
+    try {
+      exportAsPDF(generatedList)
+      toast.success('PDF印刷ダイアログを開きました')
+    } catch (err) {
+      console.error('PDF エクスポートに失敗しました:', err)
+      toast.error('PDF エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [generatedList])
+
+  const exportICS = useCallback(() => {
+    try {
+      exportAsICS(generatedList)
+      toast.success('カレンダーファイルをダウンロードしました')
+    } catch (err) {
+      console.error('カレンダー エクスポートに失敗しました:', err)
+      toast.error('カレンダー エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [generatedList])
+
   const resetSettings = useCallback(() => {
     setTitle('スケジュール')
     setDateFormat('MM/DD（ddd）')
@@ -216,6 +271,10 @@ export const useDateListGenerator = () => {
     updateSelectedPreset,
     applyPreset,
     copyToClipboard,
+    exportCSV,
+    exportExcel,
+    exportPDF,
+    exportICS,
     resetSettings,
     isGenerateButtonDisabled,
     selectedPreset,
