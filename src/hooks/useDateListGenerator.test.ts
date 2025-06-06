@@ -30,6 +30,12 @@ vi.mock('@/utils/dateUtils', () => ({
   )
 }))
 
+// Mock the exportUtils
+vi.mock('@/utils/exportUtils', () => ({
+  exportAsMarkdown: vi.fn(),
+  exportAsPDF: vi.fn()
+}))
+
 // Mock navigator.clipboard
 Object.defineProperty(navigator, 'clipboard', {
   value: {
@@ -778,5 +784,104 @@ describe('useDateListGenerator - タイムゾーン関連テスト', () => {
 
     expect(result.current.startDate).toBe('2020-01-01')
     expect(result.current.endDate).toBe('2020-01-07')
+  })
+})
+
+describe('useDateListGenerator - エクスポート機能テスト', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('Markdown エクスポートが正常に動作する', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // Markdown エクスポートを実行
+    act(() => {
+      result.current.exportMarkdown()
+    })
+
+    const { exportAsMarkdown } = await import('@/utils/exportUtils')
+    const { toast } = await import('sonner')
+
+    expect(exportAsMarkdown).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    )
+    expect(toast.success).toHaveBeenCalledWith(
+      'Markdownファイルをダウンロードしました'
+    )
+  })
+
+  it('PDF エクスポートが正常に動作する', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // PDF エクスポートを実行
+    act(() => {
+      result.current.exportPDF()
+    })
+
+    const { exportAsPDF } = await import('@/utils/exportUtils')
+    const { toast } = await import('sonner')
+
+    expect(exportAsPDF).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    )
+    expect(toast.success).toHaveBeenCalledWith('PDF印刷ダイアログを開きました')
+  })
+
+  it('Markdown エクスポートエラーを処理する', async () => {
+    const { exportAsMarkdown } = await import('@/utils/exportUtils')
+    vi.mocked(exportAsMarkdown).mockImplementationOnce(() => {
+      throw new Error('Markdown export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportMarkdown()
+    })
+
+    const { toast } = await import('sonner')
+    expect(toast.error).toHaveBeenCalledWith(
+      'Markdown エクスポートに失敗しました',
+      {
+        style: { color: '#b91c1c' }
+      }
+    )
+  })
+
+  it('PDF エクスポートエラーを処理する', async () => {
+    const { exportAsPDF } = await import('@/utils/exportUtils')
+    vi.mocked(exportAsPDF).mockImplementationOnce(() => {
+      throw new Error('PDF export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportPDF()
+    })
+
+    const { toast } = await import('sonner')
+    expect(toast.error).toHaveBeenCalledWith('PDF エクスポートに失敗しました', {
+      style: { color: '#b91c1c' }
+    })
   })
 })

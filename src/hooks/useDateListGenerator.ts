@@ -1,4 +1,5 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
+import { exportAsMarkdown, exportAsPDF } from '@/utils/exportUtils'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -180,6 +181,31 @@ export const useDateListGenerator = () => {
     [generatedList]
   )
 
+  // Export functions
+  const exportMarkdown = useCallback(() => {
+    try {
+      exportAsMarkdown(generatedList)
+      toast.success('Markdownファイルをダウンロードしました')
+    } catch (err) {
+      console.error('Markdown エクスポートに失敗しました:', err)
+      toast.error('Markdown エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [generatedList])
+
+  const exportPDF = useCallback(() => {
+    try {
+      exportAsPDF(generatedList)
+      toast.success('PDF印刷ダイアログを開きました')
+    } catch (err) {
+      console.error('PDF エクスポートに失敗しました:', err)
+      toast.error('PDF エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [generatedList])
+
   const resetSettings = useCallback(() => {
     setTitle('スケジュール')
     setDateFormat('MM/DD（ddd）')
@@ -216,6 +242,8 @@ export const useDateListGenerator = () => {
     updateSelectedPreset,
     applyPreset,
     copyToClipboard,
+    exportMarkdown,
+    exportPDF,
     resetSettings,
     isGenerateButtonDisabled,
     selectedPreset,
