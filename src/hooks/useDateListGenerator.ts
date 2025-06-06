@@ -1,10 +1,5 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
-import {
-  exportAsCSV,
-  exportAsExcel,
-  exportAsICS,
-  exportAsPDF
-} from '@/utils/exportUtils'
+import { exportAsMarkdown, exportAsPDF } from '@/utils/exportUtils'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -187,25 +182,13 @@ export const useDateListGenerator = () => {
   )
 
   // Export functions
-  const exportCSV = useCallback(() => {
+  const exportMarkdown = useCallback(() => {
     try {
-      exportAsCSV(generatedList)
-      toast.success('CSVファイルをダウンロードしました')
+      exportAsMarkdown(generatedList)
+      toast.success('Markdownファイルをダウンロードしました')
     } catch (err) {
-      console.error('CSV エクスポートに失敗しました:', err)
-      toast.error('CSV エクスポートに失敗しました', {
-        style: { color: '#b91c1c' }
-      })
-    }
-  }, [generatedList])
-
-  const exportExcel = useCallback(() => {
-    try {
-      exportAsExcel(generatedList)
-      toast.success('Excelファイルをダウンロードしました')
-    } catch (err) {
-      console.error('Excel エクスポートに失敗しました:', err)
-      toast.error('Excel エクスポートに失敗しました', {
+      console.error('Markdown エクスポートに失敗しました:', err)
+      toast.error('Markdown エクスポートに失敗しました', {
         style: { color: '#b91c1c' }
       })
     }
@@ -218,18 +201,6 @@ export const useDateListGenerator = () => {
     } catch (err) {
       console.error('PDF エクスポートに失敗しました:', err)
       toast.error('PDF エクスポートに失敗しました', {
-        style: { color: '#b91c1c' }
-      })
-    }
-  }, [generatedList])
-
-  const exportICS = useCallback(() => {
-    try {
-      exportAsICS(generatedList)
-      toast.success('カレンダーファイルをダウンロードしました')
-    } catch (err) {
-      console.error('カレンダー エクスポートに失敗しました:', err)
-      toast.error('カレンダー エクスポートに失敗しました', {
         style: { color: '#b91c1c' }
       })
     }
@@ -271,10 +242,8 @@ export const useDateListGenerator = () => {
     updateSelectedPreset,
     applyPreset,
     copyToClipboard,
-    exportCSV,
-    exportExcel,
+    exportMarkdown,
     exportPDF,
-    exportICS,
     resetSettings,
     isGenerateButtonDisabled,
     selectedPreset,

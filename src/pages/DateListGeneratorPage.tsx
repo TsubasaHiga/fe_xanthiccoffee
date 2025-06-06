@@ -69,10 +69,8 @@ function DateListGeneratorContent() {
             <MarkdownViewer
               generatedList={settings.generatedList}
               copyToClipboard={settings.copyToClipboard}
-              exportCSV={settings.exportCSV}
-              exportExcel={settings.exportExcel}
+              exportMarkdown={settings.exportMarkdown}
               exportPDF={settings.exportPDF}
-              exportICS={settings.exportICS}
               onMount={handleMarkdownMount}
             />
           </Suspense>

@@ -6,7 +6,13 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
-import { Calendar, Copy, FileSpreadsheet, FileText } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+import { ChevronDown, Copy, Download, FileText } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ConfiguredMdEditor } from './ConfiguredMdEditor'
 import { MdPreview } from './MdPreview'
@@ -14,18 +20,14 @@ import { MdPreview } from './MdPreview'
 export function MarkdownViewer({
   generatedList,
   copyToClipboard,
-  exportCSV,
-  exportExcel,
+  exportMarkdown,
   exportPDF,
-  exportICS,
   onMount
 }: {
   generatedList: string
   copyToClipboard: (text: string) => void
-  exportCSV?: () => void
-  exportExcel?: () => void
+  exportMarkdown?: () => void
   exportPDF?: () => void
-  exportICS?: () => void
   onMount?: () => void
 }) {
   const [value, setValue] = useState<string>(generatedList)
@@ -60,6 +62,45 @@ export function MarkdownViewer({
     if (onMount) onMount()
   }, [onMount])
 
+  // Create wrapped export functions that use current value
+  const handleExportMarkdown = useCallback(() => {
+    // Import and call export function directly with current value
+    import('@/utils/exportUtils').then(({ exportAsMarkdown }) => {
+      try {
+        exportAsMarkdown(value)
+        // Import toast to show success message
+        import('sonner').then(({ toast }) => {
+          toast.success('Markdownファイルをダウンロードしました')
+        })
+      } catch (err) {
+        console.error('Markdown エクスポートに失敗しました:', err)
+        import('sonner').then(({ toast }) => {
+          toast.error('Markdown エクスポートに失敗しました', {
+            style: { color: '#b91c1c' }
+          })
+        })
+      }
+    })
+  }, [value])
+
+  const handleExportPDF = useCallback(() => {
+    import('@/utils/exportUtils').then(({ exportAsPDF }) => {
+      try {
+        exportAsPDF(value)
+        import('sonner').then(({ toast }) => {
+          toast.success('PDF印刷ダイアログを開きました')
+        })
+      } catch (err) {
+        console.error('PDF エクスポートに失敗しました:', err)
+        import('sonner').then(({ toast }) => {
+          toast.error('PDF エクスポートに失敗しました', {
+            style: { color: '#b91c1c' }
+          })
+        })
+      }
+    })
+  }, [value])
+
   return (
     <Card
       data-testid='generated-list-card'
@@ -76,67 +117,53 @@ export function MarkdownViewer({
         </div>
       </CardHeader>
       <CardContent className='space-y-4'>
-        <div className='flex flex-wrap gap-2'>
-          <Button
-            onClick={handleCopy}
-            variant='outline'
-            size='sm'
-            className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
-          >
-            <Copy className='mr-2 h-4 w-4' />
-            コピー
-          </Button>
-          <Button
-            onClick={handleEditToggle}
-            variant='outline'
-            size='sm'
-            className='border border-gray-300 text-gray-700 transition hover:bg-gray-50'
-          >
-            {isEditing ? 'プレビューに戻す' : '編集する'}
-          </Button>
-          {exportCSV && (
+        <div className='flex flex-wrap justify-between gap-2'>
+          <div className='flex flex-wrap gap-2'>
             <Button
-              onClick={exportCSV}
+              onClick={handleCopy}
               variant='outline'
               size='sm'
-              className='border border-green-300 text-green-600 transition hover:bg-green-50'
+              className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
             >
-              <FileSpreadsheet className='mr-2 h-4 w-4' />
-              CSV
+              <Copy className='mr-2 h-4 w-4' />
+              コピー
             </Button>
-          )}
-          {exportExcel && (
             <Button
-              onClick={exportExcel}
+              onClick={handleEditToggle}
               variant='outline'
               size='sm'
-              className='border border-green-300 text-green-600 transition hover:bg-green-50'
+              className='border border-gray-300 text-gray-700 transition hover:bg-gray-50'
             >
-              <FileSpreadsheet className='mr-2 h-4 w-4' />
-              Excel
+              {isEditing ? 'プレビューに戻す' : '編集する'}
             </Button>
-          )}
-          {exportPDF && (
-            <Button
-              onClick={exportPDF}
-              variant='outline'
-              size='sm'
-              className='border border-red-300 text-red-600 transition hover:bg-red-50'
-            >
-              <FileText className='mr-2 h-4 w-4' />
-              PDF
-            </Button>
-          )}
-          {exportICS && (
-            <Button
-              onClick={exportICS}
-              variant='outline'
-              size='sm'
-              className='border border-purple-300 text-purple-600 transition hover:bg-purple-50'
-            >
-              <Calendar className='mr-2 h-4 w-4' />
-              カレンダー
-            </Button>
+          </div>
+          {(exportMarkdown || exportPDF) && !isEditing && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='flex items-center border border-gray-300 text-gray-700 transition hover:bg-gray-50'
+                >
+                  ダウンロードする
+                  <ChevronDown className='ml-1 h-4 w-4' />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                {exportMarkdown && (
+                  <DropdownMenuItem onSelect={handleExportMarkdown}>
+                    <Download className='mr-2 h-4 w-4 text-blue-600' />
+                    Markdown
+                  </DropdownMenuItem>
+                )}
+                {exportPDF && (
+                  <DropdownMenuItem onSelect={handleExportPDF}>
+                    <FileText className='mr-2 h-4 w-4 text-red-600' />
+                    PDF
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
         <div

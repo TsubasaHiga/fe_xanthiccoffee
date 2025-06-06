@@ -1,97 +1,24 @@
-import dayjs from 'dayjs'
-
 /**
- * Parse markdown content to extract dates and title
+ * Extract title from markdown content
  */
-export function parseMarkdownContent(content: string): {
-  title: string
-  dates: Array<{ date: string; dayOfWeek: string; holiday?: string }>
-} {
+function extractTitle(content: string): string | null {
   const lines = content.split('\n').filter((line) => line.trim())
-
-  // Extract title (first line starting with #)
   const titleLine = lines.find((line) => line.startsWith('#'))
-  const title = titleLine ? titleLine.replace(/^#+\s*/, '') : 'スケジュール'
-
-  // Extract dates (lines starting with -)
-  const dateLines = lines.filter((line) => line.startsWith('- '))
-  const dates = dateLines.map((line) => {
-    const content = line.replace(/^-\s*/, '')
-
-    // Parse content that might include HTML span tags and holiday names
-    const cleanContent = content.replace(/<[^>]*>/g, '') // Remove HTML tags
-
-    // Extract date, day of week, and optional holiday name
-    const match = cleanContent.match(/^(.+?)（(.+?)）(?:（(.+?)）)?/)
-    if (match) {
-      return {
-        date: match[1],
-        dayOfWeek: match[2],
-        holiday: match[3]
-      }
-    }
-
-    // Fallback parsing
-    return {
-      date: cleanContent,
-      dayOfWeek: '',
-      holiday: undefined
-    }
-  })
-
-  return { title, dates }
+  return titleLine ? titleLine.replace(/^#+\s*/, '') : null
 }
 
 /**
- * Export as CSV format
+ * Export as Markdown file
  */
-export function exportAsCSV(content: string): void {
-  const { title, dates } = parseMarkdownContent(content)
+export function exportAsMarkdown(content: string): void {
+  const title = extractTitle(content) || 'マークダウンファイル'
 
-  // Create CSV content
-  const headers = ['日付', '曜日', '祝日']
-  const csvContent = [
-    headers.join(','),
-    ...dates.map(({ date, dayOfWeek, holiday }) =>
-      [date, dayOfWeek, holiday || ''].join(',')
-    )
-  ].join('\n')
-
-  // Create and download file
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  // Create and download markdown file
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   link.setAttribute('href', url)
-  link.setAttribute('download', `${title}.csv`)
-  link.style.visibility = 'hidden'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
-/**
- * Export as Excel format (CSV with .xlsx extension)
- */
-export function exportAsExcel(content: string): void {
-  const { title, dates } = parseMarkdownContent(content)
-
-  // Create CSV content (Excel can read CSV)
-  const headers = ['日付', '曜日', '祝日']
-  const csvContent = [
-    headers.join(','),
-    ...dates.map(({ date, dayOfWeek, holiday }) =>
-      [date, dayOfWeek, holiday || ''].join(',')
-    )
-  ].join('\n')
-
-  // Create and download file as Excel format
-  const blob = new Blob([csvContent], {
-    type: 'application/vnd.ms-excel;charset=utf-8;'
-  })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  link.setAttribute('href', url)
-  link.setAttribute('download', `${title}.xlsx`)
+  link.setAttribute('download', `${title}.md`)
   link.style.visibility = 'hidden'
   document.body.appendChild(link)
   link.click()
@@ -102,35 +29,50 @@ export function exportAsExcel(content: string): void {
  * Export as PDF using browser print functionality
  */
 export function exportAsPDF(content: string): void {
-  const { title, dates } = parseMarkdownContent(content)
+  const title = extractTitle(content) || 'マークダウンコンテンツ'
 
-  // Create HTML content for printing
+  // Convert markdown to HTML with basic formatting
   const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <title>${title}</title>
+      <meta charset="UTF-8">
       <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        ul { list-style-type: none; padding: 0; }
-        li { padding: 5px 0; border-bottom: 1px solid #eee; }
-        .holiday { color: #dc2626; font-weight: bold; }
+        body { 
+          font-family: 'Arial', 'Meiryo', sans-serif; 
+          margin: 20px; 
+          line-height: 1.6;
+          color: #333;
+        }
+        h1, h2, h3, h4, h5, h6 { 
+          color: #333; 
+          border-bottom: 1px solid #ddd; 
+          padding-bottom: 5px; 
+          margin-top: 20px;
+        }
+        ul, ol { padding-left: 20px; }
+        li { margin: 5px 0; }
+        p { margin: 10px 0; }
+        code { 
+          background: #f4f4f4; 
+          padding: 2px 4px; 
+          border-radius: 3px; 
+        }
+        pre { 
+          background: #f4f4f4; 
+          padding: 10px; 
+          border-radius: 5px; 
+          overflow-wrap: break-word;
+        }
         @media print {
           body { margin: 0; }
+          * { -webkit-print-color-adjust: exact !important; }
         }
       </style>
     </head>
     <body>
-      <h1>${title}</h1>
-      <ul>
-        ${dates
-          .map(
-            ({ date, dayOfWeek, holiday }) =>
-              `<li${holiday ? ' class="holiday"' : ''}>${date}（${dayOfWeek}）${holiday ? `（${holiday}）` : ''}</li>`
-          )
-          .join('')}
-      </ul>
+      ${markdownToHTML(content)}
     </body>
     </html>
   `
@@ -151,79 +93,30 @@ export function exportAsPDF(content: string): void {
 }
 
 /**
- * Export as ICS calendar format
+ * Simple markdown to HTML converter
  */
-export function exportAsICS(content: string): void {
-  const { title, dates } = parseMarkdownContent(content)
+function markdownToHTML(markdown: string): string {
+  return markdown
+    .split('\n')
+    .map((line) => {
+      // Headers
+      if (line.startsWith('# ')) return `<h1>${line.slice(2)}</h1>`
+      if (line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`
+      if (line.startsWith('### ')) return `<h3>${line.slice(4)}</h3>`
+      if (line.startsWith('#### ')) return `<h4>${line.slice(5)}</h4>`
+      if (line.startsWith('##### ')) return `<h5>${line.slice(6)}</h5>`
+      if (line.startsWith('###### ')) return `<h6>${line.slice(7)}</h6>`
 
-  // Generate ICS content
-  const now = new Date()
-  const timestamp = `${now.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`
+      // List items
+      if (line.startsWith('- ')) return `<li>${line.slice(2)}</li>`
+      if (/^\d+\.\s/.test(line))
+        return `<li>${line.replace(/^\d+\.\s/, '')}</li>`
 
-  const icsContent = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//MarkDays//MarkDays Calendar//EN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH'
-  ]
+      // Empty lines
+      if (line.trim() === '') return '<br>'
 
-  dates.forEach(({ date, dayOfWeek, holiday }, index) => {
-    // Parse the date - assuming format like "01/01" or "MM/DD"
-    const currentYear = now.getFullYear()
-    let parsedDate: dayjs.Dayjs
-
-    try {
-      // Try to parse various date formats
-      if (date.includes('/')) {
-        const [month, day] = date.split('/')
-        parsedDate = dayjs(
-          `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-        )
-      } else if (date.includes('-')) {
-        parsedDate = dayjs(date)
-      } else {
-        // Skip if we can't parse the date
-        return
-      }
-
-      if (!parsedDate.isValid()) {
-        return
-      }
-
-      const eventDate = parsedDate.format('YYYYMMDD')
-      const eventTitle = holiday
-        ? `${date}（${dayOfWeek}）（${holiday}）`
-        : `${date}（${dayOfWeek}）`
-      const uid = `${eventDate}-${index}@markdays.app`
-
-      icsContent.push(
-        'BEGIN:VEVENT',
-        `UID:${uid}`,
-        `DTSTAMP:${timestamp}`,
-        `DTSTART;VALUE=DATE:${eventDate}`,
-        `DTEND;VALUE=DATE:${eventDate}`,
-        `SUMMARY:${eventTitle}`,
-        `DESCRIPTION:${title}で生成されたイベント`,
-        'END:VEVENT'
-      )
-    } catch (error) {
-      console.warn('Date parsing failed for:', date, error)
-    }
-  })
-
-  icsContent.push('END:VCALENDAR')
-
-  // Create and download file
-  const blob = new Blob([icsContent.join('\r\n')], {
-    type: 'text/calendar;charset=utf-8;'
-  })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  link.setAttribute('href', url)
-  link.setAttribute('download', `${title}.ics`)
-  link.style.visibility = 'hidden'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+      // Regular paragraphs
+      return `<p>${line}</p>`
+    })
+    .join('\n')
 }
