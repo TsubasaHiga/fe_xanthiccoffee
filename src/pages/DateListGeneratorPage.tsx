@@ -20,51 +20,50 @@ function DateListGeneratorContent() {
   const [showViewer, setShowViewer] = useState(false)
   const [shouldScrollOnMount, setShouldScrollOnMount] = useState(false)
 
-  // Scroll function
+  // スクロール処理
   const scrollToViewer = () => {
-    if (generatedListRef.current) {
-      generatedListRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      })
-    }
+    generatedListRef.current?.scrollIntoView({
+      behavior: 'auto',
+      block: 'start'
+    })
   }
 
-  // Wrapper for list generation button press
-  const handleGenerateListWithScroll = async () => {
-    const wasFirst = settings.isFirstGeneration
-    await settings.handleGenerateList()
-    if (wasFirst) {
-      setShouldScrollOnMount(true) // Scroll on mount for first time
+  // リスト生成とスクロール処理
+  const handleGenerateListWithScroll = () => {
+    const wasFirstGeneration = settings.isFirstGeneration
+
+    // 同期的に実行してUIの即座な更新を実現
+    settings.handleGenerateList()
+
+    if (wasFirstGeneration) {
+      setShouldScrollOnMount(true)
     } else {
-      scrollToViewer() // Scroll immediately from second time onwards
+      // 2回目以降は少し遅延させてスクロール
+      setTimeout(scrollToViewer, 100)
     }
   }
 
-  // Scroll function when MarkdownViewer lazy loading completes
+  // MarkdownViewer遅延読み込み完了時の処理
   const handleMarkdownMount = () => {
+    settings.notifyLazyLoadingComplete()
+
     if (shouldScrollOnMount) {
       scrollToViewer()
       setShouldScrollOnMount(false)
     }
   }
 
-  // showViewer control
+  // ビューアーの表示制御
   useEffect(() => {
-    if (settings.generatedList && !showViewer) {
-      setShowViewer(true)
-      return
-    }
-    if (!settings.generatedList) {
-      setShowViewer(false)
-    }
-  }, [settings.generatedList, showViewer])
+    const hasGeneratedList = Boolean(settings.generatedList)
+    setShowViewer(hasGeneratedList)
+  }, [settings.generatedList])
 
   return (
     <>
       <DateSettings handleGenerateList={handleGenerateListWithScroll} />
       {showViewer && settings.generatedList && (
-        <ContentLayout ref={generatedListRef}>
+        <ContentLayout ref={generatedListRef} className='scroll-m-2'>
           <Suspense fallback={null}>
             <MarkdownViewer
               generatedList={settings.generatedList}

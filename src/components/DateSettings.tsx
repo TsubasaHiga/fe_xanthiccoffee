@@ -34,23 +34,33 @@ import {
 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
-// Memoized preset configuration constants
-const PRESET_CONFIGURATIONS = [
-  { type: 'period' as const, value: 7, label: '1週間' },
-  { type: 'period' as const, value: 14, label: '2週間' },
-  { type: 'period' as const, value: 21, label: '3週間' },
-  { type: 'period' as const, value: 28, label: '4週間' },
-  { type: 'months' as const, value: 1, label: '1ヶ月' },
-  { type: 'months' as const, value: 2, label: '2ヶ月' },
-  { type: 'months' as const, value: 3, label: '3ヶ月' },
-  { type: 'months' as const, value: 4, label: '4ヶ月' }
+// プリセット設定の型定義
+type PresetConfig = {
+  readonly type: 'period' | 'months'
+  readonly value: number
+  readonly label: string
+}
+
+// プリセット設定定数
+const PRESET_CONFIGURATIONS: readonly PresetConfig[] = [
+  { type: 'period', value: 7, label: '1週間' },
+  { type: 'period', value: 14, label: '2週間' },
+  { type: 'period', value: 21, label: '3週間' },
+  { type: 'period', value: 28, label: '4週間' },
+  { type: 'months', value: 1, label: '1ヶ月' },
+  { type: 'months', value: 2, label: '2ヶ月' },
+  { type: 'months', value: 3, label: '3ヶ月' },
+  { type: 'months', value: 4, label: '4ヶ月' }
 ] as const
+
+// プロップの型定義
+interface DateSettingsProps {
+  readonly handleGenerateList?: () => void
+}
 
 export function DateSettings({
   handleGenerateList: handleGenerateListProp
-}: {
-  handleGenerateList?: () => void
-} = {}) {
+}: DateSettingsProps = {}) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const [presetBase, setPresetBase] = useState<'start' | 'end'>('start')
 
@@ -64,7 +74,7 @@ export function DateSettings({
     dateFormat,
     setDateFormat,
     isLoading,
-    isFirstGeneration,
+    isWaitingForLazyLoad,
     handleGenerateList,
     applyPreset,
     resetSettings,
@@ -79,8 +89,7 @@ export function DateSettings({
     holidayColor,
     setHolidayColor,
     nationalHolidayColor,
-    setNationalHolidayColor,
-    generatedList
+    setNationalHolidayColor
   } = useDateListSettings()
 
   const handleGenerate = handleGenerateListProp || handleGenerateList
@@ -399,11 +408,10 @@ export function DateSettings({
                 size='lg'
                 className='w-full rounded-lg bg-blue-600 py-3 font-bold text-base text-white shadow-md transition-all duration-200 hover:bg-blue-700 sm:text-lg'
                 disabled={
-                  isGenerateButtonDisabled ||
-                  (isLoading && isFirstGeneration && !generatedList)
+                  isGenerateButtonDisabled || isLoading || isWaitingForLazyLoad
                 }
               >
-                {isLoading && isFirstGeneration && !generatedList ? (
+                {isLoading || isWaitingForLazyLoad ? (
                   <div className='flex items-center gap-2'>
                     <Spinner size={16} className='text-white' />
                     <span>生成中...</span>

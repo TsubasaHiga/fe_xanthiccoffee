@@ -13,9 +13,24 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { ChevronDown, Copy, Download, FileText } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from 'react'
 import { ConfiguredMdEditor } from './ConfiguredMdEditor'
 import { MdPreview } from './MdPreview'
+
+// プロップの型定義
+interface MarkdownViewerProps {
+  readonly generatedList: string
+  readonly copyToClipboard: (text: string) => void
+  readonly exportMarkdown?: () => void
+  readonly exportPDF?: () => void
+  readonly onMount?: () => void
+}
 
 export function MarkdownViewer({
   generatedList,
@@ -23,25 +38,22 @@ export function MarkdownViewer({
   exportMarkdown,
   exportPDF,
   onMount
-}: {
-  generatedList: string
-  copyToClipboard: (text: string) => void
-  exportMarkdown?: () => void
-  exportPDF?: () => void
-  onMount?: () => void
-}) {
+}: MarkdownViewerProps) {
+  // 状態管理
   const [value, setValue] = useState<string>(generatedList)
   const [isEditing, setIsEditing] = useState(false)
   const [previewHeight, setPreviewHeight] = useState<number | null>(null)
+
+  // DOM参照
   const editorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
 
-  // Reflect changes in generatedList
+  // generatedListの変更を反映
   useEffect(() => {
     setValue(generatedList)
   }, [generatedList])
 
-  // Measure preview height
+  // プレビュー高さの測定
   useEffect(() => {
     if (!isEditing && previewRef.current) {
       const height = previewRef.current.scrollHeight
@@ -49,31 +61,42 @@ export function MarkdownViewer({
     }
   }, [isEditing])
 
-  // Copy function
+  // コピー処理
   const handleCopy = useCallback(() => {
     copyToClipboard(value)
   }, [value, copyToClipboard])
 
-  const handleEditToggle = () => {
+  // 編集モード切り替え
+  const handleEditToggle = useCallback(() => {
     setIsEditing((prev) => !prev)
-  }
+  }, [])
 
-  useEffect(() => {
-    if (onMount) onMount()
+  // コンポーネントマウント完了時の処理
+  useLayoutEffect(() => {
+    if (!onMount) return
+
+    // DOMレンダリング完了を確実に待つ
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          onMount()
+        })
+      })
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
   }, [onMount])
 
-  // Create wrapped export functions that use current value
+  // Markdownエクスポート処理
   const handleExportMarkdown = useCallback(() => {
-    // Import and call export function directly with current value
     import('@/utils/exportUtils').then(({ exportAsMarkdown }) => {
       try {
         exportAsMarkdown(value)
-        // Import toast to show success message
         import('sonner').then(({ toast }) => {
           toast.success('Markdownファイルをダウンロードしました')
         })
-      } catch (err) {
-        console.error('Markdown エクスポートに失敗しました:', err)
+      } catch (error) {
+        console.error('Markdown エクスポートに失敗しました:', error)
         import('sonner').then(({ toast }) => {
           toast.error('Markdown エクスポートに失敗しました', {
             style: { color: '#b91c1c' }
@@ -83,6 +106,7 @@ export function MarkdownViewer({
     })
   }, [value])
 
+  // PDFエクスポート処理
   const handleExportPDF = useCallback(() => {
     import('@/utils/exportUtils').then(({ exportAsPDF }) => {
       try {
@@ -90,8 +114,8 @@ export function MarkdownViewer({
         import('sonner').then(({ toast }) => {
           toast.success('PDF印刷ダイアログを開きました')
         })
-      } catch (err) {
-        console.error('PDF エクスポートに失敗しました:', err)
+      } catch (error) {
+        console.error('PDF エクスポートに失敗しました:', error)
         import('sonner').then(({ toast }) => {
           toast.error('PDF エクスポートに失敗しました', {
             style: { color: '#b91c1c' }
@@ -121,9 +145,8 @@ export function MarkdownViewer({
           <div className='flex flex-wrap gap-2'>
             <Button
               onClick={handleCopy}
-              variant='outline'
               size='sm'
-              className='border border-blue-300 text-blue-600 transition hover:bg-blue-50'
+              className='bg-blue-600 hover:bg-blue-700'
             >
               <Copy className='mr-2 h-4 w-4' />
               コピー

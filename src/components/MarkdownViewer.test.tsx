@@ -79,9 +79,20 @@ describe('MarkdownViewerコンポーネント', () => {
     )
   })
 
-  it('onMountコールバックがマウント時に呼ばれる', () => {
+  it('onMountコールバックがマウント時に呼ばれる', async () => {
     const mockOnMount = vi.fn()
     render(<MarkdownViewer {...defaultProps} onMount={mockOnMount} />)
+
+    // Wait for the async operations (setTimeout + requestAnimationFrame)
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            resolve(undefined)
+          })
+        })
+      }, 0)
+    })
 
     // Verify that onMount callback is called
     expect(mockOnMount).toHaveBeenCalledTimes(1)

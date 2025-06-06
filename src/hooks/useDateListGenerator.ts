@@ -4,30 +4,40 @@ import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-// Type definitions
+// 型定義
 type PresetType = 'period' | 'months'
-type Preset = { type: PresetType; value: number }
 
-// Constants
+interface Preset {
+  readonly type: PresetType
+  readonly value: number
+}
+
+// 定数
 const INITIAL_END_DATE = 14
 const DEFAULT_HOLIDAY_COLOR = '#dc2626'
+const DEFAULT_TITLE = 'スケジュール'
+const DEFAULT_DATE_FORMAT = 'MM/DD（ddd）'
 
 export const useDateListGenerator = () => {
+  // 基本状態
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [title, setTitle] = useState('スケジュール')
-  const [dateFormat, setDateFormat] = useState('MM/DD（ddd）')
+  const [title, setTitle] = useState(DEFAULT_TITLE)
+  const [dateFormat, setDateFormat] = useState(DEFAULT_DATE_FORMAT)
   const [generatedList, setGeneratedList] = useState('')
+
+  // ローディング状態
   const [isLoading, setIsLoading] = useState(false)
   const [isFirstGeneration, setIsFirstGeneration] = useState(true)
+  const [isWaitingForLazyLoad, setIsWaitingForLazyLoad] = useState(false)
 
-  // Preset selection state
+  // プリセット選択状態
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>({
     type: 'period',
     value: INITIAL_END_DATE
   })
 
-  // Holiday settings
+  // 祝日設定状態
   const [excludeHolidays, setExcludeHolidays] = useState(false)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
   const [enableHolidayColors, setEnableHolidayColors] = useState(true)
@@ -36,9 +46,11 @@ export const useDateListGenerator = () => {
     DEFAULT_HOLIDAY_COLOR
   )
 
+  // 初期化処理
   useEffect(() => {
-    setStartDate(getTodayString())
-    setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
+    const today = getTodayString()
+    setStartDate(today)
+    setEndDate(addDays(today, INITIAL_END_DATE))
   }, [])
 
   // Memoize generation process dependencies
@@ -67,12 +79,18 @@ export const useDateListGenerator = () => {
     ]
   )
 
-  const handleGenerateList = useCallback(async () => {
+  // リスト生成処理
+  const handleGenerateList = useCallback(() => {
     try {
-      if (isFirstGeneration) {
+      // 初回生成時（既存のリストがない場合）のみローディング状態を開始
+      const isFirstLoad = !generatedList
+
+      if (isFirstLoad) {
         setIsLoading(true)
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        setIsWaitingForLazyLoad(true)
       }
+
+      // 設定値を取得して日付リストを生成
       const {
         startDate,
         endDate,
@@ -84,6 +102,7 @@ export const useDateListGenerator = () => {
         holidayColor,
         nationalHolidayColor
       } = generateListDependencies
+
       const result = generateDateList(
         startDate,
         endDate,
@@ -95,21 +114,36 @@ export const useDateListGenerator = () => {
         holidayColor,
         nationalHolidayColor
       )
+
+      // 常にリストを設定
       setGeneratedList(result)
+
+      // 状態更新処理
       if (isFirstGeneration) {
         setIsFirstGeneration(false)
+        // isWaitingForLazyLoadは遅延読み込み完了まで継続（初回のみ）
+      }
+
+      // 2回目以降の生成では、ローディング状態を即座に終了
+      if (!isFirstLoad) {
+        setIsLoading(false)
+        setIsWaitingForLazyLoad(false)
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'An error occurred',
-        { style: { color: '#b91c1c' } }
-      )
-    } finally {
-      if (isFirstGeneration) {
-        setIsLoading(false)
-      }
+      const errorMessage =
+        error instanceof Error ? error.message : 'An error occurred'
+      toast.error(errorMessage, { style: { color: '#b91c1c' } })
+      setIsLoading(false)
+      setIsWaitingForLazyLoad(false)
     }
-  }, [generateListDependencies, isFirstGeneration])
+  }, [generateListDependencies, generatedList, isFirstGeneration])
+
+  // 遅延読み込み完了を通知する関数
+  const notifyLazyLoadingComplete = useCallback(() => {
+    setIsWaitingForLazyLoad(false)
+    // 遅延読み込み完了時は必ずローディングを終了
+    setIsLoading(false)
+  }, [])
 
   // Function to update preset selection state (does not change dates)
   const updateSelectedPreset = useCallback((preset: Preset) => {
@@ -206,19 +240,31 @@ export const useDateListGenerator = () => {
     }
   }, [generatedList])
 
+  // 設定リセット処理
   const resetSettings = useCallback(() => {
-    setTitle('スケジュール')
-    setDateFormat('MM/DD（ddd）')
-    setStartDate(getTodayString())
-    setEndDate(addDays(getTodayString(), INITIAL_END_DATE))
+    const today = getTodayString()
+
+    // 基本設定をデフォルト値に戻す
+    setTitle(DEFAULT_TITLE)
+    setDateFormat(DEFAULT_DATE_FORMAT)
+    setStartDate(today)
+    setEndDate(addDays(today, INITIAL_END_DATE))
     setGeneratedList('')
+
+    // プリセット設定をリセット
     setSelectedPreset({ type: 'period', value: INITIAL_END_DATE })
+
+    // 祝日設定をデフォルト値に戻す
     setExcludeHolidays(false)
     setExcludeJpHolidays(false)
     setEnableHolidayColors(true)
     setHolidayColor(DEFAULT_HOLIDAY_COLOR)
     setNationalHolidayColor(DEFAULT_HOLIDAY_COLOR)
+
+    // 状態をリセット
     setIsLoading(false)
+    setIsWaitingForLazyLoad(false)
+    setIsFirstGeneration(true)
   }, [])
 
   // Memoized validation state
@@ -238,6 +284,7 @@ export const useDateListGenerator = () => {
     generatedList,
     isLoading,
     isFirstGeneration,
+    isWaitingForLazyLoad,
     handleGenerateList,
     updateSelectedPreset,
     applyPreset,
@@ -256,6 +303,7 @@ export const useDateListGenerator = () => {
     holidayColor,
     setHolidayColor,
     nationalHolidayColor,
-    setNationalHolidayColor
+    setNationalHolidayColor,
+    notifyLazyLoadingComplete
   }
 }
