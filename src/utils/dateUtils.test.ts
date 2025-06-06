@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   addDays,
@@ -31,7 +32,7 @@ describe('日付ユーティリティ関数', () => {
   describe('getTodayString', () => {
     it('今日の日付をYYYY-MM-DD形式で返す', () => {
       const result = getTodayString()
-      const today = new Date().toISOString().split('T')[0]
+      const today = dayjs().format('YYYY-MM-DD')
       expect(result).toBe(today)
     })
   })

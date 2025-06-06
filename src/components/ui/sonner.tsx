@@ -9,6 +9,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps['theme']}
       className='toaster group'
       data-sonner-toast
+      duration={3000}
       style={
         {
           '--normal-bg': 'var(--popover)',

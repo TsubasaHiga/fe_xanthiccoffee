@@ -108,9 +108,9 @@ export function MarkdownViewer({
 
   // PDFエクスポート処理
   const handleExportPDF = useCallback(() => {
-    import('@/utils/exportUtils').then(({ exportAsPDF }) => {
+    import('@/utils/exportUtils').then(async ({ exportAsPDF }) => {
       try {
-        exportAsPDF(value)
+        await exportAsPDF(value)
         import('sonner').then(({ toast }) => {
           toast.success('PDF印刷ダイアログを開きました')
         })

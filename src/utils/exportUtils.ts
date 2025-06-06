@@ -28,68 +28,82 @@ export function exportAsMarkdown(content: string): void {
 /**
  * Export as PDF using browser print functionality
  */
-export function exportAsPDF(content: string): void {
-  const title = extractTitle(content) || 'マークダウンコンテンツ'
+export function exportAsPDF(content: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    try {
+      const title = extractTitle(content) || 'マークダウンコンテンツ'
 
-  // Convert markdown to HTML with basic formatting
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>${title}</title>
-      <meta charset="UTF-8">
-      <style>
-        body { 
-          font-family: 'Arial', 'Meiryo', sans-serif; 
-          margin: 20px; 
-          line-height: 1.6;
-          color: #333;
-        }
-        h1, h2, h3, h4, h5, h6 { 
-          color: #333; 
-          border-bottom: 1px solid #ddd; 
-          padding-bottom: 5px; 
-          margin-top: 20px;
-        }
-        ul, ol { padding-left: 20px; }
-        li { margin: 5px 0; }
-        p { margin: 10px 0; }
-        code { 
-          background: #f4f4f4; 
-          padding: 2px 4px; 
-          border-radius: 3px; 
-        }
-        pre { 
-          background: #f4f4f4; 
-          padding: 10px; 
-          border-radius: 5px; 
-          overflow-wrap: break-word;
-        }
-        @media print {
-          body { margin: 0; }
-          * { -webkit-print-color-adjust: exact !important; }
-        }
-      </style>
-    </head>
-    <body>
-      ${markdownToHTML(content)}
-    </body>
-    </html>
-  `
+      // Convert markdown to HTML with basic formatting
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${title}</title>
+          <meta charset="UTF-8">
+          <style>
+            body { 
+              font-family: 'Arial', 'Meiryo', sans-serif; 
+              margin: 20px; 
+              line-height: 1.6;
+              color: #333;
+            }
+            h1, h2, h3, h4, h5, h6 { 
+              color: #333; 
+              border-bottom: 1px solid #ddd; 
+              padding-bottom: 5px; 
+              margin-top: 20px;
+            }
+            ul, ol { padding-left: 20px; }
+            li { margin: 5px 0; }
+            p { margin: 10px 0; }
+            code { 
+              background: #f4f4f4; 
+              padding: 2px 4px; 
+              border-radius: 3px; 
+            }
+            pre { 
+              background: #f4f4f4; 
+              padding: 10px; 
+              border-radius: 5px; 
+              overflow-wrap: break-word;
+            }
+            @media print {
+              body { margin: 0; }
+              * { -webkit-print-color-adjust: exact !important; }
+            }
+          </style>
+        </head>
+        <body>
+          ${markdownToHTML(content)}
+        </body>
+        </html>
+      `
 
-  // Open in new window and trigger print
-  const printWindow = window.open('', '_blank')
-  if (printWindow) {
-    printWindow.document.write(htmlContent)
-    printWindow.document.close()
-    printWindow.focus()
+      // Open in new window and trigger print
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(htmlContent)
+        printWindow.document.close()
+        printWindow.focus()
 
-    // Wait for content to load, then print
-    setTimeout(() => {
-      printWindow.print()
-      printWindow.close()
-    }, 250)
-  }
+        // Wait for content to load, then print
+        setTimeout(() => {
+          printWindow.print()
+          // Resolve after print dialog is triggered
+          resolve()
+
+          // Close the window after a short delay
+          setTimeout(() => {
+            printWindow.close()
+          }, 100)
+        }, 250)
+      } else {
+        reject(new Error('印刷ウィンドウを開けませんでした'))
+      }
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
 /**

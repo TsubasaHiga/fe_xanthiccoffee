@@ -228,9 +228,9 @@ export const useDateListGenerator = () => {
     }
   }, [generatedList])
 
-  const exportPDF = useCallback(() => {
+  const exportPDF = useCallback(async () => {
     try {
-      exportAsPDF(generatedList)
+      await exportAsPDF(generatedList)
       toast.success('PDF印刷ダイアログを開きました')
     } catch (err) {
       console.error('PDF エクスポートに失敗しました:', err)

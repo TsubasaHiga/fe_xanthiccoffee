@@ -3,6 +3,12 @@ import dayjs from 'dayjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDateListGenerator } from './useDateListGenerator'
 
+// Mock the export utils
+vi.mock('@/utils/exportUtils', () => ({
+  exportAsMarkdown: vi.fn(),
+  exportAsPDF: vi.fn().mockResolvedValue(undefined)
+}))
+
 // Mock the sonner toast
 vi.mock('sonner', () => ({
   toast: {
@@ -33,7 +39,7 @@ vi.mock('@/utils/dateUtils', () => ({
 // Mock the exportUtils
 vi.mock('@/utils/exportUtils', () => ({
   exportAsMarkdown: vi.fn(),
-  exportAsPDF: vi.fn()
+  exportAsPDF: vi.fn().mockResolvedValue(undefined)
 }))
 
 // Mock navigator.clipboard
@@ -825,8 +831,8 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
     })
 
     // PDF エクスポートを実行
-    act(() => {
-      result.current.exportPDF()
+    await act(async () => {
+      await result.current.exportPDF()
     })
 
     const { exportAsPDF } = await import('@/utils/exportUtils')
@@ -865,9 +871,7 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
 
   it('PDF エクスポートエラーを処理する', async () => {
     const { exportAsPDF } = await import('@/utils/exportUtils')
-    vi.mocked(exportAsPDF).mockImplementationOnce(() => {
-      throw new Error('PDF export error')
-    })
+    vi.mocked(exportAsPDF).mockRejectedValueOnce(new Error('PDF export error'))
 
     const { result } = renderHook(() => useDateListGenerator())
 
@@ -875,8 +879,8 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       await result.current.handleGenerateList()
     })
 
-    act(() => {
-      result.current.exportPDF()
+    await act(async () => {
+      await result.current.exportPDF()
     })
 
     const { toast } = await import('sonner')

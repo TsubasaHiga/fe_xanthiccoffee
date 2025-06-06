@@ -117,13 +117,13 @@ describe('exportUtils', () => {
   })
 
   describe('exportAsPDF', () => {
-    it('PDF形式でエクスポートできる', () => {
+    it('PDF形式でエクスポートできる', async () => {
       const content = `# テストスケジュール
 
 - 01/01（月）
 - 01/02（火）`
 
-      exportAsPDF(content)
+      await exportAsPDF(content)
 
       expect(global.window.open).toHaveBeenCalled()
     })
