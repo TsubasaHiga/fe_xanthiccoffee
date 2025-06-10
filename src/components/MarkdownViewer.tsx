@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import { exportAsMarkdown, exportAsPDF } from '@/utils/exportUtils'
 import { ChevronDown, Copy, Download, FileText } from 'lucide-react'
 import {
   useCallback,
@@ -20,6 +21,7 @@ import {
   useRef,
   useState
 } from 'react'
+import { toast } from 'sonner'
 import { ConfiguredMdEditor } from './ConfiguredMdEditor'
 import { MdPreview } from './MdPreview'
 
@@ -28,7 +30,7 @@ interface MarkdownViewerProps {
   readonly generatedList: string
   readonly copyToClipboard: (text: string) => void
   readonly exportMarkdown?: () => void
-  readonly exportPDF?: () => void
+  readonly exportPDF?: (customContent?: string) => void | Promise<void>
   readonly onMount?: () => void
 }
 
@@ -89,41 +91,37 @@ export function MarkdownViewer({
 
   // Markdownエクスポート処理
   const handleExportMarkdown = useCallback(() => {
-    import('@/utils/exportUtils').then(({ exportAsMarkdown }) => {
+    if (exportMarkdown) {
+      exportMarkdown()
+    } else {
       try {
         exportAsMarkdown(value)
-        import('sonner').then(({ toast }) => {
-          toast.success('Markdownファイルをダウンロードしました')
-        })
+        toast.success('Markdownファイルをダウンロードしました')
       } catch (error) {
         console.error('Markdown エクスポートに失敗しました:', error)
-        import('sonner').then(({ toast }) => {
-          toast.error('Markdown エクスポートに失敗しました', {
-            style: { color: '#b91c1c' }
-          })
+        toast.error('Markdown エクスポートに失敗しました', {
+          style: { color: '#b91c1c' }
         })
       }
-    })
-  }, [value])
+    }
+  }, [value, exportMarkdown])
 
   // PDFエクスポート処理
-  const handleExportPDF = useCallback(() => {
-    import('@/utils/exportUtils').then(async ({ exportAsPDF }) => {
-      try {
+  const handleExportPDF = useCallback(async () => {
+    try {
+      if (exportPDF) {
+        await exportPDF(value)
+      } else {
         await exportAsPDF(value)
-        import('sonner').then(({ toast }) => {
-          toast.success('PDF印刷ダイアログを開きました')
-        })
-      } catch (error) {
-        console.error('PDF エクスポートに失敗しました:', error)
-        import('sonner').then(({ toast }) => {
-          toast.error('PDF エクスポートに失敗しました', {
-            style: { color: '#b91c1c' }
-          })
-        })
+        toast.success('PDFファイルをダウンロードしました')
       }
-    })
-  }, [value])
+    } catch (error) {
+      console.error('PDF エクスポートに失敗しました:', error)
+      toast.error('PDF エクスポートに失敗しました', {
+        style: { color: '#b91c1c' }
+      })
+    }
+  }, [value, exportPDF])
 
   return (
     <Card
@@ -142,7 +140,7 @@ export function MarkdownViewer({
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='flex flex-wrap justify-between gap-2'>
-          <div className='flex flex-wrap gap-2'>
+          <div className='grid w-full grid-cols-[1fr_1fr] gap-2 sm:w-auto sm:grid-cols-2'>
             <Button
               onClick={handleCopy}
               size='sm'
@@ -166,7 +164,7 @@ export function MarkdownViewer({
                 <Button
                   variant='outline'
                   size='sm'
-                  className='flex items-center border border-gray-300 text-gray-700 transition hover:bg-gray-50'
+                  className='flex w-full items-center border border-gray-300 text-gray-700 transition hover:bg-gray-50 sm:w-auto'
                 >
                   ダウンロードする
                   <ChevronDown className='ml-1 h-4 w-4' />
