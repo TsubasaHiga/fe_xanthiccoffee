@@ -305,7 +305,7 @@ export async function exportAsPDF(
 }
 
 export function exportAsMarkdown(content: string): void {
-  const title = extractTitle(content) || 'マークダウンファイル'
+  const title = extractTitle(content) || 'document'
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
   downloadBlob(blob, `${title}.md`)
 }
