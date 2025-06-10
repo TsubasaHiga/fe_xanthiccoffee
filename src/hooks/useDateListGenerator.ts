@@ -81,61 +81,63 @@ export const useDateListGenerator = () => {
 
   // リスト生成処理
   const handleGenerateList = useCallback(() => {
-    try {
-      // 初回生成時（既存のリストがない場合）のみローディング状態を開始
-      const isFirstLoad = !generatedList
+    Promise.resolve()
+      .then(() => {
+        // 初回生成時（既存のリストがない場合）のみローディング状態を開始
+        const isFirstLoad = !generatedList
 
-      if (isFirstLoad) {
-        setIsLoading(true)
-        setIsWaitingForLazyLoad(true)
-      }
+        if (isFirstLoad) {
+          setIsLoading(true)
+          setIsWaitingForLazyLoad(true)
+        }
 
-      // 設定値を取得して日付リストを生成
-      const {
-        startDate,
-        endDate,
-        title,
-        dateFormat,
-        excludeHolidays,
-        excludeJpHolidays,
-        enableHolidayColors,
-        holidayColor,
-        nationalHolidayColor
-      } = generateListDependencies
+        // 設定値を取得して日付リストを生成
+        const {
+          startDate,
+          endDate,
+          title,
+          dateFormat,
+          excludeHolidays,
+          excludeJpHolidays,
+          enableHolidayColors,
+          holidayColor,
+          nationalHolidayColor
+        } = generateListDependencies
 
-      const result = generateDateList(
-        startDate,
-        endDate,
-        title,
-        dateFormat,
-        excludeHolidays,
-        excludeJpHolidays,
-        enableHolidayColors,
-        holidayColor,
-        nationalHolidayColor
-      )
+        const result = generateDateList(
+          startDate,
+          endDate,
+          title,
+          dateFormat,
+          excludeHolidays,
+          excludeJpHolidays,
+          enableHolidayColors,
+          holidayColor,
+          nationalHolidayColor
+        )
 
-      // 常にリストを設定
-      setGeneratedList(result)
+        // 常にリストを設定
+        setGeneratedList(result)
 
-      // 状態更新処理
-      if (isFirstGeneration) {
-        setIsFirstGeneration(false)
-        // isWaitingForLazyLoadは遅延読み込み完了まで継続（初回のみ）
-      }
+        // 状態更新処理
+        if (isFirstGeneration) {
+          setIsFirstGeneration(false)
+          // isWaitingForLazyLoadは遅延読み込み完了まで継続（初回のみ）
+        }
 
-      // 2回目以降の生成では、ローディング状態を即座に終了
-      if (!isFirstLoad) {
+        // 2回目以降の生成では、ローディング状態を即座に終了
+        if (!isFirstLoad) {
+          setIsLoading(false)
+          setIsWaitingForLazyLoad(false)
+        }
+      })
+      .catch((error: unknown) => {
+        const errorMessage =
+          error instanceof Error ? error.message : 'An error occurred'
+        toast.error(errorMessage, { style: { color: '#b91c1c' } })
         setIsLoading(false)
         setIsWaitingForLazyLoad(false)
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'An error occurred'
-      toast.error(errorMessage, { style: { color: '#b91c1c' } })
-      setIsLoading(false)
-      setIsWaitingForLazyLoad(false)
-    }
+      })
   }, [generateListDependencies, generatedList, isFirstGeneration])
 
   // 遅延読み込み完了を通知する関数
@@ -202,15 +204,19 @@ export const useDateListGenerator = () => {
 
   const copyToClipboard = useCallback(
     async (text?: string) => {
-      try {
-        await navigator.clipboard.writeText(text || generatedList)
-        toast.success('クリップボードにコピーしました')
-      } catch (err) {
-        console.error('コピーに失敗しました:', err)
-        toast.error('コピーに失敗しました', {
-          style: { color: '#b91c1c' }
+      const result = await navigator.clipboard
+        .writeText(text || generatedList)
+        .then(() => {
+          toast.success('クリップボードにコピーしました')
         })
-      }
+        .catch((err: unknown) => {
+          console.error('コピーに失敗しました:', err)
+          toast.error('コピーに失敗しました', {
+            style: { color: '#b91c1c' }
+          })
+        })
+
+      return result
     },
     [generatedList]
   )
@@ -220,7 +226,7 @@ export const useDateListGenerator = () => {
     try {
       exportAsMarkdown(generatedList)
       toast.success('Markdownファイルをダウンロードしました')
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Markdown エクスポートに失敗しました:', err)
       toast.error('Markdown エクスポートに失敗しました', {
         style: { color: '#b91c1c' }
@@ -228,19 +234,21 @@ export const useDateListGenerator = () => {
     }
   }, [generatedList])
 
-  const exportPDF = useCallback(async () => {
-    try {
-      await exportAsPDF(generatedList)
-      toast.success('PDF印刷ダイアログを開きました')
-    } catch (err) {
-      console.error('PDF エクスポートに失敗しました:', err)
-      toast.error('PDF エクスポートに失敗しました', {
-        style: { color: '#b91c1c' }
-      })
-    }
-  }, [generatedList])
+  const exportPDF = useCallback(
+    async (customContent?: string) => {
+      try {
+        await exportAsPDF(customContent || generatedList, title)
+        toast.success('PDFファイルをダウンロードしました')
+      } catch (err: unknown) {
+        console.error('PDF エクスポートに失敗しました:', err)
+        toast.error('PDF エクスポートに失敗しました', {
+          style: { color: '#b91c1c' }
+        })
+      }
+    },
+    [generatedList, title]
+  )
 
-  // 設定リセット処理
   const resetSettings = useCallback(() => {
     const today = getTodayString()
 

@@ -6,7 +6,7 @@ import { useDateListGenerator } from './useDateListGenerator'
 // Mock the export utils
 vi.mock('@/utils/exportUtils', () => ({
   exportAsMarkdown: vi.fn(),
-  exportAsPDF: vi.fn().mockResolvedValue(undefined)
+  exportAsPDF: vi.fn()
 }))
 
 // Mock the sonner toast
@@ -36,11 +36,10 @@ vi.mock('@/utils/dateUtils', () => ({
   )
 }))
 
-// Mock the exportUtils
-vi.mock('@/utils/exportUtils', () => ({
-  exportAsMarkdown: vi.fn(),
-  exportAsPDF: vi.fn().mockResolvedValue(undefined)
-}))
+import { generateDateList } from '@/utils/dateUtils'
+// Import the mocked modules for direct access
+import { exportAsMarkdown, exportAsPDF } from '@/utils/exportUtils'
+import { toast } from 'sonner'
 
 // Mock navigator.clipboard
 Object.defineProperty(navigator, 'clipboard', {
@@ -126,7 +125,6 @@ describe('日付リスト生成カスタムフック', () => {
   })
 
   it('リスト生成時にエラーが発生した場合はエラートーストを表示する', async () => {
-    const { generateDateList } = await import('@/utils/dateUtils')
     vi.mocked(generateDateList).mockImplementationOnce(() => {
       throw new Error('Test error')
     })
@@ -137,7 +135,6 @@ describe('日付リスト生成カスタムフック', () => {
       await result.current.handleGenerateList()
     })
 
-    const { toast } = await import('sonner')
     expect(toast.error).toHaveBeenCalledWith('Test error', {
       style: { color: '#b91c1c' }
     })
@@ -349,7 +346,6 @@ describe('日付リスト生成カスタムフック', () => {
       '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
     )
 
-    const { toast } = await import('sonner')
     expect(toast.success).toHaveBeenCalledWith('クリップボードにコピーしました')
   })
 
@@ -374,7 +370,6 @@ describe('日付リスト生成カスタムフック', () => {
       await result.current.copyToClipboard('test')
     })
 
-    const { toast } = await import('sonner')
     expect(toast.error).toHaveBeenCalledWith('コピーに失敗しました', {
       style: { color: '#b91c1c' }
     })
@@ -811,14 +806,34 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       result.current.exportMarkdown()
     })
 
-    const { exportAsMarkdown } = await import('@/utils/exportUtils')
-    const { toast } = await import('sonner')
-
-    expect(exportAsMarkdown).toHaveBeenCalledWith(
+    expect(vi.mocked(exportAsMarkdown)).toHaveBeenCalledWith(
       '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
     )
-    expect(toast.success).toHaveBeenCalledWith(
+    expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
       'Markdownファイルをダウンロードしました'
+    )
+  })
+
+  it('Markdown エクスポートエラーを処理する', async () => {
+    vi.mocked(exportAsMarkdown).mockImplementationOnce(() => {
+      throw new Error('Markdown export error')
+    })
+
+    const { result } = renderHook(() => useDateListGenerator())
+
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    act(() => {
+      result.current.exportMarkdown()
+    })
+
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+      'Markdown エクスポートに失敗しました',
+      {
+        style: { color: '#b91c1c' }
+      }
     )
   })
 
@@ -835,42 +850,33 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       await result.current.exportPDF()
     })
 
-    const { exportAsPDF } = await import('@/utils/exportUtils')
-    const { toast } = await import('sonner')
-
-    expect(exportAsPDF).toHaveBeenCalledWith(
-      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+    expect(vi.mocked(exportAsPDF)).toHaveBeenCalledWith(
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n',
+      'スケジュール'
     )
-    expect(toast.success).toHaveBeenCalledWith('PDF印刷ダイアログを開きました')
+    expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
+      'PDFファイルをダウンロードしました'
+    )
   })
 
-  it('Markdown エクスポートエラーを処理する', async () => {
-    const { exportAsMarkdown } = await import('@/utils/exportUtils')
-    vi.mocked(exportAsMarkdown).mockImplementationOnce(() => {
-      throw new Error('Markdown export error')
-    })
-
+  it('PDF エクスポートでカスタムコンテンツを使用できる', async () => {
     const { result } = renderHook(() => useDateListGenerator())
 
+    const customContent = '# カスタムスケジュール\n\n- カスタム項目'
+
+    // PDF エクスポートをカスタムコンテンツで実行
     await act(async () => {
-      await result.current.handleGenerateList()
+      await result.current.exportPDF(customContent)
     })
 
-    act(() => {
-      result.current.exportMarkdown()
-    })
-
-    const { toast } = await import('sonner')
-    expect(toast.error).toHaveBeenCalledWith(
-      'Markdown エクスポートに失敗しました',
-      {
-        style: { color: '#b91c1c' }
-      }
+    expect(vi.mocked(exportAsPDF)).toHaveBeenCalledWith(
+      customContent,
+      'スケジュール'
     )
   })
 
   it('PDF エクスポートエラーを処理する', async () => {
-    const { exportAsPDF } = await import('@/utils/exportUtils')
+    // Mock exportAsPDF to reject with an error
     vi.mocked(exportAsPDF).mockRejectedValueOnce(new Error('PDF export error'))
 
     const { result } = renderHook(() => useDateListGenerator())
@@ -883,9 +889,11 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       await result.current.exportPDF()
     })
 
-    const { toast } = await import('sonner')
-    expect(toast.error).toHaveBeenCalledWith('PDF エクスポートに失敗しました', {
-      style: { color: '#b91c1c' }
-    })
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+      'PDF エクスポートに失敗しました',
+      {
+        style: { color: '#b91c1c' }
+      }
+    )
   })
 })
