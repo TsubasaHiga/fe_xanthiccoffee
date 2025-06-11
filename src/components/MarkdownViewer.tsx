@@ -116,6 +116,7 @@ export function MarkdownViewer({
     try {
       if (exportPDF) {
         await exportPDF(value)
+        toast.success('PDFファイルをダウンロードしました')
       } else {
         await exportAsPDF(value)
         toast.success('PDFファイルをダウンロードしました')
@@ -205,12 +206,8 @@ export function MarkdownViewer({
                 handleExportPDF()
               }
             }}
-            style={{
-              position: 'absolute',
-              left: '-9999px',
-              opacity: 0,
-              pointerEvents: 'auto'
-            }}
+            className='absolute top-0 left-0 w-1 h-1 opacity-0 pointer-events-auto'
+            style={{ zIndex: -1 }}
           >
             PDF Export Fallback
           </button>

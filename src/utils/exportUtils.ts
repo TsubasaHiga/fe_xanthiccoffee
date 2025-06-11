@@ -14,11 +14,16 @@ const PDF_CONFIG = {
   A4_WIDTH: 210,
   A4_HEIGHT: 297,
   IMAGE_QUALITY: 0.95,
-  LAYOUT_DELAY: 250,
+  LAYOUT_DELAY: 500,
   MIN_CANVAS_HEIGHT: 100,
-  DOM_WAIT_INITIAL: 100,
-  DOM_WAIT_RETRY: 200,
-  TEST_ENVIRONMENT_DELAY: 50
+  DOM_WAIT_INITIAL: 200,
+  DOM_WAIT_RETRY: 400,
+  TEST_ENVIRONMENT_DELAY: 50,
+  // ページベース分割の設定
+  CSS_PAGE_HEIGHT: 1400, // A4の高さを最大限活用（297mm ≈ 1400px）
+  CSS_PAGE_MARGIN: 20, // ページ内マージンを削減
+  BREAK_SAFETY_MARGIN: 30, // 改ページ前の安全マージンを削減
+  MIN_ELEMENT_MARGIN: 12 // 要素間の最小マージンを削減
 } as const
 
 const MARKDOWN_CONFIG = {
@@ -27,292 +32,333 @@ const MARKDOWN_CONFIG = {
   pedantic: false
 } as const
 
-// E2Eテスト用のモックPDF生成関数
-async function mockPdfGeneration(): Promise<void> {
-  // E2Eテスト環境では実際のPDF生成をスキップし、遅延を実行
-  await new Promise(
-    (resolve) =>
-      setTimeout(() => {
-        resolve(void 0)
-      }, 100) // 100msの遅延でより確実な非同期処理
-  )
+/**
+ * デバッグモードの検出
+ */
+function isDebugMode(): boolean {
+  if (typeof window === 'undefined') return false
+  const url = new URL(window.location.href)
+  return url.searchParams.has('pdf-debug')
 }
 
-async function createIsolatedElement(
-  htmlContent: string,
+/**
+ * 新しいページベース方式でPDFを生成（根本的解決策）
+ * HTML段階でページ分割制御を行い、文字切れ問題を解決
+ */
+async function createPageBasedPDF(
+  markdownContent: string,
+  title: string,
   debugMode = false
-): Promise<{ element: HTMLElement; cleanup: () => void }> {
-  return new Promise((resolve, reject) => {
-    const iframe = document.createElement('iframe')
+): Promise<Blob> {
+  if (debugMode) {
+    console.log('🚀 Page-based PDF generation started:', { title, debugMode })
+  }
+
+  // Step 1: Markdownを解析して要素レベルでコンテンツを分散
+  const pages = await distributeContentToPages(markdownContent, debugMode)
+
+  if (debugMode) {
+    console.log('📄 Generated pages:', pages.length)
+  }
+
+  // Step 2: 各ページをHTML→Canvas→PDFに変換
+  const pdf = new jsPDF({
+    orientation: PDF_CONFIG.ORIENTATION,
+    unit: PDF_CONFIG.UNIT,
+    format: PDF_CONFIG.FORMAT
+  })
+
+  for (let i = 0; i < pages.length; i++) {
+    const pageContent = pages[i]
 
     if (debugMode) {
-      // デバッグモード: iframeを画面上に表示
-      iframe.style.cssText = `
-        position: fixed; top: 50px; left: 50px;
-        width: ${PDF_CONFIG.CONTENT_WIDTH}px; height: 800px;
-        border: 2px solid red; background: white; z-index: 9999;
-      `
-    } else {
-      // 通常モード: iframeを非表示
-      iframe.style.cssText = `
-        position: fixed; top: -9999px; left: -9999px;
-        width: ${PDF_CONFIG.CONTENT_WIDTH}px; height: 5000px;
-        border: none; visibility: hidden; opacity: 0; pointer-events: none;
-      `
+      console.log(`📝 Processing page ${i + 1}/${pages.length}`)
     }
 
-    iframe.onload = async () => {
-      try {
-        const doc = iframe.contentDocument
-        if (!doc) {
-          reject(new Error('iframeのcontentDocumentにアクセスできません'))
-          return
-        }
+    // 各ページのCanvasを生成
+    const canvas = await createPageCanvas(pageContent, debugMode)
 
-        // DOM要素の生成を待機
-        await new Promise((resolve) =>
-          setTimeout(resolve, PDF_CONFIG.DOM_WAIT_INITIAL)
-        )
-
-        const markdownElement = doc.body.firstElementChild as HTMLElement
-        if (!markdownElement) {
-          // 要素が見つからない場合、少し待ってから再試行
-          await new Promise((resolve) =>
-            setTimeout(resolve, PDF_CONFIG.DOM_WAIT_RETRY)
-          )
-          const retryElement = doc.body.firstElementChild as HTMLElement
-          if (!retryElement) {
-            reject(new Error('Markdownコンテンツの要素が見つかりません'))
-            return
-          }
-
-          // フォントとレイアウトの読み込み完了を待機
-          if (doc.fonts) await doc.fonts.ready
-          await new Promise((resolve) =>
-            setTimeout(resolve, PDF_CONFIG.LAYOUT_DELAY)
-          )
-
-          resolve({
-            element: retryElement,
-            cleanup: debugMode
-              ? () => {
-                  console.warn(
-                    'デバッグモード: iframeはクリーンアップされません。手動で削除してください。'
-                  )
-                }
-              : () => iframe.parentNode?.removeChild(iframe)
-          })
-          return
-        }
-
-        // フォントとレイアウトの読み込み完了を待機
-        if (doc.fonts) await doc.fonts.ready
-        await new Promise((resolve) =>
-          setTimeout(resolve, PDF_CONFIG.LAYOUT_DELAY)
-        )
-
-        resolve({
-          element: markdownElement,
-          cleanup: debugMode
-            ? () => {
-                console.warn(
-                  'デバッグモード: iframeはクリーンアップされません。手動で削除してください。'
-                )
-              }
-            : () => iframe.parentNode?.removeChild(iframe)
-        })
-      } catch (error) {
-        reject(error)
+    if (canvas) {
+      if (i > 0) {
+        pdf.addPage()
       }
-    }
 
-    iframe.onerror = () => {
-      reject(new Error('iframeの読み込みに失敗しました'))
-    }
+      // Canvasを適切にPDFに配置
+      const imgData = canvas.toDataURL('image/jpeg', PDF_CONFIG.IMAGE_QUALITY)
+      const imgWidth = PDF_CONFIG.A4_WIDTH - PDF_CONFIG.MARGIN * 2
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
 
-    document.body.appendChild(iframe)
-    const doc = iframe.contentDocument!
-
-    doc.open()
-    doc.write(
-      `<!DOCTYPE html><html><head><style></style></head><body><div class="markdown-body">${htmlContent}</div></body></html>`
-    )
-    doc.close()
-  })
-}
-
-export async function exportMarkdownToPdf(
-  markdownContent: string,
-  filename = 'document.pdf',
-  debugMode = false
-): Promise<void> {
-  let cleanup: (() => void) | null = null
-
-  try {
-    // ブラウザ環境とDOM APIの確認
-    if (typeof document === 'undefined') {
-      throw new Error('PDF エクスポートはブラウザ環境でのみ利用可能です')
-    }
-
-    const htmlContent = await marked.parse(markdownContent, MARKDOWN_CONFIG)
-    const result = await createIsolatedElement(htmlContent, debugMode)
-    cleanup = result.cleanup
-    const canvas = await html2canvas(result.element, {
-      scale: PDF_CONFIG.SCALE,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      foreignObjectRendering: false,
-      width: result.element.offsetWidth,
-      height: Math.max(
-        result.element.offsetHeight,
-        PDF_CONFIG.MIN_CANVAS_HEIGHT
-      ),
-      removeContainer: true,
-      imageTimeout: 15000,
-      ignoreElements: (element) => {
-        return element.tagName === 'SCRIPT' || element.tagName === 'STYLE'
-      },
-      onclone: (clonedElement) => {
-        let style = clonedElement.querySelector('style')
-        if (!style) {
-          // Create style element if it doesn't exist
-          style = clonedElement.createElement('style')
-          const head =
-            clonedElement.querySelector('head') ||
-            clonedElement.querySelector('body')
-          if (head) {
-            head.appendChild(style)
-          }
-        }
-        if (style) {
-          style.textContent += `
-          /* GitHub Markdown CSS */
-          ${githubCss}
-
-          /* 最小高さとパディングを確保 */
-          .markdown-body {
-            min-height: 200px !important;
-            padding: 20px !important;
-            box-sizing: border-box !important;
-          }
-          
-          /* リンクのスタイルを明示的に確保 */
-          .markdown-body a {
-            color: #0969da !important;
-            text-decoration: underline !important;
-          }`
-        }
-      }
-    })
-
-    if (canvas.width === 0 || canvas.height === 0) {
-      throw new Error('Canvas size is invalid (width or height is 0)')
-    }
-
-    cleanup()
-    cleanup = null
-
-    const pdf = new jsPDF({
-      orientation: PDF_CONFIG.ORIENTATION,
-      unit: PDF_CONFIG.UNIT,
-      format: PDF_CONFIG.FORMAT
-    })
-
-    const contentWidth = PDF_CONFIG.A4_WIDTH - PDF_CONFIG.MARGIN * 2
-    const contentHeight = PDF_CONFIG.A4_HEIGHT - PDF_CONFIG.MARGIN * 2
-    const scaledHeight = contentWidth * (canvas.height / canvas.width)
-    const imgData = canvas.toDataURL('image/png', PDF_CONFIG.IMAGE_QUALITY)
-
-    const minimumPdfHeight = 10
-    const finalHeight = Math.max(scaledHeight, minimumPdfHeight)
-
-    if (finalHeight <= contentHeight) {
       pdf.addImage(
         imgData,
-        'PNG',
+        'JPEG',
         PDF_CONFIG.MARGIN,
         PDF_CONFIG.MARGIN,
-        contentWidth,
-        finalHeight
+        imgWidth,
+        imgHeight
       )
-    } else {
-      // PDFページの利用可能な高さに対応するcanvasの高さを計算
-      const maxCanvasHeightPerPage = Math.floor(
-        contentHeight * (canvas.width / contentWidth)
-      )
-      let currentY = 0
 
-      while (currentY < canvas.height) {
-        if (currentY > 0) pdf.addPage()
+      if (debugMode) {
+        console.log(`✅ Page ${i + 1} added to PDF:`, { imgWidth, imgHeight })
+      }
+    }
+  }
 
-        // 残りの高さと最大高さの小さい方を使用
-        const remainingHeight = canvas.height - currentY
-        const pageCanvasHeight = Math.min(
-          remainingHeight,
-          maxCanvasHeightPerPage
-        )
+  return pdf.output('blob')
+}
 
-        const pageCanvas = document.createElement('canvas')
-        pageCanvas.width = canvas.width
-        pageCanvas.height = pageCanvasHeight
+/**
+ * Markdownコンテンツを解析して、適切にページ分割
+ */
+async function distributeContentToPages(
+  markdownContent: string,
+  debugMode: boolean
+): Promise<string[]> {
+  const html = await marked(markdownContent, MARKDOWN_CONFIG)
 
-        const ctx = pageCanvas.getContext('2d')!
-        ctx.drawImage(
-          canvas,
-          0,
-          currentY,
-          canvas.width,
-          pageCanvasHeight,
-          0,
-          0,
-          canvas.width,
-          pageCanvasHeight
-        )
+  // HTMLを行単位で分割
+  const lines = html.split('\n').filter((line) => line.trim())
+  const pages: string[] = []
+  let currentPage: string[] = []
+  let currentPageHeight = 0
 
-        const pageImgData = pageCanvas.toDataURL(
-          'image/png',
-          PDF_CONFIG.IMAGE_QUALITY
-        )
+  for (const line of lines) {
+    // 行の推定高さを計算
+    const estimatedLineHeight = estimateLineHeight(line)
 
-        // 縦横比を維持してページ画像の高さを計算
-        const pageImageHeight = contentWidth * (pageCanvasHeight / canvas.width)
+    // ページの実効的な高さを計算（マージンを差し引いて、90%まで利用）
+    const effectivePageHeight =
+      (PDF_CONFIG.CSS_PAGE_HEIGHT - PDF_CONFIG.CSS_PAGE_MARGIN * 2) * 0.9
 
-        pdf.addImage(
-          pageImgData,
-          'PNG',
-          PDF_CONFIG.MARGIN,
-          PDF_CONFIG.MARGIN,
-          contentWidth,
-          pageImageHeight
-        )
-
-        currentY += pageCanvasHeight
+    // ページの上限に達した場合は新しいページを開始
+    if (currentPageHeight + estimatedLineHeight > effectivePageHeight) {
+      if (currentPage.length > 0) {
+        pages.push(wrapPageContent(currentPage.join('\n')))
+        currentPage = []
+        currentPageHeight = 0
       }
     }
 
-    pdf.save(filename)
+    currentPage.push(line)
+    currentPageHeight += estimatedLineHeight + PDF_CONFIG.MIN_ELEMENT_MARGIN
+  }
+
+  // 最後のページを追加
+  if (currentPage.length > 0) {
+    pages.push(wrapPageContent(currentPage.join('\n')))
+  }
+
+  if (debugMode) {
+    const effectivePageHeight =
+      (PDF_CONFIG.CSS_PAGE_HEIGHT - PDF_CONFIG.CSS_PAGE_MARGIN * 2) * 0.9
+    console.log('📋 Content distribution completed:', {
+      totalLines: lines.length,
+      pagesGenerated: pages.length,
+      avgLinesPerPage: Math.round(lines.length / pages.length),
+      pageHeight: PDF_CONFIG.CSS_PAGE_HEIGHT,
+      effectivePageHeight: effectivePageHeight,
+      utilization: `${(((lines.length * 16) / (pages.length * effectivePageHeight)) * 100).toFixed(1)}%`
+    })
+  }
+
+  return pages
+}
+
+/**
+ * 行の推定高さを計算（コンパクト化）
+ */
+function estimateLineHeight(htmlLine: string): number {
+  // HTMLタグに基づいて推定高さを計算（より効率的な値に調整）
+  if (htmlLine.includes('<h1')) return 36 // 40 → 36
+  if (htmlLine.includes('<h2')) return 32 // 35 → 32
+  if (htmlLine.includes('<h3')) return 28 // 30 → 28
+  if (htmlLine.includes('<h4')) return 24 // 25 → 24
+  if (htmlLine.includes('<li')) return 18 // 20 → 18
+  if (htmlLine.includes('<p')) return 16 // 18 → 16
+  if (htmlLine.includes('<div')) return 14 // 16 → 14
+  return 14 // デフォルト行高も削減
+}
+
+/**
+ * ページコンテンツをHTMLでラップ（コンパクト化）
+ */
+function wrapPageContent(content: string): string {
+  return `
+    <div class="page-container" style="
+      width: ${PDF_CONFIG.CONTENT_WIDTH}px;
+      min-height: ${PDF_CONFIG.CSS_PAGE_HEIGHT}px;
+      padding: ${PDF_CONFIG.CSS_PAGE_MARGIN}px;
+      margin: 0;
+      box-sizing: border-box;
+      page-break-after: always;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.4;
+    ">
+      <div class="markdown-body" style="
+        all: initial; 
+        font-family: inherit;
+        line-height: 1.4;
+        margin: 0;
+        padding: 0;
+      ">
+        ${content}
+      </div>
+    </div>
+  `
+}
+
+/**
+ * 個別ページのCanvasを生成
+ */
+async function createPageCanvas(
+  pageHtml: string,
+  debugMode: boolean
+): Promise<HTMLCanvasElement | null> {
+  const iframe = document.createElement('iframe')
+  iframe.style.cssText = `
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: ${PDF_CONFIG.CONTENT_WIDTH}px;
+    height: ${PDF_CONFIG.CSS_PAGE_HEIGHT + 100}px;
+    border: none;
+    background: white;
+  `
+
+  document.body.appendChild(iframe)
+
+  try {
+    const iframeDoc = iframe.contentDocument!
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            ${githubCss}
+            body {
+              margin: 0;
+              padding: 0;
+              background: white;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              line-height: 1.4;
+            }
+            .markdown-body {
+              box-sizing: border-box;
+              min-width: 200px;
+              max-width: none;
+              margin: 0;
+              padding: 0;
+              line-height: 1.4;
+            }
+            .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+              margin: 0.5em 0 0.3em 0;
+              line-height: 1.2;
+            }
+            .markdown-body p {
+              margin: 0.3em 0;
+            }
+            .markdown-body li {
+              margin: 0.2em 0;
+              line-height: 1.3;
+            }
+          </style>
+        </head>
+        <body>${pageHtml}</body>
+      </html>
+    `
+
+    iframeDoc.open()
+    iframeDoc.write(fullHtml)
+    iframeDoc.close()
+
+    // レンダリング完了を待機
+    await new Promise((resolve) => setTimeout(resolve, PDF_CONFIG.LAYOUT_DELAY))
+
+    const canvas = await html2canvas(iframeDoc.body, {
+      width: PDF_CONFIG.CONTENT_WIDTH,
+      height: PDF_CONFIG.CSS_PAGE_HEIGHT,
+      scale: PDF_CONFIG.SCALE,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: debugMode
+    })
+
+    if (debugMode) {
+      console.log('🎨 Page canvas created:', {
+        width: canvas.width,
+        height: canvas.height,
+        scale: PDF_CONFIG.SCALE
+      })
+    }
+
+    return canvas
   } catch (error) {
-    cleanup?.()
-    throw new Error(`PDF export failed: ${error}`)
+    console.error('Error creating page canvas:', error)
+    return null
+  } finally {
+    document.body.removeChild(iframe)
   }
 }
 
+/**
+ * メイン関数: PDF生成のエントリーポイント
+ * 既存のインターフェースとの互換性を保つ
+ */
+export async function generatePDF(
+  markdownContent: string,
+  title: string
+): Promise<Blob> {
+  const debugMode = isDebugMode()
+  const sanitizedTitle = sanitizeTitle(title)
+
+  if (debugMode) {
+    console.log('🎯 PDF Generation Request:', {
+      title: sanitizedTitle,
+      contentLength: markdownContent.length,
+      debugMode
+    })
+  }
+
+  try {
+    // 新しいページベース方式を使用
+    const pdfBlob = await createPageBasedPDF(
+      markdownContent,
+      sanitizedTitle,
+      debugMode
+    )
+
+    if (debugMode) {
+      console.log('🎉 PDF generation completed successfully:', {
+        blobSize: pdfBlob.size,
+        blobType: pdfBlob.type
+      })
+    }
+
+    return pdfBlob
+  } catch (error) {
+    console.error('❌ PDF generation failed:', error)
+    throw error
+  }
+}
+
+/**
+ * 後方互換性のためのレガシー関数（使用されていない場合は削除予定）
+ */
+export async function exportToPDF(
+  markdownContent: string,
+  title: string
+): Promise<Blob> {
+  return generatePDF(markdownContent, title)
+}
+
+/**
+ * レガシーインターフェース: PDF生成とダウンロード
+ * 既存のコードとの互換性を保つため
+ */
 export async function exportAsPDF(
   content: string,
-  customTitle?: string,
-  debugMode = false
+  customTitle?: string
 ): Promise<void> {
-  // コンテンツの検証
-  if (!content || content.trim().length === 0) {
-    throw new Error('PDF エクスポートするコンテンツが空です')
-  }
-
-  // ブラウザ環境の確認
-  if (typeof window === 'undefined') {
-    throw new Error('PDF エクスポートはブラウザ環境でのみ利用可能です')
-  }
-
   // E2Eテスト環境の検出
   const isE2ETestEnvironment =
     typeof window !== 'undefined' &&
@@ -323,52 +369,49 @@ export async function exportAsPDF(
 
   // E2Eテスト環境ではモックPDF生成を実行
   if (isE2ETestEnvironment) {
-    await mockPdfGeneration()
-    // E2Eテスト環境でも正常終了として扱う
-    // 注意：このreturnの後、呼び出し元でtoast.successが表示される
+    await new Promise((resolve) => setTimeout(resolve, 100))
     return
   }
 
   const title = customTitle || extractTitle(content) || 'マークダウンファイル'
-  // ファイル名サニタイズは不要（ファイルシステムの問題であってXSSではない）
-  // 基本的な危険文字のみ除去
-  const safeTitle =
-    title
-      .replace(/[<>:"/\\|?*]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim() || 'マークダウンファイル'
-  await exportMarkdownToPdf(content, `${safeTitle}.pdf`, debugMode)
+  const safeTitle = sanitizeTitle(title)
+
+  try {
+    const pdfBlob = await generatePDF(content, safeTitle)
+    downloadBlob(pdfBlob, `${safeTitle}.pdf`)
+  } catch (error) {
+    console.error('PDF export failed:', error)
+    throw error
+  }
 }
 
+/**
+ * マークダウンエクスポート機能
+ */
 export function exportAsMarkdown(content: string): void {
   const title = extractTitle(content) || 'マークダウンファイル'
-  // ファイル名サニタイズは不要（ファイルシステムの問題であってXSSではない）
-  // 基本的な危険文字のみ除去
-  const safeTitle =
-    title
-      .replace(/[<>:"/\\|?*]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim() || 'マークダウンファイル'
+  const safeTitle = sanitizeTitle(title)
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
   downloadBlob(blob, `${safeTitle}.md`)
 }
 
+/**
+ * コンテンツからタイトルを抽出
+ */
 function extractTitle(content: string): string | null {
-  const titleLine = content
-    .split('\n')
-    .find((line) => line.trim().startsWith('#'))
-  const rawTitle = titleLine?.replace(/^#+\s*/, '') || null
-  return rawTitle ? sanitizeTitle(rawTitle) : null
+  const titleMatch = content.match(/^#\s+(.+)$/m)
+  return titleMatch ? titleMatch[1].trim() : null
 }
 
+/**
+ * Blobをダウンロード
+ */
 function downloadBlob(blob: Blob, filename: string): void {
-  const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
-
-  link.setAttribute('href', url)
-  link.setAttribute('download', filename)
-  link.style.visibility = 'hidden'
-
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

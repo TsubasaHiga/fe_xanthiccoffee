@@ -293,6 +293,9 @@ export const useDateListGenerator = () => {
     async (customContent?: string) => {
       try {
         await exportAsPDF(customContent || generatedList, title)
+        toast.success('PDFエクスポートが完了しました', {
+          style: { color: '#059669' }
+        })
       } catch (err: unknown) {
         console.error('PDF エクスポートに失敗しました:', err)
         toast.error('PDF エクスポートに失敗しました', {
