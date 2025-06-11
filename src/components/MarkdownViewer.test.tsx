@@ -57,7 +57,8 @@ vi.mock('lucide-react', () => ({
 describe('MarkdownViewerコンポーネント', () => {
   const defaultProps = {
     generatedList: '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）',
-    copyToClipboard: vi.fn()
+    copyToClipboard: vi.fn(),
+    title: 'Test Schedule'
   }
 
   beforeEach(() => {
