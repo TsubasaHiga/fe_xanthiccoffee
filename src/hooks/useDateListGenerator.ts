@@ -1,5 +1,10 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
 import { exportAsMarkdown, exportAsPDF } from '@/utils/exportUtils'
+import {
+  sanitizeColorValue,
+  sanitizeDateFormat,
+  sanitizeTitle
+} from '@/utils/xssUtils'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -22,9 +27,18 @@ export const useDateListGenerator = () => {
   // 基本状態
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [title, setTitle] = useState(DEFAULT_TITLE)
-  const [dateFormat, setDateFormat] = useState(DEFAULT_DATE_FORMAT)
+  const [title, setTitleState] = useState(DEFAULT_TITLE)
+  const [dateFormat, setDateFormatState] = useState(DEFAULT_DATE_FORMAT)
   const [generatedList, setGeneratedList] = useState('')
+
+  // サニタイズ付きセッター
+  const setTitle = useCallback((value: string) => {
+    setTitleState(sanitizeTitle(value))
+  }, [])
+
+  const setDateFormat = useCallback((value: string) => {
+    setDateFormatState(sanitizeDateFormat(value))
+  }, [])
 
   // ローディング状態
   const [isLoading, setIsLoading] = useState(false)
@@ -49,10 +63,19 @@ export const useDateListGenerator = () => {
   const [excludeHolidays, setExcludeHolidays] = useState(false)
   const [excludeJpHolidays, setExcludeJpHolidays] = useState(false)
   const [enableHolidayColors, setEnableHolidayColors] = useState(true)
-  const [holidayColor, setHolidayColor] = useState(DEFAULT_HOLIDAY_COLOR)
-  const [nationalHolidayColor, setNationalHolidayColor] = useState(
+  const [holidayColor, setHolidayColorState] = useState(DEFAULT_HOLIDAY_COLOR)
+  const [nationalHolidayColor, setNationalHolidayColorState] = useState(
     DEFAULT_HOLIDAY_COLOR
   )
+
+  // サニタイズ付きカラーセッター
+  const setHolidayColor = useCallback((value: string) => {
+    setHolidayColorState(sanitizeColorValue(value))
+  }, [])
+
+  const setNationalHolidayColor = useCallback((value: string) => {
+    setNationalHolidayColorState(sanitizeColorValue(value))
+  }, [])
 
   // 初期化処理
   useEffect(() => {
@@ -270,7 +293,6 @@ export const useDateListGenerator = () => {
     async (customContent?: string) => {
       try {
         await exportAsPDF(customContent || generatedList, title)
-        toast.success('PDFファイルをダウンロードしました')
       } catch (err: unknown) {
         console.error('PDF エクスポートに失敗しました:', err)
         toast.error('PDF エクスポートに失敗しました', {
@@ -309,7 +331,7 @@ export const useDateListGenerator = () => {
     // 設定変更状態をリセット
     setHasSettingsChanged(false)
     lastGeneratedSettingsRef.current = null
-  }, [])
+  }, [setTitle, setDateFormat, setHolidayColor, setNationalHolidayColor])
 
   // Memoized validation state
   const isGenerateButtonDisabled = useMemo(() => {
