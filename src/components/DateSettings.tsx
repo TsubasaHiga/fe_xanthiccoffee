@@ -26,6 +26,11 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { useDateListSettings } from '@/contexts/DateListSettingsContext'
 import {
+  sanitizeColorValue,
+  sanitizeDateFormat,
+  sanitizeTitle
+} from '@/utils/xssUtils'
+import {
   ArrowLeft,
   ArrowRight,
   Calendar,
@@ -102,8 +107,48 @@ export function DateSettings({
     [applyPreset, presetBase]
   )
 
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const sanitized = sanitizeTitle(e.target.value)
+      setTitle(sanitized)
+
+      // E2Eテスト用のDOM値更新
+      if (e.target.value !== sanitized && e.target) {
+        e.target.value = sanitized
+      }
+    },
+    [setTitle]
+  )
+
+  const handleDateFormatChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const sanitized = sanitizeDateFormat(e.target.value)
+      setDateFormat(sanitized)
+
+      // E2Eテスト用のDOM値更新
+      if (e.target.value !== sanitized && e.target) {
+        e.target.value = sanitized
+      }
+    },
+    [setDateFormat]
+  )
+
+  const handleColorChange = useCallback(
+    (callback: (value: string) => void) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const sanitized = sanitizeColorValue(e.target.value)
+        callback(sanitized)
+
+        // E2Eテスト用のDOM値更新
+        if (e.target.value !== sanitized && e.target) {
+          e.target.value = sanitized
+        }
+      },
+    []
+  )
+
   // Memoized validation state
-  const validationState = useMemo(
+  const { isTitleError, isStartDateError, isEndDateError } = useMemo(
     () => ({
       isTitleError: !title.trim(),
       isStartDateError: !startDate,
@@ -111,8 +156,6 @@ export function DateSettings({
     }),
     [title, startDate, endDate]
   )
-
-  const { isTitleError, isStartDateError, isEndDateError } = validationState
 
   return (
     <ContentLayout>
@@ -144,7 +187,7 @@ export function DateSettings({
               id='title'
               type='text'
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
               placeholder='タイトルを入力'
               className={`rounded-lg border bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
                 isTitleError
@@ -275,7 +318,7 @@ export function DateSettings({
                     id='date-format'
                     type='text'
                     value={dateFormat}
-                    onChange={(e) => setDateFormat(e.target.value)}
+                    onChange={handleDateFormatChange}
                     placeholder='例: M/D（dd）, YYYY-MM-DD, MM月DD日（ddd）'
                     className='rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                   />
@@ -325,13 +368,13 @@ export function DateSettings({
                             id='holiday-color'
                             type='color'
                             value={holidayColor}
-                            onChange={(e) => setHolidayColor(e.target.value)}
+                            onChange={handleColorChange(setHolidayColor)}
                             className='h-8 w-12 rounded border border-gray-300 p-1'
                           />
                           <Input
                             type='text'
                             value={holidayColor}
-                            onChange={(e) => setHolidayColor(e.target.value)}
+                            onChange={handleColorChange(setHolidayColor)}
                             placeholder='#dc2626'
                             className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                           />
@@ -349,17 +392,17 @@ export function DateSettings({
                             id='national-holiday-color'
                             type='color'
                             value={nationalHolidayColor}
-                            onChange={(e) =>
-                              setNationalHolidayColor(e.target.value)
-                            }
+                            onChange={handleColorChange(
+                              setNationalHolidayColor
+                            )}
                             className='h-8 w-12 rounded border border-gray-300 p-1'
                           />
                           <Input
                             type='text'
                             value={nationalHolidayColor}
-                            onChange={(e) =>
-                              setNationalHolidayColor(e.target.value)
-                            }
+                            onChange={handleColorChange(
+                              setNationalHolidayColor
+                            )}
                             placeholder='#dc2626'
                             className='flex-1 rounded-lg border border-gray-300 bg-gray-50 text-gray-800 transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
                           />
