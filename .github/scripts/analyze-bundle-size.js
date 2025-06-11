@@ -80,7 +80,14 @@ function getTopLibraryFiles(dirPath, extension, limit = 5) {
     }
   }
 
-  scanDir(path.join(dirPath, 'libs'))
+  const libsDir = path.join(dirPath, 'libs')
+  if (fs.existsSync(libsDir)) {
+    scanDir(libsDir)
+  } else {
+    console.warn(
+      `Warning: The directory '${libsDir}' does not exist. Skipping library file analysis.`
+    )
+  }
 
   return files
     .sort((a, b) => b.sizeKB - a.sizeKB)
