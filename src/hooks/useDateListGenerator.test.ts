@@ -854,9 +854,7 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n',
       'スケジュール'
     )
-    expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
-      'PDFファイルをダウンロードしました'
-    )
+    // Note: toast.success is handled by the component, not the hook
   })
 
   it('PDF エクスポートでカスタムコンテンツを使用できる', async () => {

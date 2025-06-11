@@ -1,6 +1,12 @@
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import Holidays from 'date-holidays'
+import {
+  escapeHtml,
+  sanitizeColorValue,
+  sanitizeDateFormat,
+  sanitizeTitle
+} from './xssUtils'
 
 // Set Japanese locale
 dayjs.locale('ja')
@@ -8,7 +14,7 @@ dayjs.locale('ja')
 const hd = new Holidays('JP')
 
 export const formatDate = (date: Date, format: string): string => {
-  return dayjs(date).format(format)
+  return dayjs(date).format(sanitizeDateFormat(format))
 }
 
 export const getTodayString = (): string => {
@@ -55,7 +61,7 @@ export const generateDateList = (
     throw new Error('開始日は終了日より前の日付を選択してください')
   }
 
-  let markdown = `# ${title || 'タイトル'}\n\n`
+  let markdown = `# ${sanitizeTitle(title || 'タイトル')}\n\n`
 
   let current = dayjs(startDate)
   const end = dayjs(endDate)
@@ -88,14 +94,14 @@ export const generateDateList = (
           : undefined
         : (holidayInfo as { name?: string })?.name
       if (name) {
-        dateContent += `（${name}）`
+        dateContent += `（${escapeHtml(name)}）`
       }
     }
 
     // Apply colors
     if (enableHolidayColors && (isWeekend || holidayInfo)) {
       const color = holidayInfo ? nationalHolidayColor : holidayColor
-      dateContent = `<span style="color: ${color || '#dc2626'}">${dateContent}</span>`
+      dateContent = `<span style="color: ${sanitizeColorValue(color || '#dc2626')}">${escapeHtml(dateContent)}</span>`
     }
 
     const line = `- ${dateContent}`
