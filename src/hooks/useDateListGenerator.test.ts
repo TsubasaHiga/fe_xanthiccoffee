@@ -807,7 +807,8 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
     })
 
     expect(vi.mocked(exportAsMarkdown)).toHaveBeenCalledWith(
-      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n'
+      '# Test Schedule\n\n- 01/01（月）\n- 01/02（火）\n',
+      'スケジュール'
     )
     expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
       'Markdownファイルをダウンロードしました'
@@ -909,7 +910,10 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       result.current.exportMarkdown(customContent)
     })
 
-    expect(vi.mocked(exportAsMarkdown)).toHaveBeenCalledWith(customContent)
+    expect(vi.mocked(exportAsMarkdown)).toHaveBeenCalledWith(
+      customContent,
+      'スケジュール'
+    )
     expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
       'Markdownファイルをダウンロードしました'
     )
@@ -934,7 +938,10 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       'スケジュール'
     )
     expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
-      'PDFファイルをダウンロードしました'
+      'PDFエクスポートが完了しました',
+      {
+        style: { color: '#059669' }
+      }
     )
   })
 })

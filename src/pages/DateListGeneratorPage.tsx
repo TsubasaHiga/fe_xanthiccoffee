@@ -71,6 +71,7 @@ function DateListGeneratorContent() {
               exportMarkdown={settings.exportMarkdown}
               exportPDF={settings.exportPDF}
               onMount={handleMarkdownMount}
+              title={settings.title}
             />
           </Suspense>
         </ContentLayout>

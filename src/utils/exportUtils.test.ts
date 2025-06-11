@@ -2,140 +2,51 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { exportAsMarkdown, exportAsPDF } from './exportUtils'
 
 // Mock external dependencies
-const mockJsPDFInstance = {
-  addPage: vi.fn(),
-  addImage: vi.fn(),
-  save: vi.fn(),
-  setFillColor: vi.fn(),
-  rect: vi.fn()
-}
-
-vi.mock('jspdf', () => ({
-  default: vi.fn().mockImplementation(() => mockJsPDFInstance)
-}))
-
-vi.mock('html2canvas-pro', () => ({
-  default: vi.fn().mockResolvedValue({
-    width: 800,
-    height: 600,
-    toDataURL: vi.fn().mockReturnValue('data:image/png;base64,mock-canvas-data')
-  })
-}))
-
 vi.mock('marked', () => ({
-  marked: {
-    parse: vi.fn().mockResolvedValue('<h1>Test</h1><ul><li>Item 1</li></ul>'),
-    setOptions: vi.fn()
-  }
+  marked: vi.fn().mockResolvedValue('<h1>Test</h1><ul><li>Item 1</li></ul>')
 }))
 
 vi.mock('github-markdown-css/github-markdown-light.css?inline', () => ({
   default: 'mock-css-content'
 }))
 
+vi.mock('./xssUtils', () => ({
+  sanitizeTitle: vi.fn((title: string) => title)
+}))
+
 // Mock DOM APIs
-const mockAppendChild = vi.fn()
-const mockRemoveChild = vi.fn()
 const mockClick = vi.fn()
 const mockCreateObjectURL = vi.fn()
 const mockRevokeObjectURL = vi.fn()
+const mockSetAttribute = vi.fn()
+const mockAppendChild = vi.fn()
+const mockRemoveChild = vi.fn()
 
-// Mock DOM element with necessary methods
-const createMockElement = (tagName: string) => {
-  const element = {
-    tagName: tagName.toUpperCase(),
-    appendChild: mockAppendChild,
-    removeChild: mockRemoveChild,
-    click: mockClick,
-    href: '',
-    download: '',
-    setAttribute: vi.fn(),
-    style: {
-      cssText: ''
-    },
-    textContent: '',
-    id: '',
-    className: '',
-    parentNode: null,
-    remove: vi.fn(),
-    innerHTML: '',
-    offsetHeight: 100,
-    offsetWidth: 800,
-    scrollHeight: 100,
-    scrollWidth: 800
-  }
+const mockCreateElement = vi.fn()
 
-  // Add specific properties for anchor elements
-  if (tagName.toLowerCase() === 'a') {
-    element.setAttribute = vi.fn()
-  }
-
-  // Add iframe-specific properties
-  if (tagName.toLowerCase() === 'iframe') {
-    const mockIframeDocument = {
-      open: vi.fn(),
-      write: vi.fn(),
-      close: vi.fn(),
-      createElement: vi.fn().mockImplementation(createMockElement),
-      getElementById: vi.fn().mockReturnValue({
-        innerHTML: '<h1>Test</h1><p>Test content</p>',
-        offsetWidth: 800,
-        offsetHeight: 600,
-        scrollWidth: 800,
-        scrollHeight: 600,
-        style: {}
-      }),
-      body: {
-        appendChild: vi.fn(),
-        removeChild: vi.fn(),
-        style: {}
-      },
-      head: {
-        appendChild: vi.fn(),
-        removeChild: vi.fn()
-      },
-      querySelectorAll: vi.fn().mockReturnValue([]),
-      documentElement: {
-        style: {}
-      }
-    }
-
-    const mockContentWindow = {
-      document: mockIframeDocument,
-      getComputedStyle: vi.fn().mockReturnValue({
-        borderBottom: '1px solid #d1d9e0',
-        borderBottomWidth: '1px',
-        borderBottomStyle: 'solid',
-        borderBottomColor: '#d1d9e0'
-      })
-    }
-
-    Object.assign(element, {
-      contentDocument: mockIframeDocument,
-      contentWindow: mockContentWindow,
-      onload: null
-    })
-  }
-
-  return element
+// Mock print window for PDF tests
+const mockPrintWindow = {
+  document: {
+    write: vi.fn(),
+    close: vi.fn(),
+    readyState: 'complete'
+  },
+  addEventListener: vi.fn(),
+  focus: vi.fn(),
+  print: vi.fn(),
+  close: vi.fn()
 }
 
-const mockCreateElement = vi.fn().mockImplementation(createMockElement)
+const mockWindowOpen = vi.fn().mockReturnValue(mockPrintWindow)
 
 // Mock global objects
 Object.defineProperty(global, 'document', {
   value: {
     createElement: mockCreateElement,
     body: {
-      appendChild: vi.fn(),
+      appendChild: mockAppendChild,
       removeChild: mockRemoveChild
-    },
-    head: {
-      appendChild: vi.fn(),
-      removeChild: mockRemoveChild
-    },
-    querySelectorAll: vi.fn().mockReturnValue([]),
-    styleSheets: []
+    }
   },
   writable: true
 })
@@ -150,50 +61,41 @@ Object.defineProperty(global, 'URL', {
 
 Object.defineProperty(global, 'window', {
   value: {
+    open: mockWindowOpen,
     navigator: {
-      userAgent: 'Mozilla/5.0 (Test Browser)',
-      webdriver: false
-    },
-    fonts: {
-      ready: Promise.resolve()
-    },
-    getComputedStyle: vi.fn().mockReturnValue({
-      borderBottom: '1px solid #d1d9e0',
-      borderBottomWidth: '1px',
-      borderBottomStyle: 'solid',
-      borderBottomColor: '#d1d9e0',
-      fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI"',
-      fontSize: '16px',
-      lineHeight: '24px'
-    })
+      userAgent: 'Mozilla/5.0 (Test Browser)'
+    }
   },
   writable: true
 })
 
 Object.defineProperty(global, 'Blob', {
-  value: class MockBlob {
-    content: unknown[]
-    options: unknown
-    constructor(content: unknown[], options: unknown) {
-      this.content = content
-      this.options = options
-    }
-  },
+  value: vi.fn(),
+  writable: true
+})
+
+Object.defineProperty(global, 'setTimeout', {
+  value: vi.fn((callback: () => void) => {
+    callback()
+    return 1
+  }),
   writable: true
 })
 
 describe('exportUtils', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockCreateElement.mockImplementation(createMockElement)
-    mockCreateObjectURL.mockReturnValue('mock-url')
-
-    // Reset jsPDF instance mock
-    for (const mock of Object.values(mockJsPDFInstance)) {
-      if (typeof mock === 'function' && 'mockClear' in mock) {
-        mock.mockClear()
+    mockCreateElement.mockImplementation((tagName: string) => {
+      if (tagName === 'a') {
+        return {
+          setAttribute: mockSetAttribute,
+          style: { display: '' },
+          click: mockClick
+        }
       }
-    }
+      return {}
+    })
+    mockCreateObjectURL.mockReturnValue('mock-url')
   })
 
   describe('exportAsMarkdown', () => {
@@ -204,74 +106,127 @@ describe('exportUtils', () => {
 - 01/02（火）
 - 01/03（水）（元日）`
 
-      exportAsMarkdown(content)
+      exportAsMarkdown(content, 'テストスケジュール')
 
       expect(mockCreateElement).toHaveBeenCalledWith('a')
       expect(mockCreateObjectURL).toHaveBeenCalled()
       expect(mockClick).toHaveBeenCalled()
     })
 
-    it('タイトルがある場合はファイル名にタイトルを使用する', () => {
+    it('カスタムタイトルが正しく使用される', () => {
       const content = `# マイスケジュール
 
 - 01/01（月）`
 
-      exportAsMarkdown(content)
+      exportAsMarkdown(content, 'カスタムタイトル')
 
-      const mockLink = mockCreateElement.mock.results[0].value
-      expect(mockLink.setAttribute).toHaveBeenCalledWith('href', 'mock-url')
-      expect(mockLink.setAttribute).toHaveBeenCalledWith(
-        'download',
-        'マイスケジュール.md'
+      expect(mockSetAttribute).toHaveBeenCalledWith('href', 'mock-url')
+
+      const downloadCall = mockSetAttribute.mock.calls.find(
+        (call: unknown[]) => Array.isArray(call) && call[0] === 'download'
+      ) as [string, string] | undefined
+      expect(downloadCall).toBeDefined()
+      expect(downloadCall![1]).toMatch(
+        /^カスタムタイトル-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.md$/
       )
     })
 
-    it('タイトルがない場合はデフォルトファイル名を使用する', () => {
-      const content = `- 01/01（月）
-- 01/02（火）`
+    it('Blobが正しい設定で作成される', () => {
+      const content = '# テスト内容'
+      const title = 'テスト'
 
-      exportAsMarkdown(content)
+      exportAsMarkdown(content, title)
 
-      const mockLink = mockCreateElement.mock.results[0].value
-      expect(mockLink.setAttribute).toHaveBeenCalledWith('href', 'mock-url')
-      expect(mockLink.setAttribute).toHaveBeenCalledWith(
-        'download',
-        'マークダウンファイル.md'
-      )
+      expect(global.Blob).toHaveBeenCalledWith([content], {
+        type: 'text/markdown;charset=utf-8;'
+      })
     })
   })
 
   describe('exportAsPDF', () => {
-    // Note: Since exportAsPDF involves complex iframe DOM manipulation that's difficult
-    // to mock in a unit test environment, we focus on testing the parts we can verify.
-    // Full functionality testing is done via E2E tests.
-
     it('PDF関数が呼び出し可能である', () => {
-      // Verify the function exists and has the right signature
       expect(exportAsPDF).toBeDefined()
       expect(typeof exportAsPDF).toBe('function')
-      expect(exportAsPDF.length).toBe(2) // content and optional customTitle parameters
+      expect(exportAsPDF.length).toBe(2)
     })
 
-    it('タイトル抽出機能が正常動作する', () => {
-      // Test title extraction through exportAsMarkdown which uses the same logic
-      const contentWithTitle = '# My Title\n\nContent here'
-      const contentWithoutTitle = 'Just content without title'
+    it('E2Eテスト環境では即座に解決される', async () => {
+      Object.defineProperty(global.window, '__e2e_pdf_test_mode__', {
+        value: true,
+        writable: true
+      })
 
-      exportAsMarkdown(contentWithTitle)
-      const firstCall = mockCreateElement.mock.results[0].value
-      expect(firstCall.setAttribute).toHaveBeenCalledWith(
-        'download',
-        'My Title.md'
+      const content = 'テスト内容'
+      const title = 'テストタイトル'
+
+      const result = await exportAsPDF(content, title)
+      expect(result).toBeUndefined()
+    })
+
+    it('通常環境では印刷ウィンドウが開かれる', async () => {
+      Object.defineProperty(global.window, '__e2e_pdf_test_mode__', {
+        value: false,
+        writable: true
+      })
+
+      const content = 'テスト内容'
+      const title = 'テストタイトル'
+
+      await exportAsPDF(content, title)
+
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        '',
+        '_blank',
+        'width=800,height=600'
       )
+      expect(mockPrintWindow.document.write).toHaveBeenCalled()
+      expect(mockPrintWindow.document.close).toHaveBeenCalled()
+      expect(mockPrintWindow.focus).toHaveBeenCalled()
+      expect(mockPrintWindow.print).toHaveBeenCalled()
+    })
 
-      vi.clearAllMocks()
+    it('ポップアップがブロックされた場合はエラーがスローされる', async () => {
+      mockWindowOpen.mockReturnValueOnce(null)
 
-      exportAsMarkdown(contentWithoutTitle)
-      const secondCall = mockCreateElement.mock.results[0].value
-      expect(secondCall.setAttribute).toHaveBeenCalledWith(
-        'download',
-        'マークダウンファイル.md'
+      Object.defineProperty(global.window, '__e2e_pdf_test_mode__', {
+        value: false,
+        writable: true
+      })
+
+      const content = 'テスト内容'
+      const title = 'テストタイトル'
+
+      await expect(exportAsPDF(content, title)).rejects.toThrow(
+        'ポップアップがブロックされました。ポップアップを許可してから再試行してください。'
+      )
+    })
+
+    it('HTML生成時に簡潔なCSS設定が含まれる', async () => {
+      Object.defineProperty(global.window, '__e2e_pdf_test_mode__', {
+        value: false,
+        writable: true
+      })
+
+      const content = '# テスト見出し\n\n- リスト項目1\n- リスト項目2'
+      const title = 'テストタイトル'
+
+      await exportAsPDF(content, title)
+
+      const writeCall = mockPrintWindow.document.write.mock.calls[0][0]
+
+      // 改ページ制御が削除されていることを確認
+      expect(writeCall).not.toContain('page-break-inside: avoid')
+      expect(writeCall).not.toContain('break-inside: avoid')
+
+      // 基本的なスタイルが含まれていることを確認
+      expect(writeCall).toContain('mock-css-content')
+      expect(writeCall).toContain('font-family: -apple-system')
+      expect(writeCall).toContain('@media print')
+      expect(writeCall).toContain('max-width: 100%')
+
+      // 改ページ制御削除のコメントが含まれていることを確認
+      expect(writeCall).toContain(
+        '改ページ制御は削除 - ブラウザの自然な判断に任せる'
       )
     })
   })
