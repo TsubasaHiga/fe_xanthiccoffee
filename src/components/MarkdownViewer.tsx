@@ -32,6 +32,7 @@ interface MarkdownViewerProps {
   readonly exportMarkdown?: (customContent?: string) => void
   readonly exportPDF?: (customContent?: string) => void | Promise<void>
   readonly onMount?: () => void
+  readonly title: string
 }
 
 export function MarkdownViewer({
@@ -39,7 +40,8 @@ export function MarkdownViewer({
   copyToClipboard,
   exportMarkdown,
   exportPDF,
-  onMount
+  onMount,
+  title
 }: MarkdownViewerProps) {
   // 状態管理
   const [value, setValue] = useState<string>(generatedList)
@@ -100,7 +102,7 @@ export function MarkdownViewer({
       exportMarkdown(value)
     } else {
       try {
-        exportAsMarkdown(value)
+        exportAsMarkdown(value, title)
         toast.success('Markdownファイルをダウンロードしました')
       } catch (error) {
         console.error('Markdown エクスポートに失敗しました:', error)
@@ -109,16 +111,27 @@ export function MarkdownViewer({
         })
       }
     }
-  }, [value, exportMarkdown])
+  }, [value, exportMarkdown, title])
 
   // PDFエクスポート処理
   const handleExportPDF = useCallback(async () => {
     try {
       if (exportPDF) {
         await exportPDF(value)
+        // フックが既にtoastを表示するので、ここでは表示しない
       } else {
-        await exportAsPDF(value)
-        toast.success('PDFファイルをダウンロードしました')
+        await exportAsPDF(value, title)
+        // E2Eテストモードでは exportAsPDF がtoastを表示するので、そうでない場合のみ表示
+        const isE2EMode =
+          (window as { __e2e_pdf_test_mode__?: boolean })
+            .__e2e_pdf_test_mode__ ||
+          (typeof navigator !== 'undefined' &&
+            ['HeadlessChrome', 'Playwright'].some((agent) =>
+              navigator.userAgent.includes(agent)
+            ))
+        if (!isE2EMode) {
+          toast.success('PDFエクスポートが完了しました')
+        }
       }
     } catch (error) {
       console.error('PDF エクスポートに失敗しました:', error)
@@ -126,7 +139,7 @@ export function MarkdownViewer({
         style: { color: '#b91c1c' }
       })
     }
-  }, [value, exportPDF])
+  }, [value, exportPDF, title])
 
   return (
     <Card
@@ -205,12 +218,8 @@ export function MarkdownViewer({
                 handleExportPDF()
               }
             }}
-            style={{
-              position: 'absolute',
-              left: '-9999px',
-              opacity: 0,
-              pointerEvents: 'auto'
-            }}
+            className='pointer-events-auto absolute top-0 left-0 h-1 w-1 opacity-0'
+            style={{ zIndex: 9999 }}
           >
             PDF Export Fallback
           </button>
