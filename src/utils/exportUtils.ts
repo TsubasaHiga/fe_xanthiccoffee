@@ -1,374 +1,308 @@
 import githubCss from 'github-markdown-css/github-markdown-light.css?inline'
-import html2canvas from 'html2canvas-pro'
-import jsPDF from 'jspdf'
 import { marked } from 'marked'
+import { toast } from 'sonner'
 import { sanitizeTitle } from './xssUtils'
 
-const PDF_CONFIG = {
-  MARGIN: 15,
+// 印刷設定の定数
+const PRINT_CONFIG = {
+  MARGIN: '15mm',
+  PAGE_SIZE: 'A4',
   ORIENTATION: 'portrait' as const,
-  UNIT: 'mm' as const,
-  FORMAT: 'a4' as const,
-  CONTENT_WIDTH: 794,
-  SCALE: 2,
-  A4_WIDTH: 210,
-  A4_HEIGHT: 297,
-  IMAGE_QUALITY: 0.95,
-  LAYOUT_DELAY: 250,
-  MIN_CANVAS_HEIGHT: 100,
-  DOM_WAIT_INITIAL: 100,
-  DOM_WAIT_RETRY: 200,
-  TEST_ENVIRONMENT_DELAY: 50
+  LAYOUT_DELAY: 500,
+  WINDOW_FEATURES: 'width=800,height=600'
 } as const
 
+// Markdown設定の定数
 const MARKDOWN_CONFIG = {
   gfm: true,
   breaks: false,
   pedantic: false
 } as const
 
-// E2Eテスト用のモックPDF生成関数
-async function mockPdfGeneration(): Promise<void> {
-  // E2Eテスト環境では実際のPDF生成をスキップし、遅延を実行
-  await new Promise(
-    (resolve) =>
-      setTimeout(() => {
-        resolve(void 0)
-      }, 100) // 100msの遅延でより確実な非同期処理
-  )
-}
+// UIテキストの定数
+const UI_TEXT = {
+  PREVIEW_TITLE: '📄 PDF印刷プレビュー',
+  PREVIEW_DESCRIPTION:
+    'このページを印刷してPDFとして保存してください。\nブラウザの印刷設定で「背景のグラフィック」を有効にすることをお勧めします。',
+  PRINT_BUTTON: '🖨️ 印刷 / PDF保存',
+  POPUP_BLOCKED_ERROR:
+    'ポップアップがブロックされました。ポップアップを許可してから再試行してください。',
+  PDF_EXPORT_ERROR: 'PDF export failed:'
+} as const
 
-async function createIsolatedElement(
-  htmlContent: string,
-  debugMode = false
-): Promise<{ element: HTMLElement; cleanup: () => void }> {
-  return new Promise((resolve, reject) => {
-    const iframe = document.createElement('iframe')
+// カラーパレット
+const COLORS = {
+  BACKGROUND: '#f8f9fa',
+  BORDER: '#e9ecef',
+  TEXT_PRIMARY: '#495057',
+  TEXT_SECONDARY: '#6c757d',
+  BUTTON_PRIMARY: '#0066cc',
+  BUTTON_HOVER: '#0052a3',
+  DIVIDER: '#dee2e6'
+} as const
 
-    if (debugMode) {
-      // デバッグモード: iframeを画面上に表示
-      iframe.style.cssText = `
-        position: fixed; top: 50px; left: 50px;
-        width: ${PDF_CONFIG.CONTENT_WIDTH}px; height: 800px;
-        border: 2px solid red; background: white; z-index: 9999;
-      `
-    } else {
-      // 通常モード: iframeを非表示
-      iframe.style.cssText = `
-        position: fixed; top: -9999px; left: -9999px;
-        width: ${PDF_CONFIG.CONTENT_WIDTH}px; height: 5000px;
-        border: none; visibility: hidden; opacity: 0; pointer-events: none;
-      `
+// E2Eテスト環境の検出
+const TEST_CONFIG = {
+  DELAY_MS: 100,
+  USER_AGENTS: ['HeadlessChrome', 'Playwright']
+} as const
+
+// CSS生成関数
+function generatePrintCSS(): string {
+  return `
+    ${githubCss}
+
+    /* 共通スタイル */
+    html {
+      font-variant-numeric: tabular-nums;
     }
-
-    iframe.onload = async () => {
-      try {
-        const doc = iframe.contentDocument
-        if (!doc) {
-          reject(new Error('iframeのcontentDocumentにアクセスできません'))
-          return
-        }
-
-        // DOM要素の生成を待機
-        await new Promise((resolve) =>
-          setTimeout(resolve, PDF_CONFIG.DOM_WAIT_INITIAL)
-        )
-
-        const markdownElement = doc.body.firstElementChild as HTMLElement
-        if (!markdownElement) {
-          // 要素が見つからない場合、少し待ってから再試行
-          await new Promise((resolve) =>
-            setTimeout(resolve, PDF_CONFIG.DOM_WAIT_RETRY)
-          )
-          const retryElement = doc.body.firstElementChild as HTMLElement
-          if (!retryElement) {
-            reject(new Error('Markdownコンテンツの要素が見つかりません'))
-            return
-          }
-
-          // フォントとレイアウトの読み込み完了を待機
-          if (doc.fonts) await doc.fonts.ready
-          await new Promise((resolve) =>
-            setTimeout(resolve, PDF_CONFIG.LAYOUT_DELAY)
-          )
-
-          resolve({
-            element: retryElement,
-            cleanup: debugMode
-              ? () => {
-                  console.warn(
-                    'デバッグモード: iframeはクリーンアップされません。手動で削除してください。'
-                  )
-                }
-              : () => iframe.parentNode?.removeChild(iframe)
-          })
-          return
-        }
-
-        // フォントとレイアウトの読み込み完了を待機
-        if (doc.fonts) await doc.fonts.ready
-        await new Promise((resolve) =>
-          setTimeout(resolve, PDF_CONFIG.LAYOUT_DELAY)
-        )
-
-        resolve({
-          element: markdownElement,
-          cleanup: debugMode
-            ? () => {
-                console.warn(
-                  'デバッグモード: iframeはクリーンアップされません。手動で削除してください。'
-                )
-              }
-            : () => iframe.parentNode?.removeChild(iframe)
-        })
-      } catch (error) {
-        reject(error)
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      background: white;
+      color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    
+    .markdown-body {
+      box-sizing: border-box;
+    }
+    
+    /* 改ページ制御は削除 - ブラウザの自然な判断に任せる */
+    
+    /* 画像の基本スタイルのみ */
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* 表示制御 */
+    pre, .highlight, code {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    pre, .highlight {
+      overflow: visible;
+    }
+    
+    /* テーブル制御 */
+    thead {
+      display: table-header-group;
+    }
+    
+    @media screen {
+      body {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      .print-only {
+        display: none;
+      }
+      
+      .screen-only {
+        display: block;
       }
     }
 
-    iframe.onerror = () => {
-      reject(new Error('iframeの読み込みに失敗しました'))
-    }
-
-    document.body.appendChild(iframe)
-    const doc = iframe.contentDocument!
-
-    doc.open()
-    doc.write(
-      `<!DOCTYPE html><html><head><style></style></head><body><div class="markdown-body">${htmlContent}</div></body></html>`
-    )
-    doc.close()
-  })
-}
-
-export async function exportMarkdownToPdf(
-  markdownContent: string,
-  filename = 'document.pdf',
-  debugMode = false
-): Promise<void> {
-  let cleanup: (() => void) | null = null
-
-  try {
-    // ブラウザ環境とDOM APIの確認
-    if (typeof document === 'undefined') {
-      throw new Error('PDF エクスポートはブラウザ環境でのみ利用可能です')
-    }
-
-    const htmlContent = await marked.parse(markdownContent, MARKDOWN_CONFIG)
-    const result = await createIsolatedElement(htmlContent, debugMode)
-    cleanup = result.cleanup
-    const canvas = await html2canvas(result.element, {
-      scale: PDF_CONFIG.SCALE,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      foreignObjectRendering: false,
-      width: result.element.offsetWidth,
-      height: Math.max(
-        result.element.offsetHeight,
-        PDF_CONFIG.MIN_CANVAS_HEIGHT
-      ),
-      removeContainer: true,
-      imageTimeout: 15000,
-      ignoreElements: (element) => {
-        return element.tagName === 'SCRIPT' || element.tagName === 'STYLE'
-      },
-      onclone: (clonedElement) => {
-        let style = clonedElement.querySelector('style')
-        if (!style) {
-          // Create style element if it doesn't exist
-          style = clonedElement.createElement('style')
-          const head =
-            clonedElement.querySelector('head') ||
-            clonedElement.querySelector('body')
-          if (head) {
-            head.appendChild(style)
-          }
-        }
-        if (style) {
-          style.textContent += `
-          /* GitHub Markdown CSS */
-          ${githubCss}
-
-          /* 最小高さとパディングを確保 */
-          .markdown-body {
-            min-height: 200px !important;
-            padding: 20px !important;
-            box-sizing: border-box !important;
-          }
-          
-          /* リンクのスタイルを明示的に確保 */
-          .markdown-body a {
-            color: #0969da !important;
-            text-decoration: underline !important;
-          }`
-        }
+    @media print {
+      @page {
+        size: ${PRINT_CONFIG.PAGE_SIZE} ${PRINT_CONFIG.ORIENTATION};
+        margin: ${PRINT_CONFIG.MARGIN};
       }
-    })
-
-    if (canvas.width === 0 || canvas.height === 0) {
-      throw new Error('Canvas size is invalid (width or height is 0)')
-    }
-
-    cleanup()
-    cleanup = null
-
-    const pdf = new jsPDF({
-      orientation: PDF_CONFIG.ORIENTATION,
-      unit: PDF_CONFIG.UNIT,
-      format: PDF_CONFIG.FORMAT
-    })
-
-    const contentWidth = PDF_CONFIG.A4_WIDTH - PDF_CONFIG.MARGIN * 2
-    const contentHeight = PDF_CONFIG.A4_HEIGHT - PDF_CONFIG.MARGIN * 2
-    const scaledHeight = contentWidth * (canvas.height / canvas.width)
-    const imgData = canvas.toDataURL('image/png', PDF_CONFIG.IMAGE_QUALITY)
-
-    const minimumPdfHeight = 10
-    const finalHeight = Math.max(scaledHeight, minimumPdfHeight)
-
-    if (finalHeight <= contentHeight) {
-      pdf.addImage(
-        imgData,
-        'PNG',
-        PDF_CONFIG.MARGIN,
-        PDF_CONFIG.MARGIN,
-        contentWidth,
-        finalHeight
-      )
-    } else {
-      // PDFページの利用可能な高さに対応するcanvasの高さを計算
-      const maxCanvasHeightPerPage = Math.floor(
-        contentHeight * (canvas.width / contentWidth)
-      )
-      let currentY = 0
-
-      while (currentY < canvas.height) {
-        if (currentY > 0) pdf.addPage()
-
-        // 残りの高さと最大高さの小さい方を使用
-        const remainingHeight = canvas.height - currentY
-        const pageCanvasHeight = Math.min(
-          remainingHeight,
-          maxCanvasHeightPerPage
-        )
-
-        const pageCanvas = document.createElement('canvas')
-        pageCanvas.width = canvas.width
-        pageCanvas.height = pageCanvasHeight
-
-        const ctx = pageCanvas.getContext('2d')!
-        ctx.drawImage(
-          canvas,
-          0,
-          currentY,
-          canvas.width,
-          pageCanvasHeight,
-          0,
-          0,
-          canvas.width,
-          pageCanvasHeight
-        )
-
-        const pageImgData = pageCanvas.toDataURL(
-          'image/png',
-          PDF_CONFIG.IMAGE_QUALITY
-        )
-
-        // 縦横比を維持してページ画像の高さを計算
-        const pageImageHeight = contentWidth * (pageCanvasHeight / canvas.width)
-
-        pdf.addImage(
-          pageImgData,
-          'PNG',
-          PDF_CONFIG.MARGIN,
-          PDF_CONFIG.MARGIN,
-          contentWidth,
-          pageImageHeight
-        )
-
-        currentY += pageCanvasHeight
+      
+      /* 印刷専用の基本設定のみ */
+      body {
+        margin: 0;
+        padding: 0;
+        max-width: none;
+        background: white !important;
+      }
+      
+      .markdown-body {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      /* 印刷時の表示/非表示 */
+      .print-only {
+        display: block !important;
+      }
+      
+      .screen-only {
+        display: none !important;
       }
     }
-
-    pdf.save(filename)
-  } catch (error) {
-    cleanup?.()
-    throw new Error(`PDF export failed: ${error}`)
-  }
+  `
 }
 
-export async function exportAsPDF(
-  content: string,
-  customTitle?: string,
-  debugMode = false
-): Promise<void> {
-  // コンテンツの検証
-  if (!content || content.trim().length === 0) {
-    throw new Error('PDF エクスポートするコンテンツが空です')
-  }
+// プレビューUI生成関数
+function generatePreviewUI(): string {
+  return `
+    <div class="screen-only">
+      <div style="
+        background: ${COLORS.BACKGROUND};
+        border: 1px solid ${COLORS.BORDER};
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+      ">
+        <h1 style="margin-top: 0; color: ${COLORS.TEXT_PRIMARY};">${UI_TEXT.PREVIEW_TITLE}</h1>
+        <p style="margin-bottom: 16px; color: ${COLORS.TEXT_SECONDARY};">
+          ${UI_TEXT.PREVIEW_DESCRIPTION.replace('\n', '<br>')}
+        </p>
+        
+        <button onclick="window.print()" style="
+          background: ${COLORS.BUTTON_PRIMARY};
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: 500;
+          box-shadow: 0 2px 4px rgba(0,102,204,0.2);
+          transition: background 0.2s;
+        " onmouseover="this.style.background='${COLORS.BUTTON_HOVER}'" onmouseout="this.style.background='${COLORS.BUTTON_PRIMARY}'">
+          ${UI_TEXT.PRINT_BUTTON}
+        </button>
+      </div>
+      
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid ${COLORS.DIVIDER};">
+    </div>
+  `
+}
 
-  // ブラウザ環境の確認
-  if (typeof window === 'undefined') {
-    throw new Error('PDF エクスポートはブラウザ環境でのみ利用可能です')
-  }
-
-  // E2Eテスト環境の検出
-  const isE2ETestEnvironment =
+// E2Eテスト環境の検出関数
+function isE2ETestEnvironment(): boolean {
+  return (
     typeof window !== 'undefined' &&
     ((window as { __e2e_pdf_test_mode__?: boolean }).__e2e_pdf_test_mode__ ||
       (typeof navigator !== 'undefined' &&
-        (navigator.userAgent.includes('HeadlessChrome') ||
-          navigator.userAgent.includes('Playwright'))))
+        TEST_CONFIG.USER_AGENTS.some((agent) =>
+          navigator.userAgent.includes(agent)
+        )))
+  )
+}
 
-  // E2Eテスト環境ではモックPDF生成を実行
-  if (isE2ETestEnvironment) {
-    await mockPdfGeneration()
-    // E2Eテスト環境でも正常終了として扱う
-    // 注意：このreturnの後、呼び出し元でtoast.successが表示される
+// HTMLドキュメント生成関数
+async function createPrintableHTML(
+  markdownContent: string,
+  customTitle: string
+): Promise<string> {
+  const html = await marked(markdownContent, MARKDOWN_CONFIG)
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const titleWithTimestamp = `${customTitle}-${timestamp}`
+
+  return `
+    <!DOCTYPE html>
+    <html lang="ja">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${sanitizeTitle(titleWithTimestamp)}</title>
+        <style>
+          ${generatePrintCSS()}
+        </style>
+      </head>
+      <body>
+        ${generatePreviewUI()}
+        <article class="markdown-body">
+          ${html}
+        </article>
+      </body>
+    </html>
+  `
+}
+
+// 印刷ウィンドウのレンダリング完了を待つ関数
+async function waitForWindowReady(printWindow: Window): Promise<void> {
+  return new Promise((resolve) => {
+    if (printWindow.document.readyState === 'complete') {
+      resolve()
+    } else {
+      printWindow.addEventListener('load', () => resolve())
+    }
+  })
+}
+
+// 印刷ウィンドウを開いて印刷ダイアログを表示
+async function openPrintWindow(
+  content: string,
+  customTitle: string
+): Promise<void> {
+  const printHTML = await createPrintableHTML(content, customTitle)
+  const printWindow = window.open('', '_blank', PRINT_CONFIG.WINDOW_FEATURES)
+
+  if (!printWindow) {
+    throw new Error(UI_TEXT.POPUP_BLOCKED_ERROR)
+  }
+
+  try {
+    printWindow.document.write(printHTML)
+    printWindow.document.close()
+
+    await waitForWindowReady(printWindow)
+
+    // レイアウト完了を待ってから印刷ダイアログを表示
+    setTimeout(() => {
+      printWindow.focus()
+      printWindow.print()
+    }, PRINT_CONFIG.LAYOUT_DELAY)
+  } catch (error) {
+    printWindow.close()
+    throw error
+  }
+}
+
+// PDF生成のメイン関数
+export async function generatePDF(
+  markdownContent: string,
+  customTitle: string
+): Promise<void> {
+  await openPrintWindow(markdownContent, customTitle)
+}
+
+// PDF出力の公開関数
+export async function exportAsPDF(
+  content: string,
+  customTitle: string
+): Promise<void> {
+  if (isE2ETestEnvironment()) {
+    await new Promise((resolve) => setTimeout(resolve, TEST_CONFIG.DELAY_MS))
+    // E2Eテストモードでテスト用のtoastを表示
+    toast.success('TEST: PDFエクスポート処理完了')
     return
   }
 
-  const title = customTitle || extractTitle(content) || 'マークダウンファイル'
-  // ファイル名サニタイズは不要（ファイルシステムの問題であってXSSではない）
-  // 基本的な危険文字のみ除去
-  const safeTitle =
-    title
-      .replace(/[<>:"/\\|?*]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim() || 'マークダウンファイル'
-  await exportMarkdownToPdf(content, `${safeTitle}.pdf`, debugMode)
+  try {
+    await generatePDF(content, customTitle)
+  } catch (error) {
+    console.error(UI_TEXT.PDF_EXPORT_ERROR, error)
+    throw error
+  }
 }
 
-export function exportAsMarkdown(content: string): void {
-  const title = extractTitle(content) || 'マークダウンファイル'
-  // ファイル名サニタイズは不要（ファイルシステムの問題であってXSSではない）
-  // 基本的な危険文字のみ除去
-  const safeTitle =
-    title
-      .replace(/[<>:"/\\|?*]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim() || 'マークダウンファイル'
+// Markdown出力関数
+export function exportAsMarkdown(content: string, customTitle: string): void {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const safeTitle = sanitizeTitle(customTitle)
+  const filename = `${safeTitle}-${timestamp}.md`
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
-  downloadBlob(blob, `${safeTitle}.md`)
+  downloadBlob(blob, filename)
 }
 
-function extractTitle(content: string): string | null {
-  const titleLine = content
-    .split('\n')
-    .find((line) => line.trim().startsWith('#'))
-  const rawTitle = titleLine?.replace(/^#+\s*/, '') || null
-  return rawTitle ? sanitizeTitle(rawTitle) : null
-}
-
+// ファイルダウンロード関数
 function downloadBlob(blob: Blob, filename: string): void {
-  const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
-
+  const link = document.createElement('a')
   link.setAttribute('href', url)
   link.setAttribute('download', filename)
-  link.style.visibility = 'hidden'
-
+  link.style.display = 'none'
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)

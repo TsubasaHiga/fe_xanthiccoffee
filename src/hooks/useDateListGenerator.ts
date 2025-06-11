@@ -277,7 +277,7 @@ export const useDateListGenerator = () => {
   const exportMarkdown = useCallback(
     (customContent?: string) => {
       try {
-        exportAsMarkdown(customContent || generatedList)
+        exportAsMarkdown(customContent || generatedList, title)
         toast.success('Markdownファイルをダウンロードしました')
       } catch (err: unknown) {
         console.error('Markdown エクスポートに失敗しました:', err)
@@ -286,13 +286,16 @@ export const useDateListGenerator = () => {
         })
       }
     },
-    [generatedList]
+    [generatedList, title]
   )
 
   const exportPDF = useCallback(
     async (customContent?: string) => {
       try {
         await exportAsPDF(customContent || generatedList, title)
+        toast.success('PDFエクスポートが完了しました', {
+          style: { color: '#059669' }
+        })
       } catch (err: unknown) {
         console.error('PDF エクスポートに失敗しました:', err)
         toast.error('PDF エクスポートに失敗しました', {
