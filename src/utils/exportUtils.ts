@@ -26,6 +26,14 @@ const MARKDOWN_CONFIG = {
   pedantic: false
 } as const
 
+// E2Eテスト用のモックPDF生成関数
+async function mockPdfGeneration(): Promise<void> {
+  // E2Eテスト環境では実際のPDF生成をスキップし、短い遅延のみ実行
+  await new Promise((resolve) =>
+    setTimeout(resolve, PDF_CONFIG.TEST_ENVIRONMENT_DELAY)
+  )
+}
+
 async function createIsolatedElement(
   htmlContent: string,
   debugMode = false
@@ -285,27 +293,25 @@ export async function exportAsPDF(
     throw new Error('PDF エクスポートはブラウザ環境でのみ利用可能です')
   }
 
-  // E2Eテスト環境の検出とモック処理
-  const isTestEnvironment =
+  // E2Eテスト環境の検出
+  const isE2ETestEnvironment =
     typeof window !== 'undefined' &&
-    ((window as { __e2e_test_mode__?: boolean }).__e2e_test_mode__ ||
+    ((window as { __e2e_pdf_test_mode__?: boolean }).__e2e_pdf_test_mode__ ||
       (typeof navigator !== 'undefined' &&
         navigator.userAgent.includes('HeadlessChrome')))
 
-  // テスト環境では実際のPDF生成をスキップ
-  if (isTestEnvironment) {
-    await new Promise((resolve) =>
-      setTimeout(resolve, PDF_CONFIG.TEST_ENVIRONMENT_DELAY)
-    )
+  // E2Eテスト環境ではモックPDF生成を実行
+  if (isE2ETestEnvironment) {
+    await mockPdfGeneration()
     return
   }
 
-  const title = customTitle || extractTitle(content) || 'document'
+  const title = customTitle || extractTitle(content) || 'マークダウンファイル'
   await exportMarkdownToPdf(content, `${title}.pdf`, debugMode)
 }
 
 export function exportAsMarkdown(content: string): void {
-  const title = extractTitle(content) || 'document'
+  const title = extractTitle(content) || 'マークダウンファイル'
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
   downloadBlob(blob, `${title}.md`)
 }

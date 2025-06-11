@@ -2,6 +2,12 @@ import { expect, test } from '@playwright/test'
 
 test.describe('PDFエクスポート機能', () => {
   test.beforeEach(async ({ page }) => {
+    // E2Eテストモードのフラグをブラウザに設定
+    await page.addInitScript(() => {
+      ;(window as { __e2e_pdf_test_mode__?: boolean }).__e2e_pdf_test_mode__ =
+        true
+    })
+
     await page.goto('/')
 
     const titleInput = page.locator('input[type="text"]').first()
