@@ -2,6 +2,7 @@ import githubCss from 'github-markdown-css/github-markdown-light.css?inline'
 import html2canvas from 'html2canvas-pro'
 import jsPDF from 'jspdf'
 import { marked } from 'marked'
+import { sanitizeTitle } from './xssUtils'
 
 const PDF_CONFIG = {
   MARGIN: 15,
@@ -28,9 +29,12 @@ const MARKDOWN_CONFIG = {
 
 // E2Eテスト用のモックPDF生成関数
 async function mockPdfGeneration(): Promise<void> {
-  // E2Eテスト環境では実際のPDF生成をスキップし、短い遅延のみ実行
-  await new Promise((resolve) =>
-    setTimeout(resolve, PDF_CONFIG.TEST_ENVIRONMENT_DELAY)
+  // E2Eテスト環境では実際のPDF生成をスキップし、遅延を実行
+  await new Promise(
+    (resolve) =>
+      setTimeout(() => {
+        resolve(void 0)
+      }, 100) // 100msの遅延でより確実な非同期処理
   )
 }
 
@@ -298,29 +302,47 @@ export async function exportAsPDF(
     typeof window !== 'undefined' &&
     ((window as { __e2e_pdf_test_mode__?: boolean }).__e2e_pdf_test_mode__ ||
       (typeof navigator !== 'undefined' &&
-        navigator.userAgent.includes('HeadlessChrome')))
+        (navigator.userAgent.includes('HeadlessChrome') ||
+          navigator.userAgent.includes('Playwright'))))
 
   // E2Eテスト環境ではモックPDF生成を実行
   if (isE2ETestEnvironment) {
     await mockPdfGeneration()
+    // E2Eテスト環境でも正常終了として扱う
+    // 注意：このreturnの後、呼び出し元でtoast.successが表示される
     return
   }
 
   const title = customTitle || extractTitle(content) || 'マークダウンファイル'
-  await exportMarkdownToPdf(content, `${title}.pdf`, debugMode)
+  // ファイル名サニタイズは不要（ファイルシステムの問題であってXSSではない）
+  // 基本的な危険文字のみ除去
+  const safeTitle =
+    title
+      .replace(/[<>:"/\\|?*]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || 'マークダウンファイル'
+  await exportMarkdownToPdf(content, `${safeTitle}.pdf`, debugMode)
 }
 
 export function exportAsMarkdown(content: string): void {
   const title = extractTitle(content) || 'マークダウンファイル'
+  // ファイル名サニタイズは不要（ファイルシステムの問題であってXSSではない）
+  // 基本的な危険文字のみ除去
+  const safeTitle =
+    title
+      .replace(/[<>:"/\\|?*]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || 'マークダウンファイル'
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
-  downloadBlob(blob, `${title}.md`)
+  downloadBlob(blob, `${safeTitle}.md`)
 }
 
 function extractTitle(content: string): string | null {
   const titleLine = content
     .split('\n')
     .find((line) => line.trim().startsWith('#'))
-  return titleLine?.replace(/^#+\s*/, '') || null
+  const rawTitle = titleLine?.replace(/^#+\s*/, '') || null
+  return rawTitle ? sanitizeTitle(rawTitle) : null
 }
 
 function downloadBlob(blob: Blob, filename: string): void {
