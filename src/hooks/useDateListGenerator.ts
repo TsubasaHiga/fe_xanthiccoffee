@@ -251,17 +251,20 @@ export const useDateListGenerator = () => {
   )
 
   // Export functions
-  const exportMarkdown = useCallback(() => {
-    try {
-      exportAsMarkdown(generatedList)
-      toast.success('Markdownファイルをダウンロードしました')
-    } catch (err: unknown) {
-      console.error('Markdown エクスポートに失敗しました:', err)
-      toast.error('Markdown エクスポートに失敗しました', {
-        style: { color: '#b91c1c' }
-      })
-    }
-  }, [generatedList])
+  const exportMarkdown = useCallback(
+    (customContent?: string) => {
+      try {
+        exportAsMarkdown(customContent || generatedList)
+        toast.success('Markdownファイルをダウンロードしました')
+      } catch (err: unknown) {
+        console.error('Markdown エクスポートに失敗しました:', err)
+        toast.error('Markdown エクスポートに失敗しました', {
+          style: { color: '#b91c1c' }
+        })
+      }
+    },
+    [generatedList]
+  )
 
   const exportPDF = useCallback(
     async (customContent?: string) => {
