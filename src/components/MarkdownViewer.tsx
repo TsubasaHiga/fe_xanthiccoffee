@@ -29,7 +29,7 @@ import { MdPreview } from './MdPreview'
 interface MarkdownViewerProps {
   readonly generatedList: string
   readonly copyToClipboard: (text: string) => void
-  readonly exportMarkdown?: () => void
+  readonly exportMarkdown?: (customContent?: string) => void
   readonly exportPDF?: (customContent?: string) => void | Promise<void>
   readonly onMount?: () => void
 }
@@ -97,7 +97,7 @@ export function MarkdownViewer({
   // Markdownエクスポート処理
   const handleExportMarkdown = useCallback(() => {
     if (exportMarkdown) {
-      exportMarkdown()
+      exportMarkdown(value)
     } else {
       try {
         exportAsMarkdown(value)

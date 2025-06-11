@@ -135,7 +135,7 @@ async function createIsolatedElement(
 
     doc.open()
     doc.write(
-      `<!DOCTYPE html><html><body><div class="markdown-body">${htmlContent}</div></body></html>`
+      `<!DOCTYPE html><html><head><style></style></head><body><div class="markdown-body">${htmlContent}</div></body></html>`
     )
     doc.close()
   })
@@ -174,7 +174,17 @@ export async function exportMarkdownToPdf(
         return element.tagName === 'SCRIPT' || element.tagName === 'STYLE'
       },
       onclone: (clonedElement) => {
-        const style = clonedElement.querySelector('style')
+        let style = clonedElement.querySelector('style')
+        if (!style) {
+          // Create style element if it doesn't exist
+          style = clonedElement.createElement('style')
+          const head =
+            clonedElement.querySelector('head') ||
+            clonedElement.querySelector('body')
+          if (head) {
+            head.appendChild(style)
+          }
+        }
         if (style) {
           style.textContent += `
           /* GitHub Markdown CSS */
@@ -185,6 +195,12 @@ export async function exportMarkdownToPdf(
             min-height: 200px !important;
             padding: 20px !important;
             box-sizing: border-box !important;
+          }
+          
+          /* リンクのスタイルを明示的に確保 */
+          .markdown-body a {
+            color: #0969da !important;
+            text-decoration: underline !important;
           }`
         }
       }

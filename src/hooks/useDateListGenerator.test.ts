@@ -894,4 +894,47 @@ describe('useDateListGenerator - エクスポート機能テスト', () => {
       }
     )
   })
+
+  it('Markdown エクスポートにカスタムコンテンツを渡せる', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // カスタムコンテンツでMarkdown エクスポートを実行
+    const customContent = '# Custom Content\n\nThis is edited content'
+    act(() => {
+      result.current.exportMarkdown(customContent)
+    })
+
+    expect(vi.mocked(exportAsMarkdown)).toHaveBeenCalledWith(customContent)
+    expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
+      'Markdownファイルをダウンロードしました'
+    )
+  })
+
+  it('PDF エクスポートにカスタムコンテンツを渡せる', async () => {
+    const { result } = renderHook(() => useDateListGenerator())
+
+    // リストを生成
+    await act(async () => {
+      await result.current.handleGenerateList()
+    })
+
+    // カスタムコンテンツでPDF エクスポートを実行
+    const customContent = '# Custom PDF Content\n\n- Link: http://example.com'
+    await act(async () => {
+      await result.current.exportPDF(customContent)
+    })
+
+    expect(vi.mocked(exportAsPDF)).toHaveBeenCalledWith(
+      customContent,
+      'スケジュール'
+    )
+    expect(vi.mocked(toast.success)).toHaveBeenCalledWith(
+      'PDFファイルをダウンロードしました'
+    )
+  })
 })
