@@ -101,21 +101,25 @@ test.describe('フォームバリデーション', () => {
     await dateInputs.first().fill('2024-01-07') // Start date
     await dateInputs.last().fill('2024-01-01') // End date (before start)
 
-    // Try to generate
+    // Try to generate - this should trigger an error due to invalid date range
     const generateButton = page.locator('button', { hasText: /生成|リスト/ })
-    if (await generateButton.isEnabled()) {
-      await generateButton.click()
+    await expect(generateButton).toBeEnabled()
+    await generateButton.click()
 
-      // 1000ms wait replaced with explicit wait for error message appearance
-      const errorMessage = page
-        .locator('[data-sonner-toast]')
-        .or(page.locator('div', { hasText: /エラー|error/i }))
-      await expect(errorMessage).toBeVisible({ timeout: 1200 })
+    // Wait for the error toast to appear - Sonner creates toast elements in an ordered list
+    const errorToast = page
+      .locator('ol[data-sonner-toaster] li')
+      .filter({ hasText: '開始日は終了日より前の日付を選択してください' })
+      .or(page.locator('[data-type="error"]'))
+      .or(page.locator('text=開始日は終了日より前の日付を選択してください'))
 
-      if (await errorMessage.isVisible()) {
-        await expect(errorMessage).toBeVisible()
-      }
-    }
+    await expect(errorToast.first()).toBeVisible({ timeout: 10000 })
+
+    // Verify the error message content is displayed
+    const errorText = page.locator(
+      'text=開始日は終了日より前の日付を選択してください'
+    )
+    await expect(errorText).toBeVisible({ timeout: 2000 })
   })
 
   test('日付入力欄は正しいフォーマットを受け付ける', async ({ page }) => {

@@ -1,7 +1,7 @@
 import { addDays, generateDateList, getTodayString } from '@/utils/dateUtils'
 import { exportAsMarkdown, exportAsPDF } from '@/utils/exportUtils'
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 // 型定義
@@ -30,6 +30,14 @@ export const useDateListGenerator = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isFirstGeneration, setIsFirstGeneration] = useState(true)
   const [isWaitingForLazyLoad, setIsWaitingForLazyLoad] = useState(false)
+
+  // 最後に生成された設定を保存するref
+  const lastGeneratedSettingsRef = useRef<
+    typeof generateListDependencies | null
+  >(null)
+
+  // 設定が変更されているかどうかの状態
+  const [hasSettingsChanged, setHasSettingsChanged] = useState(false)
 
   // プリセット選択状態
   const [selectedPreset, setSelectedPreset] = useState<Preset | null>({
@@ -79,6 +87,23 @@ export const useDateListGenerator = () => {
     ]
   )
 
+  // 設定変更の検知
+  useEffect(() => {
+    if (!lastGeneratedSettingsRef.current) {
+      // 初回は設定変更なしとする
+      setHasSettingsChanged(false)
+      return
+    }
+
+    // 現在の設定と最後に生成した設定を比較
+    const currentSettings = generateListDependencies
+    const lastSettings = lastGeneratedSettingsRef.current
+
+    const hasChanged =
+      JSON.stringify(currentSettings) !== JSON.stringify(lastSettings)
+    setHasSettingsChanged(hasChanged)
+  }, [generateListDependencies])
+
   // リスト生成処理
   const handleGenerateList = useCallback(() => {
     Promise.resolve()
@@ -118,6 +143,10 @@ export const useDateListGenerator = () => {
 
         // 常にリストを設定
         setGeneratedList(result)
+
+        // 最後に生成した設定を保存
+        lastGeneratedSettingsRef.current = generateListDependencies
+        setHasSettingsChanged(false)
 
         // 状態更新処理
         if (isFirstGeneration) {
@@ -273,12 +302,25 @@ export const useDateListGenerator = () => {
     setIsLoading(false)
     setIsWaitingForLazyLoad(false)
     setIsFirstGeneration(true)
+
+    // 設定変更状態をリセット
+    setHasSettingsChanged(false)
+    lastGeneratedSettingsRef.current = null
   }, [])
 
   // Memoized validation state
   const isGenerateButtonDisabled = useMemo(() => {
-    return !title.trim() || !startDate || !endDate
-  }, [title, startDate, endDate])
+    // 基本的なバリデーション
+    const hasValidationErrors = !title.trim() || !startDate || !endDate
+
+    // 初回生成の場合は、バリデーションエラーがなければ有効
+    if (isFirstGeneration) {
+      return hasValidationErrors
+    }
+
+    // 2回目以降は、バリデーションエラーがなく、かつ設定が変更されている場合のみ有効
+    return hasValidationErrors || !hasSettingsChanged
+  }, [title, startDate, endDate, isFirstGeneration, hasSettingsChanged])
 
   return {
     startDate,
@@ -312,6 +354,7 @@ export const useDateListGenerator = () => {
     setHolidayColor,
     nationalHolidayColor,
     setNationalHolidayColor,
-    notifyLazyLoadingComplete
+    notifyLazyLoadingComplete,
+    hasSettingsChanged
   }
 }

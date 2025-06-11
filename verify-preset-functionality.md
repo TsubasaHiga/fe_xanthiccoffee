@@ -59,7 +59,7 @@ pnpm run dev
 
 ### ユニットテスト
 ```bash
-pnpm run test:run
+pnpm run test
 ```
 - ✅ DateListSettingsContext.test.tsx: 全テスト通過
 - ✅ useDateListGenerator.test.ts: 全テスト通過（月境界テストは一時スキップ）
