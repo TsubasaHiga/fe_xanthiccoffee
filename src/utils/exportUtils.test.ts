@@ -127,7 +127,7 @@ describe('exportUtils', () => {
       ) as [string, string] | undefined
       expect(downloadCall).toBeDefined()
       expect(downloadCall![1]).toMatch(
-        /^カスタムタイトル-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.md$/
+        /^カスタムタイトル-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}\.md$/
       )
     })
 
