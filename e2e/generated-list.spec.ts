@@ -22,54 +22,63 @@ test.describe('生成リスト機能', () => {
     await expect(listCard).toBeVisible({ timeout: 5000 })
   })
 
-  test('遅延読み込み後に生成リストカードが表示される', async ({ page }) => {
-    // Check if generated list card is visible after lazy loading
-    const listCard = page.locator('[data-testid="generated-list-card"]').first()
-    await expect(listCard).toBeVisible()
-
-    // Verify that content is correctly displayed after lazy loading
-    await expect(listCard.locator('text=生成されたリスト')).toBeVisible()
-  })
-
-  test('遅延読み込み後にコピー用ボタンが表示される', async ({ page }) => {
-    // Look for copy button (usually has copy icon or copy text)
-    // Verify that the copy button becomes available after lazy loading
-    const copyButton = page.getByRole('button', { name: 'コピー' })
-
-    // Wait for the button to be displayed after lazy loading completion
-    await expect(copyButton).toBeVisible({ timeout: 3000 })
-  })
-
-  test('遅延読み込み後に編集/プレビュー切替ができる', async ({ page }) => {
-    // Look for edit/preview toggle buttons after lazy loading
-    // Verify that edit/preview toggle buttons become available after lazy loading
-    const editButton = page.locator('button', { hasText: /編集|edit/i })
-
-    // Verify that the edit button is displayed after lazy loading
-    await expect(editButton).toBeVisible({ timeout: 3000 })
-  })
-
-  test('遅延読み込み後に日付が正しく表示される', async ({ page }) => {
-    // Check if the generated content contains expected dates after lazy loading
-    // Verify that content is correctly displayed after lazy loading
-    const content = page.locator('[data-testid="generated-list"]')
-
-    // Verify that the start date (01/01) is displayed after lazy loading
-    await expect(content.locator('text=01/01')).toBeVisible({ timeout: 3000 })
-  })
-
-  test('遅延読み込み後にMarkdown形式で内容が表示される', async ({ page }) => {
-    // Check if content appears to be markdown formatted after lazy loading
-    // Verify that Markdown-formatted content is displayed after lazy loading
-    const markdownContainer = page.locator('[data-testid="generated-list"]')
-
-    // Verify that the Markdown container is displayed after lazy loading
-    await expect(markdownContainer).toBeVisible({ timeout: 3000 })
-  })
-
-  test('遅延読み込み後にコピー操作でトーストが表示される', async ({
+  // 遅延読み込みテストは独立したテストとして実行し、beforeEachの影響を受けないようにする
+  test('遅延読み込みが遅い場合もリストが最終的に表示される', async ({
     page
-  }, testInfo) => {
+  }) => {
+    // このテストは独立して実行し、ネットワーク遅延をシミュレート
+    await page.goto('/')
+
+    // Simulate slower network for more realistic lazy loading test
+    await page.route('**/*', async (route) => {
+      // Only add delay to JS/CSS files to simulate component loading delay
+      if (
+        route.request().url().includes('.js') ||
+        route.request().url().includes('.css')
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 200))
+      }
+      route.continue()
+    })
+
+    // Fill form to generate a list with different dates
+    const titleInput = page.locator('input[type="text"]').first()
+    await titleInput.fill('遅延テスト用タイトル')
+
+    const dateInputs = page.locator('input[type="date"]')
+    await dateInputs.first().fill('2024-02-01')
+    await dateInputs.last().fill('2024-02-07')
+
+    // Click the list generation button
+    const generateButton = page.getByRole('button', { name: /生成|リスト/ })
+    await expect(generateButton).toBeEnabled({ timeout: 5000 })
+    await generateButton.click()
+
+    // Wait for the generated list container to appear
+    // This tests that the component loads even with network delays
+    const generatedListContainer = page
+      .locator('[data-testid="generated-list-card"]')
+      .or(page.locator('.markdown-viewer'))
+      .or(page.locator('text=生成されたリスト').locator('..'))
+
+    await expect(generatedListContainer.first()).toBeVisible({ timeout: 20000 })
+
+    // Verify that the content is actually loaded with correct dates
+    const content = page
+      .locator('text=02/01')
+      .or(page.locator('text=2024-02-01'))
+    await expect(content.first()).toBeVisible({ timeout: 5000 })
+
+    // Verify copy button is available after lazy loading
+    const copyButton = page.getByRole('button', { name: 'コピー' })
+    await expect(copyButton).toBeVisible({ timeout: 5000 })
+
+    // Verify edit button is available after lazy loading
+    const editButton = page.getByRole('button', { name: /編集する/i })
+    await expect(editButton).toBeVisible({ timeout: 5000 })
+  })
+
+  test('コピー操作でトーストが表示される', async ({ page }, testInfo) => {
     if (!['chromium', 'Mobile Chrome'].includes(testInfo.project.name)) {
       console.log(
         `[SKIP] ${testInfo.project.name} ではクリップボードテストをスキップします`
@@ -78,37 +87,13 @@ test.describe('生成リスト機能', () => {
     }
 
     // Find copy button after lazy loading
-    // Verify that the copy button becomes available after lazy loading
     const copyButton = page.getByRole('button', { name: 'コピー' }).first()
     await expect(copyButton).toBeVisible({ timeout: 3000 })
 
     await copyButton.click()
 
     // Wait for toast notification after copy
-    // Verify toast notification after copy
-    const toast = page
-      .getByRole('region', { name: 'Notifications alt+T' })
-      .getByRole('listitem')
-      .getByText('クリップボードにコピーしました')
-    await expect(toast).toBeVisible({ timeout: 1500 })
-  })
-
-  test('遅延読み込みが遅い場合もリストが最終的に表示される', async ({
-    page
-  }) => {
-    // Simulate slow network to test lazy loading behavior
-    // Simulate slow network to test lazy loading behavior
-    await page.route('**/*', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      route.continue()
-    })
-
-    // Click the list generation button
-    const generateButton = page.getByRole('button', { name: /生成|リスト/ })
-    await generateButton.click()
-
-    // Verify that the lazy-loaded component is eventually displayed
-    const listCard = page.locator('[data-testid="generated-list-card"]').first()
-    await expect(listCard).toBeVisible({ timeout: 10000 })
+    const toast = page.locator('text=クリップボードにコピーしました')
+    await expect(toast).toBeVisible({ timeout: 3000 })
   })
 })

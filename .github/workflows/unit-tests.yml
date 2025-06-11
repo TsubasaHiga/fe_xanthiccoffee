@@ -54,7 +54,7 @@ jobs:
       run: pnpm run build
     
     - name: Run unit tests
-      run: pnpm run test:run
+      run: pnpm run test
     
     - name: Run unit tests with coverage
       run: pnpm run test:coverage
@@ -63,7 +63,7 @@ jobs:
       id: test-summary
       run: |
         # Run tests to get output for parsing
-        TEST_OUTPUT=$(pnpm run test:run 2>&1 || true)
+        TEST_OUTPUT=$(pnpm run test 2>&1 || true)
         echo "$TEST_OUTPUT" > test-output.txt
         
         # Strip ANSI escape codes and extract test statistics

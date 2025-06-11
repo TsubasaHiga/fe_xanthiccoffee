@@ -44,6 +44,7 @@ const config = (mode: string): UserConfig => {
         '**/node_modules/**',
         '**/dist/**',
         '**/e2e/**',
+        '**/*.spec.ts',
         '**/src/components/ui/**',
         '**/.{idea,git,cache,output,temp}/**',
         '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*'
