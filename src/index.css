@@ -139,4 +139,9 @@ body {
 	[role="button"]:not([disabled]) {
 		cursor: pointer;
 	}
+
+	/* Fix iOS Safari zoom issue by ensuring editor font-size is 16px or larger */
+	.md-editor .cm-editor {
+		font-size: 16px;
+	}
 }
