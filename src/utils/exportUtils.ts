@@ -196,7 +196,7 @@ async function createPrintableHTML(
   customTitle: string
 ): Promise<string> {
   const html = await marked(markdownContent, MARKDOWN_CONFIG)
-  const timestamp = dayjs().format('YYYY-MM-DD-HH-mm-ss')
+  const timestamp = dayjs().format('YYYYMMDD-HHmmss')
   const titleWithTimestamp = `${customTitle}-${timestamp}`
 
   return `
@@ -290,7 +290,7 @@ export async function exportAsPDF(
 
 // Markdown出力関数
 export function exportAsMarkdown(content: string, customTitle: string): void {
-  const timestamp = dayjs().format('YYYY-MM-DD-HH-mm-ss')
+  const timestamp = dayjs().format('YYYYMMDD-HHmmss')
   const safeTitle = sanitizeTitle(customTitle)
   const filename = `${safeTitle}-${timestamp}.md`
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
