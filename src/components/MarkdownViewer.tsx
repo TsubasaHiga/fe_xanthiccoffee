@@ -275,7 +275,7 @@ export function MarkdownViewer({
             <div className='rounded-md border border-gray-200 bg-white px-6 py-8 shadow-inner'>
               <MdPreview
                 value={value}
-                className='prose-ul:ps-0'
+                className='prose-ul:list-disc prose-ul:ps-0'
                 style={{
                   background: 'transparent',
                   fontVariantNumeric: 'tabular-nums'
