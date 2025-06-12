@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import githubCss from 'github-markdown-css/github-markdown-light.css?inline'
 import { marked } from 'marked'
 import { toast } from 'sonner'
@@ -195,7 +196,7 @@ async function createPrintableHTML(
   customTitle: string
 ): Promise<string> {
   const html = await marked(markdownContent, MARKDOWN_CONFIG)
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const timestamp = dayjs().format('YYYYMMDD-HHmmss')
   const titleWithTimestamp = `${customTitle}-${timestamp}`
 
   return `
@@ -289,7 +290,7 @@ export async function exportAsPDF(
 
 // Markdown出力関数
 export function exportAsMarkdown(content: string, customTitle: string): void {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const timestamp = dayjs().format('YYYYMMDD-HHmmss')
   const safeTitle = sanitizeTitle(customTitle)
   const filename = `${safeTitle}-${timestamp}.md`
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' })
