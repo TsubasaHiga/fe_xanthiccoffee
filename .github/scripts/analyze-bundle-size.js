@@ -4,180 +4,207 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import zlib from 'node:zlib'
 
-// Get the directory name
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-// Create directory for temporary files
-const tmpDir = path.join(__dirname, '../tmp')
-if (!fs.existsSync(tmpDir)) {
-  fs.mkdirSync(tmpDir, { recursive: true })
+const CONFIG = {
+  TOP_FILES_LIMIT: 5,
+  DECIMAL_PLACES: 2,
+  COMMIT_HASH_LENGTH: 7,
+  SUPPORTED_EXTENSIONS: ['.js', '.css']
 }
 
-// Function to get file size in KB with format
-function getFileSizeInKB(filePath) {
+const formatBytesToKB = (bytes) => (bytes / 1024).toFixed(CONFIG.DECIMAL_PLACES)
+const isSupportedFile = (filename) =>
+  CONFIG.SUPPORTED_EXTENSIONS.some((ext) => filename.endsWith(ext))
+const getFileType = (filename) => (filename.endsWith('.js') ? 'JS' : 'CSS')
+
+function getFileSizeData(filePath) {
   try {
     const stats = fs.statSync(filePath)
-    return (stats.size / 1024).toFixed(2)
+    const gzipped = zlib.gzipSync(fs.readFileSync(filePath))
+    return {
+      size: Number.parseFloat(formatBytesToKB(stats.size)),
+      gzipSize: Number.parseFloat(formatBytesToKB(gzipped.length))
+    }
   } catch (error) {
-    console.error(`Error getting file size for ${filePath}:`, error)
-    return '0.00'
+    console.error(`Error processing ${filePath}:`, error.message)
+    return { size: 0, gzipSize: 0 }
   }
 }
 
-// Function to get gzipped size in KB with format
-function getGzippedSizeInKB(filePath) {
-  try {
-    const fileBuffer = fs.readFileSync(filePath)
-    const gzippedBuffer = zlib.gzipSync(fileBuffer)
-    return (gzippedBuffer.length / 1024).toFixed(2)
-  } catch (error) {
-    console.error(`Error getting gzipped size for ${filePath}:`, error)
-    return '0.00'
+function calculateBundleSize(distPath) {
+  const assetsDir = path.join(distPath, 'assets')
+  if (!fs.existsSync(assetsDir)) {
+    console.warn(`Assets directory not found: ${assetsDir}`)
+    return { totalSize: 0, totalGzipSize: 0, files: [] }
   }
-}
 
-// Main dist folder
-const distDir = path.join(process.cwd(), 'dist')
-
-// Check if dist directory exists
-if (!fs.existsSync(distDir)) {
-  console.error(
-    'Error: dist directory does not exist. Make sure the build was successful.'
-  )
-  process.exit(1)
-}
-
-// Get package info
-const packageJsonPath = path.join(process.cwd(), 'package.json')
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
-
-// Key files to analyze
-const mainFiles = ['index.es.js', 'index.cjs.js']
-
-// Also collect information about top 5 largest individual lib files
-function getTopLibraryFiles(dirPath, extension, limit = 5) {
+  let totalSize = 0
+  let totalGzipSize = 0
   const files = []
 
-  function scanDir(currentPath) {
-    const entries = fs.readdirSync(currentPath, { withFileTypes: true })
+  for (const file of fs.readdirSync(assetsDir)) {
+    if (!isSupportedFile(file)) continue
 
-    for (const entry of entries) {
-      const entryPath = path.join(currentPath, entry.name)
+    const filePath = path.join(assetsDir, file)
+    const { size, gzipSize } = getFileSizeData(filePath)
 
-      if (entry.isDirectory()) {
-        scanDir(entryPath)
-      } else if (entry.name.endsWith(extension)) {
-        const sizeKB = getFileSizeInKB(entryPath)
-        const gzipSizeKB = getGzippedSizeInKB(entryPath)
-
-        files.push({
-          path: path.relative(distDir, entryPath),
-          sizeKB: Number.parseFloat(sizeKB),
-          gzipSizeKB: Number.parseFloat(gzipSizeKB)
-        })
-      }
-    }
+    totalSize += size
+    totalGzipSize += gzipSize
+    files.push({
+      file: path.join('assets', file),
+      size: `${size.toFixed(CONFIG.DECIMAL_PLACES)} KB`,
+      gzipSize: `${gzipSize.toFixed(CONFIG.DECIMAL_PLACES)} KB`,
+      sizeNum: size,
+      type: getFileType(file)
+    })
   }
 
-  const libsDir = path.join(dirPath, 'libs')
-  if (fs.existsSync(libsDir)) {
-    scanDir(libsDir)
-  } else {
-    console.warn(
-      `Warning: The directory '${libsDir}' does not exist. Skipping library file analysis.`
+  return {
+    totalSize: totalSize.toFixed(CONFIG.DECIMAL_PLACES),
+    totalGzipSize: totalGzipSize.toFixed(CONFIG.DECIMAL_PLACES),
+    files: files.sort((a, b) => b.sizeNum - a.sizeNum)
+  }
+}
+
+function getPackageInfo() {
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+  return { name: packageJson.name, version: packageJson.version }
+}
+
+function getPRInfo() {
+  return {
+    title: process.env.PR_TITLE || 'Unknown PR',
+    number: process.env.PR_NUMBER || '0',
+    author: process.env.PR_AUTHOR || 'Unknown'
+  }
+}
+
+function getCommitHash() {
+  try {
+    return execSync('git rev-parse HEAD')
+      .toString()
+      .trim()
+      .substring(0, CONFIG.COMMIT_HASH_LENGTH)
+  } catch {
+    return 'unknown'
+  }
+}
+
+function processIndexHtml(distDir) {
+  const indexPath = path.join(distDir, 'index.html')
+  if (!fs.existsSync(indexPath)) return null
+
+  const { size, gzipSize } = getFileSizeData(indexPath)
+  return {
+    file: 'index.html',
+    size: `${size.toFixed(CONFIG.DECIMAL_PLACES)} KB`,
+    gzipSize: `${gzipSize.toFixed(CONFIG.DECIMAL_PLACES)} KB`
+  }
+}
+
+function generateMarkdown(
+  packageInfo,
+  prInfo,
+  commitHash,
+  indexInfo,
+  bundleData
+) {
+  const lines = [
+    `## 📊 Bundle Size - v${packageInfo.version}`,
+    '',
+    `Merged PR #${prInfo.number}: ${prInfo.title}`,
+    '',
+    '### Main Bundle Summary',
+    '',
+    '| File | Size | Gzipped |',
+    '| ---- | ---- | ------- |'
+  ]
+
+  if (indexInfo) {
+    lines.push(
+      `| ${indexInfo.file} | ${indexInfo.size} | ${indexInfo.gzipSize} |`
     )
   }
 
-  return files
-    .sort((a, b) => b.sizeKB - a.sizeKB)
-    .slice(0, limit)
-    .map((file) => ({
-      file: file.path,
-      size: `${file.sizeKB.toFixed(2)} KB`,
-      gzipSize: `${file.gzipSizeKB.toFixed(2)} KB`
-    }))
-}
+  lines.push(
+    `| **Total Assets** | **${bundleData.totalSize} KB** | **${bundleData.totalGzipSize} KB** |`
+  )
 
-// Get PR information from environment variables
-const prTitle = process.env.PR_TITLE || 'Unknown PR'
-const prNumber = process.env.PR_NUMBER || '0'
-const prAuthor = process.env.PR_AUTHOR || 'Unknown'
+  if (bundleData.files.length > 0) {
+    lines.push('', `### Top ${CONFIG.TOP_FILES_LIMIT} Largest Asset Files`, '')
+    lines.push(
+      '| File | Size | Gzipped | Type |',
+      '| ---- | ---- | ------- | ---- |'
+    )
 
-// Get git commit information
-const commitHash = execSync('git rev-parse HEAD').toString().trim()
-const shortCommitHash = commitHash.substring(0, 7)
-
-// Collect file sizes
-const fileSizes = []
-let totalSize = 0
-let totalGzipSize = 0
-
-// Calculate sizes for key files
-for (const file of mainFiles) {
-  const filePath = path.join(distDir, file)
-  if (fs.existsSync(filePath)) {
-    const sizeKB = getFileSizeInKB(filePath)
-    const gzipSizeKB = getGzippedSizeInKB(filePath)
-
-    fileSizes.push({
-      file,
-      size: `${sizeKB} KB`,
-      gzipSize: `${gzipSizeKB} KB`
-    })
-
-    totalSize += Number.parseFloat(sizeKB)
-    totalGzipSize += Number.parseFloat(gzipSizeKB)
+    for (const file of bundleData.files.slice(0, CONFIG.TOP_FILES_LIMIT)) {
+      lines.push(
+        `| ${file.file} | ${file.size} | ${file.gzipSize} | ${file.type} |`
+      )
+    }
   }
+
+  lines.push(
+    '',
+    '> This comment was automatically generated by GitHub Actions 🤖'
+  )
+  lines.push(`> PR by @${prInfo.author} | Commit: ${commitHash}`)
+
+  return lines.join('\n')
 }
 
-// Add total sizes
-fileSizes.push({
-  file: '**Total**',
-  size: `**${totalSize.toFixed(2)} KB**`,
-  gzipSize: `**${totalGzipSize.toFixed(2)} KB**`
-})
+function analyzeBundleSize() {
+  console.log('=== Bundle Size Analysis Started ===')
 
-// Get top 5 largest library files
-const topLibFiles = getTopLibraryFiles(distDir, '.es.js')
-
-// Generate comment markdown
-const commentLines = [
-  `## 📊 Bundle Size - v${packageJson.version}`,
-  '',
-  `Merged PR #${prNumber}: ${prTitle}`,
-  '',
-  '### Main Bundle Files',
-  '',
-  '| File | Size | Gzipped |',
-  '| ---- | ---- | ------- |'
-]
-
-for (const { file, size, gzipSize } of fileSizes) {
-  commentLines.push(`| ${file} | ${size} | ${gzipSize} |`)
-}
-
-// Add top 5 largest library files
-if (topLibFiles.length > 0) {
-  commentLines.push('')
-  commentLines.push('### Top 5 Largest Library Files')
-  commentLines.push('')
-  commentLines.push('| File | Size | Gzipped |')
-  commentLines.push('| ---- | ---- | ------- |')
-
-  for (const { file, size, gzipSize } of topLibFiles) {
-    commentLines.push(`| ${file} | ${size} | ${gzipSize} |`)
+  const distDir = path.join(process.cwd(), 'dist')
+  if (!fs.existsSync(distDir)) {
+    console.error(
+      'Error: dist directory does not exist. Make sure the build was successful.'
+    )
+    process.exit(1)
   }
+
+  console.log('✅ Dist directory found')
+
+  const packageInfo = getPackageInfo()
+  console.log(`📦 Package: ${packageInfo.name} v${packageInfo.version}`)
+
+  console.log('📊 Calculating bundle sizes...')
+  const bundleData = calculateBundleSize(distDir)
+  console.log(`Found ${bundleData.files.length} asset files`)
+  console.log(
+    `Total size: ${bundleData.totalSize} KB (${bundleData.totalGzipSize} KB gzipped)`
+  )
+
+  const indexInfo = processIndexHtml(distDir)
+  const prInfo = getPRInfo()
+  const commitHash = getCommitHash()
+
+  const markdown = generateMarkdown(
+    packageInfo,
+    prInfo,
+    commitHash,
+    indexInfo,
+    bundleData
+  )
+
+  const __dirname = path.dirname(fileURLToPath(import.meta.url))
+  const tmpDir = path.join(__dirname, '../tmp')
+
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true })
+  }
+
+  const outputPath = path.join(tmpDir, 'bundle-size-comment.md')
+  console.log(`📝 Writing comment to: ${outputPath}`)
+  fs.writeFileSync(outputPath, markdown)
+  console.log(
+    `✅ Comment written successfully. File size: ${fs.statSync(outputPath).size} bytes`
+  )
+
+  console.log('\n🎉 Bundle size analysis completed successfully!')
+  console.log(
+    `📊 Final summary: ${bundleData.totalSize} KB (${bundleData.totalGzipSize} KB gzipped)`
+  )
 }
 
-commentLines.push('')
-commentLines.push(
-  '> This comment was automatically generated by GitHub Actions 🤖'
-)
-commentLines.push(`> PR by @${prAuthor} | Commit: ${shortCommitHash}`)
-
-// Write comment to file for the next step
-const commentPath = path.join(tmpDir, 'bundle-size-comment.md')
-fs.writeFileSync(commentPath, commentLines.join('\n'))
-
-console.log('Bundle size analysis completed')
+analyzeBundleSize()
