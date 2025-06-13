@@ -23,8 +23,7 @@ const MARKDOWN_CONFIG = {
 // UIテキストの定数
 const UI_TEXT = {
   PREVIEW_TITLE: '📄 PDF印刷プレビュー',
-  PREVIEW_DESCRIPTION:
-    'このページを印刷してPDFとして保存してください。\niOSのアプリ内ブラウザでは印刷がサポートされていません。\nSafariで開いて印刷してください。',
+  PREVIEW_DESCRIPTION: 'このページを印刷してPDFとして保存してください。',
   PRINT_BUTTON: '🖨️ 印刷 / PDF保存',
   POPUP_BLOCKED_ERROR:
     'ポップアップがブロックされました。ポップアップを許可してから再試行してください。',
@@ -153,24 +152,70 @@ function generatePreviewUI(): string {
         margin-bottom: 20px;
       ">
         <h1 style="margin-top: 0; color: ${COLORS.TEXT_PRIMARY}; font-size: 25px">${UI_TEXT.PREVIEW_TITLE}</h1>
-        <p style="margin-bottom: 16px; color: ${COLORS.TEXT_SECONDARY};">
+        <p style="margin-bottom: 20px; color: ${COLORS.TEXT_SECONDARY};">
           ${UI_TEXT.PREVIEW_DESCRIPTION.replace(/\n/g, '<br>')}
         </p>
         
-        <button onclick="window.handlePrintButtonClick && window.handlePrintButtonClick()" style="
-          background: ${COLORS.BUTTON_PRIMARY};
-          color: white;
-          border: none;
-          padding: 12px 24px;
+        <!-- 通常の印刷ボタンセクション -->
+        <div style="
+          background: #f0f8ff;
+          border: 1px solid #b3d9ff;
           border-radius: 6px;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: 500;
-          box-shadow: 0 2px 4px rgba(0,102,204,0.2);
-          transition: background 0.2s;
-        " onmouseover="this.style.background='${COLORS.BUTTON_HOVER}'" onmouseout="this.style.background='${COLORS.BUTTON_PRIMARY}'">
-          ${UI_TEXT.PRINT_BUTTON}
-        </button>
+          padding: 16px;
+          margin-bottom: 20px;
+        ">
+          <h3 style="margin: 0 0 12px 0; color: #0066cc; font-size: 18px; display: grid; grid-template-columns: auto 1fr; gap: 8px;">
+            <span>🖨️</span>
+            <span>自動的に印刷ダイアログが表示されない場合</span>
+          </h3>
+          <button onclick="window.print()" style="
+            background: ${COLORS.BUTTON_PRIMARY};
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,102,204,0.2);
+            transition: background 0.2s;
+          " onmouseover="this.style.background='${COLORS.BUTTON_HOVER}'" onmouseout="this.style.background='${COLORS.BUTTON_PRIMARY}'">
+            ${UI_TEXT.PRINT_BUTTON}
+          </button>
+        </div>
+        
+        <!-- iOS印刷ガイドセクション -->
+        <div style="
+          background: #e8f5e8;
+          border: 1px solid #c3e6c3;
+          border-radius: 6px;
+          padding: 16px;
+          margin-bottom: 16px;
+        ">
+          <h3 style="margin: 0 0 12px 0; color: #2d5a2d; font-size: 18px; display: grid; grid-template-columns: auto 1fr; gap: 8px;">
+            <span>📱</span>
+            <span>iOSのアプリ内ブラウザで印刷する場合</span>
+          </h3>
+          <p style="margin: 0 0 12px 0; color: #2d5a2d; font-size: 14px;">
+            iOSのアプリ内ブラウザでは印刷がサポートされていません。<br>Safariで改めて開くか、以下の手順で印刷してください。
+          </p>
+          <ol style="margin: 0; padding-left: 20px; color: #2d5a2d; line-height: 1.6;">
+            <li>画面下部（または右上）の <strong>シェアボタン（□↑）</strong> をタップ</li>
+            <li>メニューから <strong>「プリント」</strong> を選択</li>
+            <li>プリンターを選択して印刷、またはPDFとして保存</li>
+          </ol>
+        </div>
+        
+        <div style="
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-radius: 6px;
+          padding: 12px;
+          color: #856404;
+          font-size: 14px;
+        ">
+          💡 <strong>ヒント:</strong> シェアボタンが見つからない場合は、画面を少し上下にスクロールしてみてください。
+        </div>
       </div>
       
       <hr style="margin: 20px 0; border: none; border-top: 1px solid ${COLORS.DIVIDER};">
@@ -209,53 +254,6 @@ async function createPrintableHTML(
         <style>
           ${generatePrintCSS()}
         </style>
-        <script>
-          // 新しいタブかどうかの判定
-          const isNewTab = window.opener !== null;
-          
-          // 新しいタブで開いて印刷する関数
-          window.openInNewTab = function() {
-            const htmlContent = document.documentElement.outerHTML;
-            const newTab = window.open('', '_blank');
-            if (newTab) {
-              newTab.document.write(htmlContent);
-              newTab.document.close();
-              newTab.focus();
-              
-              // Safari判定
-              const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-              
-              // 新しいタブでの処理
-              newTab.addEventListener('load', function() {
-                setTimeout(() => {
-                  if (isSafari) {
-                    // Safariの場合は印刷ボタンを目立たせる
-                    const printButton = newTab.document.querySelector('button[onclick*="print"]');
-                    if (printButton) {
-                      printButton.style.animation = 'pulse 1s infinite';
-                      printButton.style.transform = 'scale(1.1)';
-                      printButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                  } else {
-                    // その他のブラウザでは自動印刷を試行
-                    newTab.print();
-                  }
-                }, ${PRINT_CONFIG.LAYOUT_DELAY});
-              });
-            }
-          };
-          
-          // ボタンのクリックハンドラーを設定
-          window.handlePrintButtonClick = function() {
-            if (isNewTab) {
-              // 新しいタブでは直接印刷
-              window.print();
-            } else {
-              // 元のウィンドウでは新しいタブで開く
-              window.openInNewTab();
-            }
-          };
-        </script>
       </head>
       <body>
         ${generatePreviewUI()}
