@@ -24,7 +24,7 @@ const MARKDOWN_CONFIG = {
 const UI_TEXT = {
   PREVIEW_TITLE: '📄 PDF印刷プレビュー',
   PREVIEW_DESCRIPTION:
-    'このページを印刷してPDFとして保存してください。\nブラウザの印刷設定で「背景のグラフィック」を有効にすることをお勧めします。',
+    'このページを印刷してPDFとして保存してください。\niOSのアプリ内ブラウザでは印刷がサポートされていません。\nSafariで開いて印刷してください。',
   PRINT_BUTTON: '🖨️ 印刷 / PDF保存',
   POPUP_BLOCKED_ERROR:
     'ポップアップがブロックされました。ポップアップを許可してから再試行してください。',
@@ -152,12 +152,12 @@ function generatePreviewUI(): string {
         padding: 20px;
         margin-bottom: 20px;
       ">
-        <h1 style="margin-top: 0; color: ${COLORS.TEXT_PRIMARY};">${UI_TEXT.PREVIEW_TITLE}</h1>
+        <h1 style="margin-top: 0; color: ${COLORS.TEXT_PRIMARY}; font-size: 25px">${UI_TEXT.PREVIEW_TITLE}</h1>
         <p style="margin-bottom: 16px; color: ${COLORS.TEXT_SECONDARY};">
-          ${UI_TEXT.PREVIEW_DESCRIPTION.replace('\n', '<br>')}
+          ${UI_TEXT.PREVIEW_DESCRIPTION.replace(/\n/g, '<br>')}
         </p>
         
-        <button onclick="window.print()" style="
+        <button onclick="window.handlePrintButtonClick && window.handlePrintButtonClick()" style="
           background: ${COLORS.BUTTON_PRIMARY};
           color: white;
           border: none;
@@ -209,6 +209,53 @@ async function createPrintableHTML(
         <style>
           ${generatePrintCSS()}
         </style>
+        <script>
+          // 新しいタブかどうかの判定
+          const isNewTab = window.opener !== null;
+          
+          // 新しいタブで開いて印刷する関数
+          window.openInNewTab = function() {
+            const htmlContent = document.documentElement.outerHTML;
+            const newTab = window.open('', '_blank');
+            if (newTab) {
+              newTab.document.write(htmlContent);
+              newTab.document.close();
+              newTab.focus();
+              
+              // Safari判定
+              const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+              
+              // 新しいタブでの処理
+              newTab.addEventListener('load', function() {
+                setTimeout(() => {
+                  if (isSafari) {
+                    // Safariの場合は印刷ボタンを目立たせる
+                    const printButton = newTab.document.querySelector('button[onclick*="print"]');
+                    if (printButton) {
+                      printButton.style.animation = 'pulse 1s infinite';
+                      printButton.style.transform = 'scale(1.1)';
+                      printButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  } else {
+                    // その他のブラウザでは自動印刷を試行
+                    newTab.print();
+                  }
+                }, ${PRINT_CONFIG.LAYOUT_DELAY});
+              });
+            }
+          };
+          
+          // ボタンのクリックハンドラーを設定
+          window.handlePrintButtonClick = function() {
+            if (isNewTab) {
+              // 新しいタブでは直接印刷
+              window.print();
+            } else {
+              // 元のウィンドウでは新しいタブで開く
+              window.openInNewTab();
+            }
+          };
+        </script>
       </head>
       <body>
         ${generatePreviewUI()}
